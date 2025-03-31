@@ -1,0 +1,5 @@
+# Ignorar carpeta anteproyecto
+anteproyecto/
+
+# Ignorar carpeta repaso_py
+repaso_py/
