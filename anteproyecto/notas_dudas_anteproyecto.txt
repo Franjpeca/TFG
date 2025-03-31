@@ -1,0 +1,37 @@
+NOTAS
+-----
+
+- Sigo con el problema de que realmente no sé que vamos a hacer.
+Si vamos a hacer lo de la base de rendimiento para otros modelos
+Si estamos haciendo el mismo tfg que mi compañero
+Si lo ibamos a aplicar a energía generada ...
+
+- Los objetivos son similares a los del proyecto de olas. Pero hay que modificarlos en base a lo que nosotros hagamos.
+
+- Repito mucho la parte de Kedro, es debido a que no estaba pillando del todo que iba en cada cosa.
+
+- Entiendo ya que hay que poner en cada cosa. El tema es el mismo, sigo sin saber exactamente que hacemos y por tanto no se reflejarlo.
+
+
+
+--- Dudas por puntos ---
+
+Portada: Pues sabiendo qué hacemos se el titulo
+
+Indice: Nada, lo veo bien
+
+1. Introducción: Pues comentar el problema a estudiar en sí.
+
+2. Objetivos: Cambiar aquellas partes en morado dependiendo del tema. Creo que los objetivos entendí como se redactan. He intentado estructurarlo de forma que refleje las fases de un proyecto de ML.
+
+3. Antecedentes: La parte de ML sé desarrollarla en base a qué apliquemos. La parte de recuperación de información casi tambien (si es que se aplica). La parte del software no puede ser tan matemática, por lo que la he desarrollado al maximo.
+
+4. Esto lo haré en consecuencia a cuando el resto de duas esten resueltas. Indicando todo en base a mi tema
+
+5. Sobre todo la parte del 5.2, que depende del tema que hagamos. 5.3 Hay que indicar más concretamente la parte de diseño? El resto de subpuntos creo que ok
+
+6. Indicamos ya el tiempo?
+
+7. Cambio vuestras descripciones?
+
+8. Añado bibliografía en la parte de introdución y antedecentes.
