@@ -38,6 +38,52 @@
   type: pandas.CSVDataset
   filepath: data/01_raw/46069_test_ordinal.csv
 
-cleaned_data:
+# Configura los datasets "cleaned" para las salidas:
+cleaned_46014_train_ordinal:
   type: pandas.CSVDataset
-  filepath: data/cleaned_data.csv
+  filepath: data/02_intermediate/46014_train_ordinal_cleaned.csv
+
+cleaned_46014_test_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/02_intermediate/46014_test_ordinal_cleaned.csv
+
+cleaned_46025_train_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/02_intermediate/46025_train_ordinal_cleaned.csv
+
+cleaned_46025_test_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/02_intermediate/46025_test_ordinal_cleaned.csv
+
+cleaned_46042_train_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/02_intermediate/46042_train_ordinal_cleaned.csv
+
+cleaned_46042_test_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/02_intermediate/46042_test_ordinal_cleaned.csv
+
+cleaned_46053_train_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/02_intermediate/46053_train_ordinal_cleaned.csv
+
+cleaned_46053_test_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/02_intermediate/46053_test_ordinal_cleaned.csv
+
+cleaned_46069_train_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/02_intermediate/46069_train_ordinal_cleaned.csv
+
+cleaned_46069_test_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/02_intermediate/46069_test_ordinal_cleaned.csv
+
+# Dataset juntados
+train_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/03_primary/train_ordinal.csv
+
+test_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/03_primary/test_ordinal.csv

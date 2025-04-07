@@ -1,50 +1,40 @@
 import pandas as pd
 
-def clean_data_all(
-    # Aceptamos cada dataset como parámetro explícito
-    dataset_46014_train_ordinal,
-    dataset_46014_test_ordinal,
-    dataset_46025_train_ordinal,
-    dataset_46025_test_ordinal,
-    dataset_46042_train_ordinal,
-    dataset_46042_test_ordinal,
-    dataset_46053_train_ordinal,
-    dataset_46053_test_ordinal,
-    dataset_46069_train_ordinal,
-    dataset_46069_test_ordinal
-):
-    """
-    Nodo que recibe varios datasets, los imprime para verificar que se cargan correctamente
-    y los retorna tal cual se reciben sin realizar ninguna operación sobre ellos.
-    """
+def clean_data_all(*datasets):
+    cleaned_list = []
 
-    # Imprimir las primeras filas de cada dataset para verificar que se han cargado correctamente
-    print("Este es el paso inicial de carga de datos.")
+    for dataset in datasets:
+        cleaned_data = clean_data(dataset)  # Asumiendo que tienes la función clean_data
+        print("Con borrado tras la funcion:")
+        print(cleaned_data.head)
+        cleaned_list.append(cleaned_data)  # Guardar el dataset limpio en la lista
 
-    # Mostrar los primeros registros de cada dataset
-    for dataset_name, dataset in locals().items():
-        if "dataset_" in dataset_name:  # Asegurarnos de que solo iteramos sobre los datasets
-            print(f"Dataset {dataset_name}:")
-            print(dataset.head())  # Muestra las primeras filas de cada dataset
+    print("Datos limpiados. Se procede a guardarlos")
 
-    # Regresar los datasets tal cual, sin ninguna transformación
-    cleaned_data = pd.DataFrame()
-    return cleaned_data
+    return tuple(cleaned_list)
 
 
-def clean_data():
-    print("Este es el paso inicial de limpieza de datos.")
+def clean_data(data: pd.DataFrame) -> pd.DataFrame:
+    # Verificar que el DataFrame no esté vacío
+    if data.empty:
+        print("Warning: DataFrame vacio!")
+
+    # 0. Eliminacion de valores nulos
+    data_cleaned = data.dropna()
+
+    # 1. Eliminar la columna de regresión
+    data = data.drop(columns=[data.columns[-2]])
+    return data
+
+
+def merge_data(*cleaned_datasets):
+    train_datasets = cleaned_datasets[::2]  # Los datasets de entrenamiento están en las posiciones pares
+    test_datasets = cleaned_datasets[1::2]  # Los datasets de test están en las posiciones impares
     
-    # Aquí deberías realizar la limpieza de los datos
-    cleaned_data = "algo"  # Esto es solo un ejemplo, reemplázalo con el procesamiento real de los datos
+    # Juntar todos los datasets de train en uno solo
+    merged_train = pd.concat(train_datasets, axis=0, ignore_index=True)
     
-    return cleaned_data
-
-def merge_data(cleaned_data):
-
-    print("Este es otro paso en el pipeline: combinación de datos.")
+    # Juntar todos los datasets de test en uno solo
+    merged_test = pd.concat(test_datasets, axis=0, ignore_index=True)
     
-    # Aquí deberías realizar la fusión de datos (o el procesamiento necesario)
-    merged_data = f"Datos procesados a partir de {cleaned_data}"  # Este es solo un ejemplo
-    
-    return merged_data
+    return merged_train, merged_test
