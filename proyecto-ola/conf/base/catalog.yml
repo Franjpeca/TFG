@@ -1,0 +1,43 @@
+46014_train_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/46014_train_ordinal.csv
+
+46014_test_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/46014_test_ordinal.csv
+
+46025_train_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/46025_train_ordinal.csv
+
+46025_test_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/46025_test_ordinal.csv
+
+46042_train_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/46042_train_ordinal.csv
+
+46042_test_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/46042_test_ordinal.csv
+
+46053_train_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/46053_train_ordinal.csv
+
+46053_test_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/46053_test_ordinal.csv
+
+46069_train_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/46069_train_ordinal.csv
+
+46069_test_ordinal:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/46069_test_ordinal.csv
+
+cleaned_data:
+  type: pandas.CSVDataset
+  filepath: data/cleaned_data.csv

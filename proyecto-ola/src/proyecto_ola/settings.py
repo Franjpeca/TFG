@@ -5,8 +5,6 @@ https://docs.kedro.org/en/stable/kedro_project_setup/settings.html."""
 # Instantiated project hooks.
 from proyecto_ola.hooks import SparkHooks  # noqa: E402
 
-# Hooks are executed in a Last-In-First-Out (LIFO) order.
-HOOKS = (SparkHooks(),)
 
 # Installed plugins for which to disable hook auto-registration.
 # DISABLE_HOOKS_FOR_PLUGINS = ("kedro-viz",)

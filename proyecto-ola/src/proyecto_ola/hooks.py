@@ -1,6 +1,4 @@
 from kedro.framework.hooks import hook_impl
-from pyspark import SparkConf
-from pyspark.sql import SparkSession
 
 
 class SparkHooks:
