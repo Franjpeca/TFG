@@ -3,3 +3,6 @@ anteproyecto/
 
 # Ignorar carpeta repaso_py
 repaso_py/
+
+# Ignorar carpeta datos
+datos/

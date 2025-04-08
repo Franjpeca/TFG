@@ -1,0 +1,3 @@
+- Hay que añadir un init en cada directorio de pipelines y añadir la ruta del modulo (create_pipeline)
+
+- He tenido que incluir Orca-python con: pip install -e ./orca-python

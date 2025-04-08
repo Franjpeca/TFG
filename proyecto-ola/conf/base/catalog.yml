@@ -87,3 +87,9 @@ train_ordinal:
 test_ordinal:
   type: pandas.CSVDataset
   filepath: data/03_primary/test_ordinal.csv
+
+
+# PARA PRUEBAS
+pruebas:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/pruebas.csv
