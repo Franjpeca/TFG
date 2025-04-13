@@ -1,11 +1,15 @@
 import sys
 import os
 import pandas as pd
-from orca_python import classifiers.OrdinalDecomposition
+import numpy as np
+import sys
+sys.path.append('/mnt/c/Users/francisco.perez/Desktop/TFG/proyecto-ola/orca-python')
+import orca_python
+from orca_python.classifiers import OrdinalDecomposition
 
-def orca_functions_node(*datasets):
+def MORD_OrdinalRidge(*datasets):
     # Imprimir un mensaje indicando que la función fue llamada
-    print("La función orca_functions_node ha sido ejecutada, pero no se procesó ningún dato.")
+    print("\n ==> Funcion MORD_OrdinalRidge")
     
     # Crear un DataFrame vacío
     empty_dataframe = pd.DataFrame()

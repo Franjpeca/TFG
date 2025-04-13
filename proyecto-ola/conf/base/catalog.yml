@@ -90,6 +90,50 @@ test_ordinal:
 
 
 # PARA PRUEBAS
-pruebas:
+pruebas1:
   type: pandas.CSVDataset
-  filepath: data/01_raw/pruebas.csv
+  filepath: data/01_raw/pruebas1.csv
+
+pruebas2:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/pruebas2.csv
+
+pruebas3:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/pruebas3.csv
+
+pruebas4:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/pruebas4.csv
+
+pruebas5:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/pruebas5.csv
+
+pruebas6:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/pruebas6.csv
+
+pruebas7:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/pruebas7.csv
+
+pruebas8:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/pruebas8.csv
+
+pruebas9:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/pruebas9.csv
+
+pruebas10:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/pruebas10.csv
+
+pruebas11:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/pruebas11.csv
+
+pruebas12:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/pruebas12.csv

@@ -2,27 +2,22 @@ import pandas as pd
 
 def clean_data_all(*datasets):
     cleaned_list = []
-
+    print("Limpiando los datasets...")
     for dataset in datasets:
-        cleaned_data = clean_data(dataset)  # Asumiendo que tienes la función clean_data
-        print("Con borrado tras la funcion:")
-        print(cleaned_data.head)
+        cleaned_data = clean_data(dataset)  # Funcion dentro del nodo
         cleaned_list.append(cleaned_data)  # Guardar el dataset limpio en la lista
-
-    print("Datos limpiados. Se procede a guardarlos")
-
     return tuple(cleaned_list)
 
 
 def clean_data(data: pd.DataFrame) -> pd.DataFrame:
-    # Verificar que el DataFrame no esté vacío
+    # Verificar que el DataFrame no este vacio
     if data.empty:
         print("Warning: DataFrame vacio!")
 
-    # 0. Eliminacion de valores nulos
+    # Eliminacion de valores nulos
     data_cleaned = data.dropna()
 
-    # 1. Eliminar la columna de regresión
+    # Eliminar la columna de regresion
     data = data.drop(columns=[data.columns[-2]])
     return data
 

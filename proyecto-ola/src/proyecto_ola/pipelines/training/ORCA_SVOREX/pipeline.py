@@ -1,18 +1,18 @@
 from kedro.pipeline import Pipeline, node
-from .nodes import orca_functions_node
+from .nodes import ORCA_SVOREX
 
 def create_pipeline(**kwargs) -> Pipeline:
     return Pipeline(
         [
             node(
-                func=orca_functions_node,
+                func=ORCA_SVOREX,
                 inputs=[
                     "train_ordinal", "test_ordinal",
                 ],
                 outputs=[
-                    "pruebas"
+                    "pruebas9"
                 ],
-                name="orca_node"
+                name="ORCA_SVOREX_node"
             )
         ]
     )
