@@ -1,0 +1,113 @@
+- Hay que añadir un init en cada directorio de pipelines y añadir la ruta del modulo (create_pipeline)
+
+- He tenido que incluir Orca-python con: pip install -e ./orca-python
+
+
+
+
+- En preprocessing, revisar si cada nodo como borrado de valores nulos u otras operaciones distintas pueden ir en el mismo nodo o deben
+de ir en uno distinto.
+- Asegurarse que elimino la penultima, no la ultima
+
+------------
+METODOS MORD
+------------
+
+- CAMBIAR NOMBRE DE LOS METODOS, NO ESTAN BIEN REFLEJADOS CON LOS DE LA DOCUMENTACION   
+
+- TODOS los metodos de mord requieren que la salida sea numerica discreta, no valores continuos ni clases nombradas como A B C D 
+    -> Pasa la ultima fila del raw a 0 1 2 3 4 y luego eliminar la penultima salida, la que es continua.
+        -> Por tanto, nuevo nodo en el pipeline preprocessing
+
+-- LogisticAT --
+- Permite medir:
+    · Accuracy
+    · Mean absolute error
+    · Confusion matrix  
+- El modelo separa el problema en pequeños problemas de clasificacion binaria, y calcula la probabilidad entre pares de clases
+    · "Probabilidad de que sea mayor de la clase 1..." y luego con esto vamos a la clase correspondiente
+- Los umbrales de las salidas no le puedo dar los mios, el modelo los aprende automaticamente
+- En este metodo asume que las clases siguen la misma pendiente 
+
+-- LogisticIT --
+- Aqui, las clases no tienen la misma pendiente
+- Busca predecir una variable ordinal usando regresion logistica pero con ciertas condiciones para respetar el orden natural de las clases
+- Las pendientes no son las mismas y posee menos restricciones que AT
+- En el modelo matematico se busca estimar 𝑤 y 𝜃 para aumentar la verosimilitud.
+- Nuevamente, se calculan probabilidades para ver a que clase pertenecen. 
+- Esta no usa probabilidades acumuladas, sino las probabilidades directas para cada clase
+
+
+-- OrdinalRidge --
+"Si este número cae entre los umbrales correctos, estoy clasificando bien. Si no, penalizo."
+- Aqui busca aprender un vector de peso y lueg olos UMBRALES para saber donde caigo.
+- NO usa probabilidades
+
+
+-- LAD --
+- No usa probabilidades
+- Usa regularizacion L1
+- Tiene seleccion de variables
+- Posee una funcion de perdida diferente
+- Mejor contra el ruido y outliers
+- Tambien calcula los umbrales
+- Se ve si se es mayor o menor que los umbrales y con ello encuentra la clase
+
+
+-- Multiclass Logistic -- 
+- No usa umbrales
+- Esa una adaptacion de una regresion logistica multinominal, pero manteniendo el orden
+- El modelo calcula una puntacion para cada clase usando una funcion logit y luego con una softmax da una probabilidad
+
+
+------------
+METODOS ORCA
+------------
+
+-- OrdinalDecomposition --
+- Busca descomponer el problema en una serie de predicciones binarias
+- Se usan K-1 clasificadores binarios (siendo K el numero de clases)
+- Cada clasificador puede ser cual sea, incluso basado en probabilidades, aunque no necesariamente
+
+
+-- REDSVM --
+- Mantiene el orden y adapta las SVM para abordar el ordinal.
+- Tiene en cuenta el orden natural de las clases
+- Busca un hiperplano y aprende varios umbrales ordenados
+- Se ajustan pesos y umbrales
+- Usa una funcion real continua (REgression)
+- Usa umbrales para dividir esa funcion en clases (Decomposition)
+- Se adapta la SVM a un problema ordinal en la forma de entrenarlo y optimizarlo
+
+
+-- SVOREX --
+- Tambien mantiene el orden y adapta el SVM
+- Se imponen restricciones explicitas que indican el orden de las clases durante el entrenamiento
+- Se aprende un hiperplano y tambien umbrales, pero impone restrcciones sobre donde deben de care los puntos
+
+
+-- NNPOM --
+- Junta las ventajas de la regresion logistica con las de las redes neuronales
+- En vez de usar un vector depesos por la entrada, usa una red neuronal a cambio de una funcion continua
+- Proportional odds : Calcula la probabilidad acumulada de que la clase sea menor o igual a k, donde phi k es el umbral
+- El modelo aprende los pesos de la red neuronal y los umbrales, que definene los cortes entre clases
+- La red neuronal transforma los datos en continuos ORDENADOS, tras ello, se aplican los umbrales para decidir la clase
+
+
+-- NNOP --
+- NO impone la estructura de proportional odds, sino que aprende directamente de las probabilidades de cada clase ordinal, 
+asegurando que se respeta el orden 
+- NO usa una unica funcion continua y umbrales, sino que usa una red neuronal con una salida por clase PERO con mecanismos para respetar el orden
+- Tiene una salida softmax
+- La forma de imponer el orden es:
+-> Que de una probabilidad acumulada
+-> Modificando la funcion de perdida, dependiendo de donde se equivoque se penaliza mas o menos
+-> Imponiendo restricciones en las salidas (no se si se aplican)
+
+
+
+
+- Correcta estrucutra de los nodos de test, permitiendo automatizacion:
+- A los nodos les paso el argumento param
+- En el data catalog registro de forma dinamica el nombre de lo que me devuelve (y guardo) del nodo
+- En el fichero param defino los parametros, pero esto es para indicar unos concretos, si quiero hacerlo con los que quiera y rapido puedo llamar comando
