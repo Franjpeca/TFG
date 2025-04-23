@@ -1,5 +1,5 @@
 from kedro.pipeline import Pipeline, node
-from .nodes import ORCA_REDSVM
+from .nodes import ORCA_NNOP
 
 def create_pipeline(**kwargs) -> Pipeline:
     # Recuperamos los parámetros de kwargs
@@ -10,20 +10,21 @@ def create_pipeline(**kwargs) -> Pipeline:
 
     # Crear el nombre dinámico basado en los parámetros
     run_id = params.get("run_id", "default")
-    C = params.get("C", 1.0)
-    epsilon = params.get("epsilon", 0.1)
+    learning_rate = params.get("learning_rate", 0.01)
+    hidden_layer_size = params.get("hidden_layer_size", 10)
     max_iter = params.get("max_iter", 1000)
+    alpha = params.get("alpha", 0.1)
     
     # Nombre dinámico para el dataset
-    dataset_name = f"ORCA_REDSVM_C_{C}_epsilon_{epsilon}_max_iter_{max_iter}_run_{run_id}".replace(".", "")
+    dataset_name = f"ORCA_NNOP_lr_{learning_rate}_hidden_size_{hidden_layer_size}_max_iter_{max_iter}_alpha_{alpha}_run_{run_id}".replace(".", "")
 
     return Pipeline(
         [
             node(
-                func=ORCA_REDSVM,  # La función ORCA_REDSVM que devolverá el modelo vacío
+                func=ORCA_NNOP,  # La función ORCA_NNOP que devolverá el modelo vacío
                 inputs=["train_ordinal", "parameters"],  # Pasamos los datos de entrenamiento y los parámetros al nodo
                 outputs=dataset_name,  # Usamos el parámetro dinámico para la salida
-                name=f"ORCA_REDSVM_node_C_{C}_epsilon_{epsilon}_max_iter_{max_iter}_run_{run_id}"
+                name=f"ORCA_NNOP_node_lr_{learning_rate}_hidden_size_{hidden_layer_size}_max_iter_{max_iter}_alpha_{alpha}_run_{run_id}"
             )
         ]
     )

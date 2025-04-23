@@ -7,12 +7,18 @@ sys.path.append('/mnt/c/Users/francisco.perez/Desktop/TFG/proyecto-ola/orca-pyth
 import orca_python
 from orca_python.classifiers import OrdinalDecomposition
 
-def ORCA_NNPOM(*datasets):
-    # Imprimir un mensaje indicando que la función fue llamada
-    print("\n ==> Funcion ORCA_NNPOM")
+def ORCA_NNPOM(dataset, params):
     
-    # Crear un DataFrame vacío
-    empty_dataframe = pd.DataFrame()
+    # Crear el modelo vacío con los parámetros
+    model = orca_python.classifiers.NNPOM(
+        learning_rate=params["learning_rate"], 
+        hidden_layer_size=params["hidden_layer_size"], 
+        max_iter=params["max_iter"],
+        alpha=params["alpha"]
+    )
 
-    # Devuelve el DataFrame vacío dentro de una lista o tupla
-    return [empty_dataframe]
+    # Comentamos el .fit() por ahora, ya que no entrenamos el modelo
+    # model.fit(train, test)  # Comentado por ahora, no entrenamos el modelo
+
+    # Devolvemos el modelo vacío (sin entrenar)
+    return model

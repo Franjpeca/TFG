@@ -1,3 +1,10 @@
+# Para parametros
+"models.*":
+  type: pickle.PickleDataset
+  filepath: data/06_models/{name}.pkl
+  versioned: true
+
+# Datasets
 46014_train_ordinal:
   type: pandas.CSVDataset
   filepath: data/01_raw/46014_train_ordinal.csv
@@ -89,6 +96,7 @@ test_ordinal:
   filepath: data/03_primary/test_ordinal.csv
 
 
+
 # PARA PRUEBAS
 pruebas1:
   type: pandas.CSVDataset
@@ -129,11 +137,3 @@ pruebas9:
 pruebas10:
   type: pandas.CSVDataset
   filepath: data/01_raw/pruebas10.csv
-
-pruebas11:
-  type: pandas.CSVDataset
-  filepath: data/01_raw/pruebas11.csv
-
-pruebas12:
-  type: pandas.CSVDataset
-  filepath: data/01_raw/pruebas12.csv

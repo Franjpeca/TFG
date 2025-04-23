@@ -7,13 +7,14 @@ sys.path.append('/mnt/c/Users/francisco.perez/Desktop/TFG/proyecto-ola/orca-pyth
 import orca_python
 from orca_python.classifiers import OrdinalDecomposition
 
-def ORCA_OrdinalDecomposition(dataset, params):
+def ORCA_NNOP(dataset, params):
     
     # Crear el modelo vacío con los parámetros
-    model = orca_python.classifiers.OrdinalDecomposition(
-        C=params["C"], 
-        epsilon=params["epsilon"], 
-        max_iter=params["max_iter"]
+    model = orca_python.classifiers.NNOP(
+        learning_rate=params["learning_rate"], 
+        hidden_layer_size=params["hidden_layer_size"], 
+        max_iter=params["max_iter"],
+        alpha=params["alpha"]
     )
 
     # Comentamos el .fit() por ahora, ya que no entrenamos el modelo

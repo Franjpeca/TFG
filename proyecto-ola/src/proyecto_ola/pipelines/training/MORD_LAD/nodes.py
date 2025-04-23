@@ -4,19 +4,19 @@ import pandas as pd
 import numpy as np
 import sys
 sys.path.append('/mnt/c/Users/francisco.perez/Desktop/TFG/proyecto-ola/orca-python')
-import orca_python
-from orca_python.classifiers import OrdinalDecomposition
+import mord
 
-def ORCA_REDSVM(dataset, params):
-    
-    # Crear el modelo vacío con los parámetros
-    model = orca_python.classifiers.REDSVM(
-        C=params["C"], 
-        epsilon=params["epsilon"], 
+def MORD_LAD(dataset, params):
+
+    # Crear el modelo vacío (sin entrenar) utilizando los parámetros
+    model = mord.LAD(
+        alpha=params["alpha"], 
         max_iter=params["max_iter"]
     )
 
-    # Comentamos el .fit() por ahora, ya que no entrenamos el modelo
+    print(dataset)
+
+    # Aquí dejamos comentado el .fit(), ya que no queremos entrenar el modelo aún
     # model.fit(train, test)  # Comentado por ahora, no entrenamos el modelo
 
     # Devolvemos el modelo vacío (sin entrenar)
