@@ -14,6 +14,7 @@ def create_pipeline(param_key: str,
                 "params":  param_ds       # aquí solo hiper-parámetros
             },
             outputs=output_ds,
-            name=f"MORD_LogisticAT_node_{param_key}"
+            name=f"MORD_LogisticAT_node_{param_key}",
+            tags=[param_key]
         )
     ])

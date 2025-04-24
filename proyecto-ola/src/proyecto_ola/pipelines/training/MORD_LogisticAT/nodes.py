@@ -10,6 +10,6 @@ import mord
 def MORD_LogisticAT(dataset, params):
     print("ESTOY DENTRO DEL NODO !!!!")
     model = mord.LogisticAT(**params)  # los kwargs llegan directamente
-    print(dataset)
+    print(params)
     #model.fit(dataset["X"], dataset["y"])
     return model
