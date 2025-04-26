@@ -4,6 +4,7 @@ from kedro.config import OmegaConfigLoader
 
 from proyecto_ola.pipelines.preprocessing import pipeline as preprocessing_pipeline
 from proyecto_ola.pipelines.training import pipeline as training_pipeline
+from proyecto_ola.pipelines.training import pipeline as evaluation_pipeline
 
 from proyecto_ola.pipelines.training.MORD_LogisticAT import pipeline as MORD_LogisticAT_pipeline
 from proyecto_ola.pipelines.training.MORD_LogisticIT import pipeline as MORD_LogisticIT_pipeline
