@@ -19,30 +19,38 @@ from proyecto_ola.pipelines.training.ORCA_SVOREX.pipeline import create_pipeline
 
 def create_pipeline(**kwargs) -> Pipeline:
     print("Preparando los modelos")
+
     params       = kwargs.get("params", {})
     run_id       = params.get("run_id", "debug")
     model_params = params.get("model_parameters", {})
+
     subpipelines = []
 
     for model_name, combos in model_params.items():
-        for combo_id, config in combos.items():
-
-            dataset_name = config.get("dataset_name", "train_ordinal")
+        for combo_id, cfg in combos.items():
+            # Datos de entrada
+            dataset_name = cfg.get("dataset_name", "train_ordinal")
             param_ds     = f"params:model_parameters.{model_name}.{combo_id}.hyperparams"
-            output_ds    = f"models.{run_id}.{model_name}_{combo_id}"
 
-            param_key = f"{model_name}_{combo_id}"
-            tag = param_key  # ✅ Define la variable que usarás abajo
+            # Construir cadena de hiperparámetros
+            hyperparams = cfg.get("hyperparams", {})
+            hyper_str   = "_".join(f"{k}-{v}" for k, v in hyperparams.items()) if hyperparams else "default"
+
+            # Nombre final que usarán tanto el hook como el pipeline
+            full_key   = f"{model_name}_{combo_id}_{hyper_str}"
+            output_ds  = f"models.{run_id}.{full_key}"
+            tag        = full_key
 
             if model_name == "LogisticAT":
                 subpipelines.append(
                     create_MORD_LogisticAT_pipeline(
-                        param_key    = param_key,
+                        param_key    = tag,
                         param_ds     = param_ds,
                         output_ds    = output_ds,
                         dataset_name = dataset_name,
-                    ).tag(tag)  # ✅ Ya está definida, todo correcto
+                    ).tag(tag)
                 )
+
             # elif model_name == "LogisticIT":
             #     all_pipelines.append(create_MORD_LogisticIT_pipeline(params=config))
             # elif model_name == "LAD":

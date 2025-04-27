@@ -22,4 +22,5 @@ def MORD_LogisticAT(dataset, params):
     trained_model = mord.LogisticAT(**params)
     trained_model.fit(X, y_mapped)
     trained_model.label_mapping = label_mapping
+    
     return trained_model
