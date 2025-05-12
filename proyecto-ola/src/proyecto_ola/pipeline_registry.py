@@ -21,15 +21,19 @@ from proyecto_ola.pipelines.training.ORCA_SVOREX import pipeline as ORCA_SVOREX_
 from kedro.pipeline import pipeline as pipeline_factory
 
 def register_pipelines():
-
     config_loader = OmegaConfigLoader(conf_source="conf")
     params = config_loader.get("parameters")
-    
+
+    preprocessing = preprocessing_pipeline.create_pipeline()
+    training = training_pipeline.create_pipeline(params=params)
+    evaluation = evaluation_pipeline.create_pipeline(params=params)
+
     return {
-        "__default__": preprocessing_pipeline.create_pipeline(),
-        "preprocessing": preprocessing_pipeline.create_pipeline(),
-        "training": training_pipeline.create_pipeline(params=params),
-        "evaluation": evaluation_pipeline.create_pipeline(params=params),
+        "__default__": preprocessing + training + evaluation,
+        "preprocessing": preprocessing,
+        "training": training,
+        "evaluation": evaluation,
+    }
     
         #"training": training_pipeline.create_pipeline
         # Pipelines de metodos (subpipelines)
@@ -48,6 +52,3 @@ def register_pipelines():
         #"ORCA_NNPOM": ORCA_NNPOM_pipeline.create_pipeline(),
         #"ORCA_REDSVM": ORCA_REDSVM_pipeline.create_pipeline(),
         #"ORCA_SVOREX": ORCA_SVOREX_pipeline.create_pipeline()
-        
-
-    }

@@ -2,6 +2,7 @@ from kedro.pipeline import Pipeline, node
 from .nodes import clean_data_all, merge_data
 
 def create_pipeline(**kwargs) -> Pipeline:
+    
     return Pipeline(
         [
             node(
