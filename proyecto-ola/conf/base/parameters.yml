@@ -1,5 +1,19 @@
 run_id: "001" # Representa ejecucion global
 
+training_datasets:
+  - cleaned_46014_train_ordinal
+  - cleaned_46025_train_ordinal
+  - cleaned_46042_train_ordinal
+  - cleaned_46053_train_ordinal
+  - cleaned_46069_train_ordinal
+  
+test_datasets:
+  - cleaned_46014_test_ordinal
+  - cleaned_46025_test_ordinal
+  - cleaned_46042_test_ordinal
+  - cleaned_46053_test_ordinal
+  - cleaned_46069_test_ordinal
+
 cv_settings:
   n_splits: 5
   random_state: 42
@@ -9,5 +23,5 @@ model_parameters:
     grid_001: # Representa combinacion de parametros
       dataset_name: train_ordinal
       param_grid:
-        alpha: [0.1, 0.5]
-        max_iter: [500]
+        alpha: [0.5, 0.9]
+        max_iter: [500, 1000]

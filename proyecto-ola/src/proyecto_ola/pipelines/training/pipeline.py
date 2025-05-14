@@ -10,11 +10,11 @@ from proyecto_ola.pipelines.training.MORD_OrdinalRidge.pipeline import create_pi
 from proyecto_ola.pipelines.training.MORD_MulticlassLogistic.pipeline import create_pipeline as create_MORD_MulticlassLogistic_pipeline
 
 # ORCA
-from proyecto_ola.pipelines.training.ORCA_NNOP.pipeline import create_pipeline as create_ORCA_NNOP_pipeline
-from proyecto_ola.pipelines.training.ORCA_NNPOM.pipeline import create_pipeline as create_ORCA_NNPOM_pipeline
-from proyecto_ola.pipelines.training.ORCA_OrdinalDecomposition.pipeline import create_pipeline as create_OrdinalDecomposition_pipeline
-from proyecto_ola.pipelines.training.ORCA_REDSVM.pipeline import create_pipeline as create_ORCA_REDSVM_pipeline
-from proyecto_ola.pipelines.training.ORCA_SVOREX.pipeline import create_pipeline as create_ORCA_SVOREX_pipeline
+#from proyecto_ola.pipelines.training.ORCA_NNOP.pipeline import create_pipeline as create_ORCA_NNOP_pipeline
+#from proyecto_ola.pipelines.training.ORCA_NNPOM.pipeline import create_pipeline as create_ORCA_NNPOM_pipeline
+#from proyecto_ola.pipelines.training.ORCA_OrdinalDecomposition.pipeline import create_pipeline as create_OrdinalDecomposition_pipeline
+#from proyecto_ola.pipelines.training.ORCA_REDSVM.pipeline import create_pipeline as create_ORCA_REDSVM_pipeline
+#from proyecto_ola.pipelines.training.ORCA_SVOREX.pipeline import create_pipeline as create_ORCA_SVOREX_pipeline
 
 
 def create_pipeline(**kwargs) -> Pipeline:
@@ -25,6 +25,8 @@ def create_pipeline(**kwargs) -> Pipeline:
     run_id = params.get("run_id", "debug")
     # Obtiene los parametros del modelo, ya sea por parameters.yml o CLI
     model_params = params.get("model_parameters", {})
+    # Lista de datasets de entrenamiento definidos en parameters.yml
+    train_datasets = params.get("training_datasets", [])
 
     # Lista que acumula los pipelines que se vayan a querer ejecutar
     subpipelines = []
@@ -33,8 +35,6 @@ def create_pipeline(**kwargs) -> Pipeline:
     for model_name, combos in model_params.items():
         # For para recorrer las combinaciones de hiperparametros
         for combo_id, cfg in combos.items():
-            # Dataset de entrenamiento, por defecto es train_ordinal
-            dataset_name = cfg.get("dataset_name", "train_ordinal")
 
             # Detectar tipo de entrenamiento: manual o gridsearch
             # Miramos la variable cfg donde se ve reflejada esta "bandera"
@@ -46,7 +46,7 @@ def create_pipeline(**kwargs) -> Pipeline:
 
             # Lo mismo pero para el caso de hacer gridsearch
             elif "param_grid" in cfg and "hyperparams" not in cfg:
-                # Solo hacemos gridsearch si no hay parámetros manuales
+                # Solo hacemos gridsearch si no hay parametros manuales
                 param_ds = f"params:model_parameters.{model_name}.{combo_id}.param_grid"
                 hyper_str = "gridsearch"
             
@@ -56,29 +56,31 @@ def create_pipeline(**kwargs) -> Pipeline:
                 continue
 
             # Generar identificadores
-            # Obtener configuración de validación cruzada (con valores por defecto si no existen)
+            # Obtener configuracion de validacion cruzada (con valores por defecto si no existen)
             cv = cfg.get("cv_settings", {"n_splits": 5, "random_state": 42})
             cv_str = f"cv_{cv['n_splits']}_rs_{cv['random_state']}"
 
-            # Construir identificador completo con validación cruzada incluida
-            full_key = f"{model_name}_{combo_id}_{hyper_str}_{cv_str}"
-            output_ds = f"models.{run_id}.{full_key}"
-            tag = full_key
-            param_type_ds = f"params:model_parameters.{model_name}.{combo_id}.param_type"
-            cv_settings_ds = "params:cv_settings"
+            # For para recorrer cada dataset de entrenamiento
+            for train_ds in train_datasets:
+                dataset_id = train_ds.replace("cleaned_", "").replace("_train_ordinal", "")
+                full_key = f"{model_name}_{combo_id}_{dataset_id}_{hyper_str}_{cv_str}"
+                output_ds = f"models.{run_id}.{full_key}"
+                tag = full_key
+                param_type_ds = f"params:model_parameters.{model_name}.{combo_id}.param_type"
+                cv_settings_ds = "params:cv_settings"
 
-            # Construir subpipeline específico según modelo
-            if model_name == "LogisticAT":
-                subpipelines.append(
-                    create_MORD_LogisticAT_pipeline(
-                        param_key    = tag,
-                        param_ds     = param_ds,
-                        output_ds    = output_ds,
-                        dataset_name = dataset_name,
-                        param_type   = param_type_ds,
-                        cv_settings  = cv_settings_ds
-                    ).tag(tag)
-                )
+                # Construir subpipeline especifico segun modelo
+                if model_name == "LogisticAT":
+                    subpipelines.append(
+                        create_MORD_LogisticAT_pipeline(
+                            param_key    = tag,
+                            param_ds     = param_ds,
+                            output_ds    = output_ds,
+                            dataset_name = train_ds,
+                            param_type   = param_type_ds,
+                            cv_settings  = cv_settings_ds
+                        ).tag(tag)
+                    )
 
     return sum(subpipelines, Pipeline([]))
             # elif model_name == "LogisticIT":

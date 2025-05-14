@@ -6,7 +6,7 @@ import logging
 import mord
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 
-sys.path.append('/mnt/c/Users/francisco.perez/Desktop/TFG/proyecto-ola/orca-python')
+sys.path.append('/home/fran/TFG/proyecto-ola/orca-python')
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ def MORD_LogisticAT(dataset, params, param_type, cv_settings):
             estimator=mord.LogisticAT(),
             param_grid=params,
             cv=cv,
-            scoring="accuracy",
+            scoring="accuracy", # Usar el mae
             n_jobs=-1
         )
         search.fit(X, y_mapped)
@@ -40,7 +40,7 @@ def MORD_LogisticAT(dataset, params, param_type, cv_settings):
         logger.info(f"[Training] Mejor modelo obtenido:\n\t{best_model}")
         return best_model
 
-    else:
+    else: # SIN TESTEAR, AUN NO IMPLEMENTADO!!!
         logger.info("[Training] Entrenando LogisticAT con GridSearch...")
         model = mord.LogisticAT(**params)
         model.fit(X, y_mapped)

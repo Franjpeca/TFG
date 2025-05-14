@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import numpy as np
 import sys
-sys.path.append('/mnt/c/Users/francisco.perez/Desktop/TFG/proyecto-ola/orca-python')
+sys.path.append('/home/fran/TFG/proyecto-ola/orca-python')
 import mord
 
 def MORD_OrdinalRidge(dataset, params):

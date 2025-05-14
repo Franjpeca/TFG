@@ -3,12 +3,12 @@ import os
 import pandas as pd
 import numpy as np
 import sys
-sys.path.append('/mnt/c/Users/francisco.perez/Desktop/TFG/proyecto-ola/orca-python')
+sys.path.append('/home/fran/TFG/proyecto-ola/orca-python')
 import mord
 
 def MORD_LAD(dataset, params):
 
-    # Crear el modelo vacío (sin entrenar) utilizando los parámetros
+    # Crear el modelo vacio (sin entrenar) utilizando los parametros
     model = mord.LAD(
         alpha=params["alpha"], 
         max_iter=params["max_iter"]
@@ -16,8 +16,8 @@ def MORD_LAD(dataset, params):
 
     print(dataset)
 
-    # Aquí dejamos comentado el .fit(), ya que no queremos entrenar el modelo aún
+    # Aqui dejamos comentado el .fit(), ya que no queremos entrenar el modelo aun
     # model.fit(train, test)  # Comentado por ahora, no entrenamos el modelo
 
-    # Devolvemos el modelo vacío (sin entrenar)
+    # Devolvemos el modelo vacio (sin entrenar)
     return model

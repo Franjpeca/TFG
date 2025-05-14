@@ -12,11 +12,11 @@ from proyecto_ola.pipelines.training.MORD_LAD import pipeline as MORD_LAD_pipeli
 from proyecto_ola.pipelines.training.MORD_OrdinalRidge import pipeline as MORD_OrdinalRidge_pipeline
 from proyecto_ola.pipelines.training.MORD_MulticlassLogistic import pipeline as MORD_MulticlassLogistic_pipeline
 
-from proyecto_ola.pipelines.training.ORCA_OrdinalDecomposition import pipeline as ORCA_OrdinalDecomposition_pipeline
-from proyecto_ola.pipelines.training.ORCA_NNOP import pipeline as ORCA_NNOP_pipeline
-from proyecto_ola.pipelines.training.ORCA_NNPOM import pipeline as ORCA_NNPOM_pipeline
-from proyecto_ola.pipelines.training.ORCA_REDSVM import pipeline as ORCA_REDSVM_pipeline
-from proyecto_ola.pipelines.training.ORCA_SVOREX import pipeline as ORCA_SVOREX_pipeline
+#from proyecto_ola.pipelines.training.ORCA_OrdinalDecomposition import pipeline as ORCA_OrdinalDecomposition_pipeline
+#from proyecto_ola.pipelines.training.ORCA_NNOP import pipeline as ORCA_NNOP_pipeline
+#from proyecto_ola.pipelines.training.ORCA_NNPOM import pipeline as ORCA_NNPOM_pipeline
+#from proyecto_ola.pipelines.training.ORCA_REDSVM import pipeline as ORCA_REDSVM_pipeline
+#from proyecto_ola.pipelines.training.ORCA_SVOREX import pipeline as ORCA_SVOREX_pipeline
 
 from kedro.pipeline import pipeline as pipeline_factory
 

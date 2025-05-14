@@ -1,9 +1,9 @@
 from kedro.config import OmegaConfigLoader
-from proyecto_ola.hooks import SparkHooks, DynamicModelCatalogHook
+from proyecto_ola.hooks import DynamicModelCatalogHook#, SparkHooks 
 
 LOGGING_CONFIG = "conf/base/logging.yml"
 
-# Configuración del loader (ya la tenías correcta)
+# Configuración del loader
 CONFIG_LOADER_CLASS = OmegaConfigLoader
 CONFIG_LOADER_ARGS = {
     "base_env": "base",
@@ -13,8 +13,8 @@ CONFIG_LOADER_ARGS = {
     },
 }
 
-# Aquí registramos **ambos** hooks, SIN duplicados
+# Registro de hooks
 HOOKS = (
-    SparkHooks(),
+    #SparkHooks(),
     DynamicModelCatalogHook(),
 )
