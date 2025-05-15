@@ -68,6 +68,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                 tag = full_key
                 param_type_ds = f"params:model_parameters.{model_name}.{combo_id}.param_type"
                 cv_settings_ds = "params:cv_settings"
+                dataset_id_ds = f"params:{tag}_train_dataset_id"
 
                 # Construir subpipeline especifico segun modelo
                 if model_name == "LogisticAT":
@@ -78,7 +79,8 @@ def create_pipeline(**kwargs) -> Pipeline:
                             output_ds    = output_ds,
                             dataset_name = train_ds,
                             param_type   = param_type_ds,
-                            cv_settings  = cv_settings_ds
+                            cv_settings  = cv_settings_ds,
+                            dataset_id  = dataset_id_ds
                         ).tag(tag)
                     )
 

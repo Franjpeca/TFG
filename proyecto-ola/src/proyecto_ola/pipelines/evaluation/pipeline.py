@@ -3,19 +3,18 @@ from kedro.pipeline import Pipeline
 from proyecto_ola.pipelines.evaluation.MORD_LogisticAT.pipeline import create_pipeline as create_MORD_LogisticAT_pipeline
 
 def create_pipeline(**kwargs) -> Pipeline:
-    from pathlib import Path
-    from proyecto_ola.pipelines.evaluation.MORD_LogisticAT.pipeline import create_pipeline as create_MORD_LogisticAT_pipeline
-    from kedro.pipeline import Pipeline
-
-    # Variables "de entrada"
     params         = kwargs.get("params", {})
     run_id         = params.get("run_id", "debug")
     evaluate_only  = params.get("evaluate_only", None)
     test_datasets  = params.get("test_datasets", [])
-    models_dir     = Path(f"data/06_models/{run_id}")
+    catalog        = kwargs.get("catalog", None)
 
-    model_files = sorted(models_dir.glob("*.pkl"))
-    model_keys  = [f.stem for f in model_files]
+    models_dir     = Path(f"data/06_models/{run_id}")
+    model_files    = sorted(models_dir.glob("*.pkl"))
+    model_keys     = [f.stem for f in model_files]
+
+    if not model_keys:
+        logger.warning("No se encontraron modelos en: %s", models_dir)
 
     if evaluate_only:
         if isinstance(evaluate_only, str):
@@ -25,22 +24,34 @@ def create_pipeline(**kwargs) -> Pipeline:
     subpipelines = []
 
     for key in model_keys:
-        parts = key.split("_")
+        try:
+            # Separar desde el final para encontrar los últimos 4 elementos
+            prefix, cv_tag, cv_n, rs_tag, rs_n = key.rsplit("_", 4)
+            # Ahora separo el resto: model_name, combo_id, combo_num, dataset_id, hyperparam_str...
+            parts = prefix.split("_", 4)
 
-        if len(parts) < 6:
-            print(f"Formato inválido en el nombre del modelo: {key}. Se omite.")
+            if len(parts) < 4:
+                logger.warning("Nombre inválido: %s. Esperado al menos 4 elementos antes de _cv_...", key)
+                continue
+
+            model_name  = parts[0]
+            combo_id    = parts[1]
+            combo_num   = parts[2]
+            dataset_id  = parts[3]
+
+        except ValueError:
+            logger.warning("No se pudo parsear el nombre del modelo: %s", key)
             continue
-
-        model_name  = parts[0]
-        combo_id    = parts[1]
-        dataset_id  = parts[2]
-        # El resto no es necesario extraerlo
 
         test_ds_name = f"cleaned_{dataset_id}_test_ordinal"
         if test_datasets and test_ds_name not in test_datasets:
             continue
 
-        model_ds = f"models.{run_id}.{key}"
+        if catalog and test_ds_name not in catalog.list():
+            logger.warning("Dataset %s no está en el catálogo. Se omite.", test_ds_name)
+            continue
+
+        model_ds  = f"models.{run_id}.{key}"
         output_ds = f"evaluation.{run_id}.{key}_output"
         tag = key
 
@@ -52,11 +63,12 @@ def create_pipeline(**kwargs) -> Pipeline:
                     model_ds     = model_ds,
                     dataset_name = test_ds_name,
                     output_ds    = output_ds,
+                    dataset_id   = dataset_id
                 ).tag(tag)
             )
 
     if not subpipelines:
-        print("No se procesaron subpipelines de evaluación debido a la falta de modelos válidos.")
+        logger.info("No se procesaron subpipelines de evaluación por falta de modelos válidos.")
         return Pipeline([])
 
     return sum(subpipelines, Pipeline([]))

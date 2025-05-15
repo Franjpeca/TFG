@@ -28,8 +28,9 @@ def amae(y_true, y_pred):
 
     return np.mean(per_class_errors)
 
-def MORD_LogisticAT(model, dataset, model_id, model_type):
-    logger.info(f"[Evaluating] Evaluando modelo\n\t{model_id}")
+def MORD_LogisticAT(model, dataset, model_id, model_type, dataset_id):
+    logger.info(f"\n[Evaluating] Evaluando modelo:\n\t{model_id}")
+    logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
 
     X = dataset.iloc[:, :-1]
     y = dataset.iloc[:, -1]

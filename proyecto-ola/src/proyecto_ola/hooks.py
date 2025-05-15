@@ -82,3 +82,11 @@ class DynamicModelCatalogHook:
 
                     if model_name not in catalog.list():
                         catalog.add(model_name, MemoryDataset(data=model_name, copy_mode="assign"))
+
+                    train_dataset_id_param = f"params:{full_key}_train_dataset_id"
+                    if train_dataset_id_param not in catalog.list():
+                        catalog.add(train_dataset_id_param, MemoryDataset(data=dataset_id))
+
+                    dataset_id_param = f"params:{full_key}_dataset_id"
+                    if dataset_id_param not in catalog.list():
+                        catalog.add(dataset_id_param, MemoryDataset(data=dataset_id))

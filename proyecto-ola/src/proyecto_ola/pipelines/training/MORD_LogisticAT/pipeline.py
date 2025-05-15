@@ -7,16 +7,18 @@ def create_pipeline(param_key: str,
                     output_ds: str,
                     dataset_name: str,
                     param_type: str,
-                    cv_settings: str) -> Pipeline:
+                    cv_settings: str,
+                    dataset_id: str) -> Pipeline:
     return Pipeline([
         node(
             func=MORD_LogisticAT,
-            inputs={
-                "dataset": dataset_name,
-                "params": param_ds,
-                "param_type": param_type,
-                "cv_settings": cv_settings
-            },
+            inputs=[
+                dataset_name,
+                param_ds,
+                param_type,
+                cv_settings,
+                f"params:{param_key}_dataset_id"
+            ],
             outputs=output_ds,
             name=f"MORD_LogisticAT_node_{param_key}",
             tags=[param_key]
