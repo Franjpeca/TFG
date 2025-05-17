@@ -37,7 +37,8 @@ def create_pipeline(**kwargs) -> Pipeline:
                 continue  # combinación mal definida
 
             # Configuración de CV
-            cv      = cfg.get("cv_settings", {"n_splits": 5, "random_state": 42})
+            cv = cfg.get("cv_settings", params.get("cv_settings", {"n_splits": 5, "random_state": 42}))
+
             cv_str  = f"cv_{cv['n_splits']}_rs_{cv['random_state']}"
 
             # Recorremos los datasets de training

@@ -95,7 +95,7 @@ class DynamicModelCatalogHook:
                     for stage in ["overview", "distributions", "correlations"]:
                         output_viz_key = f"visualization.{run_id}.{full_key}_{stage}"
 
-                        output_viz_path = os.path.join("data", "08_reporting", dataset_id, stage, f"{full_key}.png")
+                        output_viz_path = os.path.join("data", "08_reporting", run_id, dataset_id, stage, f"{full_key}.png")
 
                         if output_viz_key not in catalog.list():
                             catalog.add(

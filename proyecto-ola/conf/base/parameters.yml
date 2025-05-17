@@ -16,7 +16,7 @@ test_datasets:
 
 cv_settings:
   n_splits: 5
-  random_state: 42
+  random_state: 32
 
 model_parameters:
   LogisticAT:
