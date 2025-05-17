@@ -4,6 +4,7 @@ from kedro.config import OmegaConfigLoader
 from kedro.io import DataCatalog, MemoryDataset
 from kedro_datasets.pickle import PickleDataset
 from kedro_datasets.json import JSONDataset
+from kedro_datasets.matplotlib import MatplotlibWriter
 
 class DynamicModelCatalogHook:
     @hook_impl
@@ -51,8 +52,8 @@ class DynamicModelCatalogHook:
                     dataset_id = train_ds.replace("cleaned_", "").replace("_train_ordinal", "")
                     full_key   = f"{model_name}_{combo_id}_{dataset_id}_{hyper_str}_{cv_str}"
 
-                    model_ds_key = f"models.{run_id}.{full_key}"
-                    model_path   = os.path.join(models_dir, f"{full_key}.pkl")
+                    model_ds_key = f"training.{run_id}.Model_{full_key}"
+                    model_path = os.path.join(models_dir, f"Model_{full_key}.pkl")
 
                     if model_ds_key not in catalog.list():
                         catalog.add(
@@ -66,7 +67,7 @@ class DynamicModelCatalogHook:
                             PickleDataset(filepath=model_path, save_args={"protocol": 4})
                         )
 
-                    output_name   = f"{full_key}_output"
+                    output_name   = f"Metrics_{full_key}"
                     output_ds_key = f"evaluation.{run_id}.{output_name}"
                     output_path   = os.path.join(output_dir, f"{output_name}.json")
 
@@ -90,3 +91,14 @@ class DynamicModelCatalogHook:
                     dataset_id_param = f"params:{full_key}_dataset_id"
                     if dataset_id_param not in catalog.list():
                         catalog.add(dataset_id_param, MemoryDataset(data=dataset_id))
+
+                    for stage in ["overview", "distributions", "correlations"]:
+                        output_viz_key = f"visualization.{run_id}.{full_key}_{stage}"
+
+                        output_viz_path = os.path.join("data", "08_reporting", dataset_id, stage, f"{full_key}.png")
+
+                        if output_viz_key not in catalog.list():
+                            catalog.add(
+                                output_viz_key,
+                                MatplotlibWriter(filepath=output_viz_path)
+                            )

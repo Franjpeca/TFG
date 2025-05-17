@@ -28,7 +28,7 @@ def amae(y_true, y_pred):
 
     return np.mean(per_class_errors)
 
-def MORD_LogisticAT(model, dataset, model_id, model_type, dataset_id):
+def Evaluate_MORD_LogisticAT(model, dataset, model_id, model_type, dataset_id):
     logger.info(f"\n[Evaluating] Evaluando modelo:\n\t{model_id}")
     logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
 
@@ -56,10 +56,11 @@ def MORD_LogisticAT(model, dataset, model_id, model_type, dataset_id):
 
     results = {
         "model_id": f"{model_type}(" + ", ".join(f"{k}={v}" for k, v in model.get_params().items()) + ")",
+        "dataset_id": dataset_id,
         "nominal_metrics": nominal_metrics,
         "ordinal_metrics": ordinal_metrics,
     }
 
-    logger.info(f"[Evaluating] Resultados nominales:\n\t{nominal_metrics}")
-    logger.info(f"[Evaluating] Resultados ordinales:\n\t{ordinal_metrics}")
+    logger.info(f"[Evaluating] Metricas de evaluacion nominales :\n\t{nominal_metrics}")
+    logger.info(f"[Evaluating] Metricas de evaluacion ordinales :\n\t{ordinal_metrics}")
     return results

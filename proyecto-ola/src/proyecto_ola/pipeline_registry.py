@@ -5,6 +5,7 @@ from kedro.config import OmegaConfigLoader
 from proyecto_ola.pipelines.preprocessing import pipeline as preprocessing_pipeline
 from proyecto_ola.pipelines.training import pipeline as training_pipeline
 from proyecto_ola.pipelines.evaluation import pipeline as evaluation_pipeline
+from proyecto_ola.pipelines.visualization import pipeline as visualization_pipeline
 
 from proyecto_ola.pipelines.training.MORD_LogisticAT import pipeline as MORD_LogisticAT_pipeline
 from proyecto_ola.pipelines.training.MORD_LogisticIT import pipeline as MORD_LogisticIT_pipeline
@@ -27,12 +28,14 @@ def register_pipelines():
     preprocessing = preprocessing_pipeline.create_pipeline()
     training = training_pipeline.create_pipeline(params=params)
     evaluation = evaluation_pipeline.create_pipeline(params=params)
+    visualization = visualization_pipeline.create_pipeline(params=params)
 
     return {
-        "__default__": preprocessing + training + evaluation,
+        "__default__": preprocessing + training + evaluation + visualization,
         "preprocessing": preprocessing,
         "training": training,
         "evaluation": evaluation,
+        "visualization": visualization,
     }
     
         #"training": training_pipeline.create_pipeline

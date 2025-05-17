@@ -10,7 +10,7 @@ sys.path.append('/home/fran/TFG/proyecto-ola/orca-python')
 
 logger = logging.getLogger(__name__)
 
-def MORD_LogisticAT(dataset, params, param_type, cv_settings, dataset_id):
+def Train_MORD_LogisticAT(dataset, params, param_type, cv_settings, dataset_id):
     X = dataset.iloc[:, :-1]
     y_raw = dataset.iloc[:, -1]
 

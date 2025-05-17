@@ -37,51 +37,50 @@ def create_pipeline(**kwargs) -> Pipeline:
         for combo_id, cfg in combos.items():
 
             # Detectar tipo de entrenamiento: manual o gridsearch
-            # Miramos la variable cfg donde se ve reflejada esta "bandera"
             if "hyperparams" in cfg:
-                # Si estamos en modo manual, establecemos todo como tal
                 param_ds = f"params:model_parameters.{model_name}.{combo_id}.hyperparams"
                 hyperparams = cfg["hyperparams"]
                 hyper_str = "_".join(f"{k}-{v}" for k, v in hyperparams.items()) if hyperparams else "default"
 
-            # Lo mismo pero para el caso de hacer gridsearch
             elif "param_grid" in cfg and "hyperparams" not in cfg:
-                # Solo hacemos gridsearch si no hay parametros manuales
                 param_ds = f"params:model_parameters.{model_name}.{combo_id}.param_grid"
                 hyper_str = "gridsearch"
-            
-            # Manejo de errores
+
             else:
                 print(f"{model_name}/{combo_id} no tiene ni hyperparams ni param_grid definidos. Se omite.")
                 continue
 
-            # Generar identificadores
-            # Obtener configuracion de validacion cruzada (con valores por defecto si no existen)
+            # Configuracion de CV
             cv = cfg.get("cv_settings", {"n_splits": 5, "random_state": 42})
             cv_str = f"cv_{cv['n_splits']}_rs_{cv['random_state']}"
 
-            # For para recorrer cada dataset de entrenamiento
+            # Recorremos datasets
             for train_ds in train_datasets:
                 dataset_id = train_ds.replace("cleaned_", "").replace("_train_ordinal", "")
                 full_key = f"{model_name}_{combo_id}_{dataset_id}_{hyper_str}_{cv_str}"
-                output_ds = f"models.{run_id}.{full_key}"
+                output_ds = f"training.{run_id}.Model_{full_key}"
                 tag = full_key
                 param_type_ds = f"params:model_parameters.{model_name}.{combo_id}.param_type"
                 cv_settings_ds = "params:cv_settings"
                 dataset_id_ds = f"params:{tag}_train_dataset_id"
 
-                # Construir subpipeline especifico segun modelo
                 if model_name == "LogisticAT":
                     subpipelines.append(
                         create_MORD_LogisticAT_pipeline(
                             param_key    = tag,
+                            model_type   = model_name,
                             param_ds     = param_ds,
                             output_ds    = output_ds,
                             dataset_name = train_ds,
                             param_type   = param_type_ds,
                             cv_settings  = cv_settings_ds,
-                            dataset_id  = dataset_id_ds
-                        ).tag(tag)
+                            dataset_id   = dataset_id
+                        ).tag([
+                            tag,
+                            f"dataset_{dataset_id}",
+                            f"model_{model_name}",
+                            "pipeline_training",
+                        ])
                     )
 
     return sum(subpipelines, Pipeline([]))

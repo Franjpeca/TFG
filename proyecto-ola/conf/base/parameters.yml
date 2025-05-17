@@ -21,7 +21,6 @@ cv_settings:
 model_parameters:
   LogisticAT:
     grid_001: # Representa combinacion de parametros
-      dataset_name: train_ordinal
       param_grid:
         alpha: [0.5, 0.9]
         max_iter: [500, 1000]
