@@ -1,23 +1,53 @@
 import sys
-import os
+import logging
 import pandas as pd
 import numpy as np
-import sys
-sys.path.append('/home/fran/TFG/proyecto-ola/orca-python')
-import orca_python
-from orca_python.classifiers import OrdinalDecomposition
+import torch
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
+from sklearn.preprocessing import StandardScaler
 
-def ORCA_SVOREX(dataset, params):
-    
-    # Crear el modelo vacío con los parámetros
-    model = orca_python.classifiers.SVOREX(
-        C=params["C"], 
-        epsilon=params["epsilon"], 
-        max_iter=params["max_iter"]
+# ORCA
+sys.path.append("/home/fran/TFG/proyecto-ola/orca-python")
+from orca_python.classifiers import SVOREX
+
+logger = logging.getLogger(__name__)
+
+def Train_ORCA_SVOREX(dataset, params, param_type, cv_settings, dataset_id):
+    X = dataset.iloc[:, :-1].values.astype(np.float32)
+    y_raw = dataset.iloc[:, -1]
+
+    # mapeo de etiquetas de 1 a 5 (SVOREX lo requiere)
+    label_mapping = {"A": 1, "B": 2, "C": 3, "D": 4, "E": 5}
+    y = pd.Series(y_raw).map(label_mapping).astype(int).values
+
+    logger.info(f"\n[Training] Entrenando ORCA-SVOREX con GridSearch (MAE) sobre el dataset: {dataset_id} ...")
+
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    torch.manual_seed(cv_settings["random_state"])
+    np.random.seed(cv_settings["random_state"])
+
+    cv = StratifiedKFold(
+        n_splits=cv_settings["n_splits"],
+        shuffle=True,
+        random_state=cv_settings["random_state"]
     )
 
-    # Comentamos el .fit() por ahora, ya que no entrenamos el modelo
-    # model.fit(train, test)  # Comentado por ahora, no entrenamos el modelo
+    search = GridSearchCV(
+        estimator=SVOREX(),
+        param_grid=params,                     # debe venir de params:model_parameters.SVOREX.<combo>.param_grid
+        cv=cv,
+        scoring="neg_mean_absolute_error",
+        n_jobs=-1
+    )
+    search.fit(X_scaled, y)
 
-    # Devolvemos el modelo vacío (sin entrenar)
-    return model
+    best_model = search.best_estimator_
+    best_model.label_mapping = label_mapping   # para usar en predict
+    best_model.scaler = scaler
+
+    logger.info(f"[Training] Mejor MAE obtenido: {-search.best_score_:.5f}")
+    logger.info(f"[Training] Mejor modelo obtenido:\n\t{best_model}")
+
+    return best_model

@@ -1,29 +1,42 @@
 from kedro.pipeline import Pipeline, node
-from .nodes import MORD_LAD
+from kedro.io import DataCatalog, MemoryDataset
+from .nodes import Train_MORD_LAD
+from functools import partial, update_wrapper
 
-def create_pipeline(**kwargs) -> Pipeline:
-# Recuperamos los parámetros de kwargs
-    params = kwargs.get("parameters", {})  # Obtenemos los parámetros pasados desde el orquestador
-    run_id = params.get("run_id", "default")
+def create_pipeline(param_key: str,
+                    model_type: str,
+                    param_ds: str,
+                    output_ds: str,
+                    dataset_name: str,
+                    param_type: str,
+                    cv_settings: str,
+                    dataset_id: str
+                ) -> Pipeline:
 
-    # Aseguramos que el parámetro 'dataset_name' esté disponible
-    dataset_name = params.get("dataset_name", "default_dataset_name")
-
-    # Establecemos los valores de los parámetros para el modelo 'LAD'
-    alpha = params.get("alpha", 1.0)  # Valor por defecto para alpha
-    max_iter = params.get("max_iter", 1000)  # Valor por defecto para max_iter
-
-    # Crear el nombre dinámico basado en los parámetros
-    dataset_name = f"LAD_alpha_{alpha}_max_iter_{max_iter}_run_{run_id}".replace(".", "")
-
-    # Ahora construimos el pipeline con el nodo correspondiente
-    return Pipeline(
-        [
-            node(
-                func=MORD_LAD,  # Función LAD que devolverá el modelo vacío
-                inputs=["train_ordinal", "parameters"],  # Pasamos los datos y los parámetros al nodo
-                outputs=[dataset_name],  # Usar el parámetro dinámico para la salida
-                name=f"MORD_LAD_node_{alpha}_{max_iter}_{run_id}"  # Nombre único para el nodo
-            )
-        ]
+    wrapped = partial(
+        Train_MORD_LAD,
+        dataset_id=dataset_id
     )
+
+    wrapped = update_wrapper(wrapped, Train_MORD_LAD)
+
+    return Pipeline([
+        node(
+            func=wrapped,
+            inputs=[
+                dataset_name,
+                param_ds,
+                param_type,
+                cv_settings
+            ],
+            outputs=output_ds,
+            name=f"TRAINING_Node_{param_key}",
+            tags=[
+                param_key,
+                f"dataset_{dataset_id}",
+                f"model_{model_type}",
+                "pipeline_training",
+                "node_train_model"
+            ]
+        )
+    ])

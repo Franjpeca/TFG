@@ -1,29 +1,42 @@
 from kedro.pipeline import Pipeline, node
-from .nodes import MORD_MulticlassLogistic
+from functools import partial, update_wrapper
+from .nodes import Train_MORD_MulticlassLogistic
 
-def create_pipeline(**kwargs) -> Pipeline:
-    # Recuperamos los parámetros de kwargs
-    params = kwargs.get("parameters", {})  # Obtenemos los parámetros pasados desde el orquestador
+def create_pipeline(param_key: str,
+                    model_type: str,
+                    param_ds: str,
+                    output_ds: str,
+                    dataset_name: str,
+                    param_type: str,
+                    cv_settings: str,
+                    dataset_id: str
+                    ) -> Pipeline:
 
-    # Aseguramos que el parámetro 'dataset_name' está disponible
-    dataset_name = params.get("dataset_name", "default_dataset_name")
-
-    # Crear el nombre dinámico basado en los parámetros
-    run_id = params.get("run_id", "default")
-    alpha = params.get("alpha", 0.1)
-    max_iter = params.get("max_iter", 1000)
-    tol = params.get("tol", 1e-4)
-    
-    # Nombre dinámico para el dataset
-    dataset_name = f"MORD_MulticlassLogistic_alpha_{alpha}_max_iter_{max_iter}_tol_{tol}_run_{run_id}".replace(".", "")
-
-    return Pipeline(
-        [
-            node(
-                func=MORD_MulticlassLogistic,  # La función MORD_MulticlassLogistic que devolverá el modelo vacío
-                inputs=["train_ordinal", "parameters"],  # Pasamos los datos de entrenamiento y los parámetros al nodo
-                outputs=dataset_name,  # Usamos el parámetro dinámico para la salida
-                name=f"MORD_MulticlassLogistic_node_{run_id}_alpha_{alpha}_max_iter_{max_iter}_tol_{tol}_run_{run_id}"
-            )
-        ]
+    # Envolvemos la función con parámetros que no son inputs reales
+    wrapped = partial(
+        Train_MORD_MulticlassLogistic,
+        dataset_id=dataset_id
     )
+
+    wrapped = update_wrapper(wrapped, Train_MORD_MulticlassLogistic)
+
+    return Pipeline([
+        node(
+            func=wrapped,
+            inputs=[
+                dataset_name,
+                param_ds,
+                param_type,
+                cv_settings
+            ],
+            outputs=output_ds,
+            name=f"TRAINING_Node_{param_key}",
+            tags=[
+                param_key,
+                f"dataset_{dataset_id}",
+                f"model_{model_type}",
+                "pipeline_training",
+                "node_train_model"
+            ]
+        )
+    ])

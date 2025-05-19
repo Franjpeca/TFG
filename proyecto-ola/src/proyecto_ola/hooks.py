@@ -23,9 +23,10 @@ class DynamicModelCatalogHook:
                     d = d.setdefault(part, {})
                 d[key.split(".")[-1]] = value
 
-        run_id         = params.get("run_id", "default")
-        model_params   = params.get("model_parameters", {})
+        run_id = params.get("run_id", "default")
+        model_params = params.get("model_parameters", {})
         train_datasets = params.get("training_datasets", [])
+        default_cv = params.get("cv_settings", {"n_splits": 5, "random_state": 42})
 
         models_dir = os.path.join("data", "06_models", run_id)
         output_dir = os.path.join("data", "07_model_output", run_id)
@@ -34,23 +35,18 @@ class DynamicModelCatalogHook:
 
         for model_name, combos in model_params.items():
             for combo_id, cfg in combos.items():
-
-                if "param_grid" in cfg:
-                    tipo      = "param_grid"
-                    hyper_str = "gridsearch"
-                elif "hyperparams" in cfg:
-                    tipo      = "hyperparams"
-                    hp        = cfg.get("hyperparams", {}) or {}
-                    hyper_str = "_".join(f"{k}-{v}" for k, v in sorted(hp.items())) if hp else "default"
-                else:
+                if "param_grid" not in cfg:
                     continue
 
-                cv     = cfg.get("cv_settings", params.get("cv_settings", {"n_splits": 5, "random_state": 42}))
+                tipo = "param_grid"
+                hyper_str = "gridsearch"
+
+                cv = cfg.get("cv_settings", default_cv)
                 cv_str = f"cv_{cv['n_splits']}_rs_{cv['random_state']}"
 
                 for train_ds in train_datasets:
                     dataset_id = train_ds.replace("cleaned_", "").replace("_train_ordinal", "")
-                    full_key   = f"{model_name}_{combo_id}_{dataset_id}_{hyper_str}_{cv_str}"
+                    full_key = f"{model_name}_{combo_id}_{dataset_id}_{hyper_str}_{cv_str}"
 
                     model_ds_key = f"training.{run_id}.Model_{full_key}"
                     model_path = os.path.join(models_dir, f"Model_{full_key}.pkl")
@@ -67,9 +63,9 @@ class DynamicModelCatalogHook:
                             PickleDataset(filepath=model_path, save_args={"protocol": 4})
                         )
 
-                    output_name   = f"Metrics_{full_key}"
+                    output_name = f"Metrics_{full_key}"
                     output_ds_key = f"evaluation.{run_id}.{output_name}"
-                    output_path   = os.path.join(output_dir, f"{output_name}.json")
+                    output_path = os.path.join(output_dir, f"{output_name}.json")
 
                     if output_ds_key not in catalog.list():
                         catalog.add(
@@ -94,7 +90,6 @@ class DynamicModelCatalogHook:
 
                     for stage in ["overview", "distributions", "correlations"]:
                         output_viz_key = f"visualization.{run_id}.{full_key}_{stage}"
-
                         output_viz_path = os.path.join("data", "08_reporting", run_id, dataset_id, stage, f"{full_key}.png")
 
                         if output_viz_key not in catalog.list():

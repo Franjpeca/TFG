@@ -1,23 +1,48 @@
-import sys
-import os
-import pandas as pd
+import logging
 import numpy as np
-import sys
-sys.path.append('/home/fran/TFG/proyecto-ola/orca-python')
-import orca_python
-from orca_python.classifiers import OrdinalDecomposition
+import pandas as pd
+import torch
 
-def ORCA_REDSVM(dataset, params):
-    
-    # Crear el modelo vacío con los parámetros
-    model = orca_python.classifiers.REDSVM(
-        C=params["C"], 
-        epsilon=params["epsilon"], 
-        max_iter=params["max_iter"]
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
+from orca_python.classifiers import REDSVM
+
+logger = logging.getLogger(__name__)
+
+def Train_ORCA_REDSVM(dataset, params, param_type, cv_settings, dataset_id):
+    X = dataset.iloc[:, :-1].values.astype(np.float32)
+    y_raw = dataset.iloc[:, -1]
+    label_mapping = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}
+    y = pd.Series(y_raw).map(label_mapping).astype(int).values
+
+    logger.info(f"\n[Training] Entrenando ORCA-REDSVM con GridSearch (MAE) con el dataset: {dataset_id} ...")
+
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    torch.manual_seed(cv_settings["random_state"])
+    np.random.seed(cv_settings["random_state"])
+
+    cv = StratifiedKFold(
+        n_splits=cv_settings["n_splits"],
+        shuffle=True,
+        random_state=cv_settings["random_state"]
     )
 
-    # Comentamos el .fit() por ahora, ya que no entrenamos el modelo
-    # model.fit(train, test)  # Comentado por ahora, no entrenamos el modelo
+    search = GridSearchCV(
+        estimator=REDSVM(),
+        param_grid=params,          # <-- esto se carga de tu parameters.yml
+        cv=cv,
+        scoring="neg_mean_absolute_error",
+        n_jobs=-1
+    )
+    search.fit(X_scaled, y)
 
-    # Devolvemos el modelo vacío (sin entrenar)
-    return model
+    best_model = search.best_estimator_
+    best_model.label_mapping = label_mapping
+    best_model.scaler = scaler
+
+    logger.info(f"[Training] Mejor MAE obtenido: {-search.best_score_:.5f}")
+    logger.info(f"[Training] Mejor modelo obtenido:\n\t{best_model}")
+
+    return best_model

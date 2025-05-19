@@ -1,29 +1,40 @@
 from kedro.pipeline import Pipeline, node
-from .nodes import ORCA_REDSVM
+from kedro.io import DataCatalog, MemoryDataset
+from .nodes import Train_ORCA_REDSVM
+from functools import partial, update_wrapper
 
-def create_pipeline(**kwargs) -> Pipeline:
-    # Recuperamos los parámetros de kwargs
-    params = kwargs.get("parameters", {})  # Obtenemos los parámetros pasados desde el orquestador
+def create_pipeline(param_key: str,
+                    model_type: str,
+                    param_ds: str,
+                    output_ds: str,
+                    dataset_name: str,
+                    param_type: str,
+                    cv_settings: str,
+                    dataset_id: str) -> Pipeline:
 
-    # Aseguramos que el parámetro 'dataset_name' está disponible
-    dataset_name = params.get("dataset_name", "default_dataset_name")
-
-    # Crear el nombre dinámico basado en los parámetros
-    run_id = params.get("run_id", "default")
-    C = params.get("C", 1.0)
-    epsilon = params.get("epsilon", 0.1)
-    max_iter = params.get("max_iter", 1000)
-    
-    # Nombre dinámico para el dataset
-    dataset_name = f"ORCA_REDSVM_C_{C}_epsilon_{epsilon}_max_iter_{max_iter}_run_{run_id}".replace(".", "")
-
-    return Pipeline(
-        [
-            node(
-                func=ORCA_REDSVM,  # La función ORCA_REDSVM que devolverá el modelo vacío
-                inputs=["train_ordinal", "parameters"],  # Pasamos los datos de entrenamiento y los parámetros al nodo
-                outputs=dataset_name,  # Usamos el parámetro dinámico para la salida
-                name=f"ORCA_REDSVM_node_C_{C}_epsilon_{epsilon}_max_iter_{max_iter}_run_{run_id}"
-            )
-        ]
+    wrapped = partial(
+        Train_ORCA_REDSVM,
+        dataset_id=dataset_id
     )
+    wrapped = update_wrapper(wrapped, Train_ORCA_REDSVM)
+
+    return Pipeline([
+        node(
+            func=wrapped,
+            inputs=[
+                dataset_name,
+                param_ds,
+                param_type,
+                cv_settings
+            ],
+            outputs=output_ds,
+            name=f"TRAINING_Node_{param_key}",
+            tags=[
+                param_key,
+                f"dataset_{dataset_id}",
+                f"model_{model_type}",
+                "pipeline_training",
+                "node_train_model"
+            ]
+        )
+    ])

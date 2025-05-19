@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 
 def clean_data_all(*datasets):
     cleaned_list = []
-    logger.info("[Preprocessing] Limpiando los datasets...")
+    logger.info("[Preprocessing] Limpiando los datasets ...")
 
     for dataset in datasets:
         cleaned_data = clean_data(dataset)

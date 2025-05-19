@@ -2,22 +2,52 @@ import sys
 import os
 import pandas as pd
 import numpy as np
-import sys
-sys.path.append('/home/fran/TFG/proyecto-ola/orca-python')
+import logging
 import mord
+from sklearn.model_selection import GridSearchCV, StratifiedKFold
 
-def MORD_LAD(dataset, params):
+from sklearn.preprocessing import StandardScaler
 
-    # Crear el modelo vacio (sin entrenar) utilizando los parametros
-    model = mord.LAD(
-        alpha=params["alpha"], 
-        max_iter=params["max_iter"]
+sys.path.append('/home/fran/TFG/proyecto-ola/orca-python')
+
+logger = logging.getLogger(__name__)
+
+def Train_MORD_LAD(dataset, params, param_type, cv_settings, dataset_id):
+    X = dataset.iloc[:, :-1]
+    y_raw = dataset.iloc[:, -1]
+
+    # Mapeo de etiquetas ordinales
+    label_mapping = {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4}
+    y_mapped = y_raw.map(label_mapping).astype(int)
+
+    logger.info(f"\n[Training] Entrenando LAD con GridSearch (MAE) con el dataset: {dataset_id} ...")
+
+    # Escalado de características
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    # Configuración de validación cruzada
+    cv = StratifiedKFold(
+        n_splits=cv_settings["n_splits"],
+        shuffle=True,
+        random_state=cv_settings["random_state"]
     )
 
-    print(dataset)
+    # GridSearch con MAE
+    search = GridSearchCV(
+        estimator=mord.LAD(),
+        param_grid=params,
+        cv=cv,
+        scoring="neg_mean_absolute_error",
+        n_jobs=-1
+    )
 
-    # Aqui dejamos comentado el .fit(), ya que no queremos entrenar el modelo aun
-    # model.fit(train, test)  # Comentado por ahora, no entrenamos el modelo
+    search.fit(X_scaled, y_mapped)
+    best_model = search.best_estimator_
+    best_model.label_mapping = label_mapping
+    best_model.scaler = scaler  # Guarda el escalador por si se necesita luego
 
-    # Devolvemos el modelo vacio (sin entrenar)
-    return model
+    logger.info(f"[Training] Mejor MAE obtenido: {-search.best_score_:.5f}")
+    logger.info(f"[Training] Mejor modelo obtenido:\n\t{best_model}")
+
+    return best_model

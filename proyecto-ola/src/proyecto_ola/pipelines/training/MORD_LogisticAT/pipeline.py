@@ -11,7 +11,7 @@ def create_pipeline(param_key: str,
                     param_type: str,
                     cv_settings: str,
                     dataset_id: str
-                ) -> Pipeline:  # <- aquí faltaba el `:` al final
+                ) -> Pipeline:
 
     # Parametros que no son realmente inputs
     wrapped = partial(
