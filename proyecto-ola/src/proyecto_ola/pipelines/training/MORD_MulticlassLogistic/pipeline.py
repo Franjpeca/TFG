@@ -12,7 +12,7 @@ def create_pipeline(param_key: str,
                     dataset_id: str
                     ) -> Pipeline:
 
-    # Envolvemos la función con parámetros que no son inputs reales
+    # Envolvemos la funcion con parametros que no son inputs reales
     wrapped = partial(
         Train_MORD_MulticlassLogistic,
         dataset_id=dataset_id

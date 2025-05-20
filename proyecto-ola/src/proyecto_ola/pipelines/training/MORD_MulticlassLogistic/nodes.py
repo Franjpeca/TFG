@@ -22,14 +22,14 @@ def Train_MORD_MulticlassLogistic(dataset, params, param_type, cv_settings, data
 
     logger.info(f"\n[Training] Entrenando MulticlassLogistic con GridSearch (MAE) con el dataset: {dataset_id} ...")
 
-    # Configuración de validación cruzada
+    # Configuracion de validacion cruzada
     cv = StratifiedKFold(
         n_splits=cv_settings["n_splits"],
         shuffle=True,
         random_state=cv_settings["random_state"]
     )
 
-    # GridSearch para encontrar la mejor combinación de hiperparámetros
+    # GridSearch para encontrar la mejor combinación de hiperparametros
     search = GridSearchCV(
         estimator=mord.MulticlassLogistic(),
         param_grid=params,

@@ -41,13 +41,13 @@ def Evaluate_MORD_LogisticAT(model, dataset, model_id, model_type, dataset_id):
 
     y_pred = model.predict(X)
 
-    # Métricas nominales
+    # Metricas nominales
     nominal_metrics = {
         "accuracy": accuracy_score(y, y_pred),
         "f1_score": f1_score(y, y_pred, average="weighted"),
     }
 
-    # Métricas ordinales
+    # Metricas ordinales
     ordinal_metrics = {
         "qwk": cohen_kappa_score(y, y_pred, weights="quadratic"),
         "mae": mean_absolute_error(y, y_pred),

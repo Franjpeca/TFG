@@ -9,7 +9,7 @@ def create_pipeline(param_key: str,
                     output_ds: str,
                     dataset_id: str) -> Pipeline:
 
-    # Parámetros que no son realmente inputs
+    # Parametros que no son realmente inputs
     wrapped = partial(
         Evaluate_MORD_OrdinalRidge,
         model_id=param_key,

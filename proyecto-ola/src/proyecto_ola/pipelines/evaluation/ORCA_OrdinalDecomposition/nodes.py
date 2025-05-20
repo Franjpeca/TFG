@@ -58,7 +58,7 @@ def Evaluate_ORCA_OrdinalDecomposition(model, dataset, model_id, model_type, dat
         "ordinal_metrics": ordinal_metrics,
     }
 
-    logger.info(f"[Evaluating] Métricas de evaluación nominales:\n\t{nominal_metrics}")
-    logger.info(f"[Evaluating] Métricas de evaluación ordinales:\n\t{ordinal_metrics}")
+    logger.info(f"[Evaluating] Metricas de evaluación nominales:\n\t{nominal_metrics}")
+    logger.info(f"[Evaluating] Metricas de evaluación ordinales:\n\t{ordinal_metrics}")
 
     return results

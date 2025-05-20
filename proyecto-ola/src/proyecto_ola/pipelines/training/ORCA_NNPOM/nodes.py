@@ -20,7 +20,7 @@ def Train_ORCA_NNPOM(dataset, params, param_type, cv_settings, dataset_id):
 
     logger.info(f"\n[Training] Entrenando ORCA-NNPOM con GridSearch (MAE) con el dataset: {dataset_id} ...")
 
-    # Escalado robusto ⇒ evita valores extremos
+    # Escalado robusto porque peta
     scaler = RobustScaler()
     X_scaled = scaler.fit_transform(X)
 
@@ -40,14 +40,14 @@ def Train_ORCA_NNPOM(dataset, params, param_type, cv_settings, dataset_id):
         scoring="neg_mean_absolute_error",
         n_jobs=-1
     )
-    # 👉 aquí pasamos X_scaled
+
     search.fit(X_scaled, y)
 
     best_model = search.best_estimator_
 
     best_model.label_mapping = label_mapping
-    best_model.scaler = scaler   # lo usarás en evaluación
-
+    best_model.scaler = scaler
+    
     logger.info(f"[Training] Mejor MAE obtenido: {-search.best_score_:.5f}")
     logger.info(f"[Training] Mejor modelo obtenido:\n\t{best_model}")
 

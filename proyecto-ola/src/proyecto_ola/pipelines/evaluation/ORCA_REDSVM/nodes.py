@@ -26,17 +26,14 @@ def Evaluate_ORCA_REDSVM(model, dataset, model_id, model_type, dataset_id):
     logger.info(f"\n[Evaluating] Evaluando modelo:\n\t{model_id}")
     logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
 
-    # Separar X e y
     X = dataset.iloc[:, :-1].values.astype(np.float32)
     y = dataset.iloc[:, -1]
     if y.dtype == 'O':
         le = LabelEncoder()
         y = le.fit_transform(y)
 
-    # Escalar con el scaler del modelo
     X_scaled = model.scaler.transform(X)
 
-    # Predicción
     y_pred = model.predict(X_scaled)
 
     logger.info(f"[Evaluating] Predicciones (primeros 10): {y_pred[:10]}")
@@ -45,20 +42,20 @@ def Evaluate_ORCA_REDSVM(model, dataset, model_id, model_type, dataset_id):
     logger.info(f"[Evaluating] Distribución real (y): {real_dist}")
     logger.info(f"[Evaluating] Distribución predicha (y_pred): {pred_dist}")
 
-    # Métricas nominales
+    # Metricas nominales
     nominal_metrics = {
         "accuracy": accuracy_score(y, y_pred),
         "f1_score": f1_score(y, y_pred, average="weighted")
     }
-    # Métricas ordinales
+    # Metricas ordinales
     ordinal_metrics = {
         "qwk": cohen_kappa_score(y, y_pred, weights="quadratic"),
         "mae": mean_absolute_error(y, y_pred),
         "amae": amae(y, y_pred)
     }
 
-    logger.info(f"[Evaluating] Métricas de evaluación nominales:\n\t{nominal_metrics}")
-    logger.info(f"[Evaluating] Métricas de evaluación ordinales:\n\t{ordinal_metrics}")
+    logger.info(f"[Evaluating] Metricas de evaluación nominales:\n\t{nominal_metrics}")
+    logger.info(f"[Evaluating] Metricas de evaluación ordinales:\n\t{ordinal_metrics}")
 
     results = {
         "model_id": f"{model_type}(" + ", ".join(f"{k}={v}" for k, v in model.get_params().items()) + ")",

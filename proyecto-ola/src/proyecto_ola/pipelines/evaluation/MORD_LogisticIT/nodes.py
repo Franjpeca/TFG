@@ -12,7 +12,7 @@ sys.path.append('/mnt/c/Users/francisco.perez/Desktop/TFG/proyecto-ola/orca-pyth
 # Logger
 logger = logging.getLogger(__name__)
 
-# Método de ayuda
+
 def amae(y_true, y_pred):
     y_true = np.asarray(y_true)
     y_pred = np.asarray(y_pred)
@@ -41,18 +41,18 @@ def Evaluate_MORD_LogisticIT(model, dataset, model_id, model_type, dataset_id):
 
     y_pred = model.predict(X)
 
-    # Opcional: muestra distribución de predicciones
+
     logger.info(f"[Evaluating] Predicciones (primeros 10): {y_pred[:10]}")
     logger.info(f"[Evaluating] Distribución real (y): {dict(pd.Series(y).value_counts().sort_index())}")
     logger.info(f"[Evaluating] Distribución predicha (y_pred): {dict(pd.Series(y_pred).value_counts().sort_index())}")
 
-    # Métricas nominales
+    # Metricas nominales
     nominal_metrics = {
         "accuracy": accuracy_score(y, y_pred),
         "f1_score": f1_score(y, y_pred, average="weighted"),
     }
 
-    # Métricas ordinales
+    # Metricas ordinales
     ordinal_metrics = {
         "qwk": cohen_kappa_score(y, y_pred, weights="quadratic"),
         "mae": mean_absolute_error(y, y_pred),

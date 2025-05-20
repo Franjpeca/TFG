@@ -119,7 +119,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                         ])
                     )
 
-                if model_name == "NNOPx":
+                if model_name == "NNOP":
                     subpipelines.append(
                         create_ORCA_NNOP_pipeline(
                             param_key=full_key,
@@ -136,8 +136,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                         ])
                     )
 
-
-                if model_name == "NNPOMx":
+                if model_name == "NNPOM":
                     subpipelines.append(
                         create_ORCA_NNPOM_pipeline(
                             param_key=full_key,
@@ -176,8 +175,8 @@ def create_pipeline(**kwargs) -> Pipeline:
                         create_ORCA_REDSVM_pipeline(
                             param_key=full_key,
                             model_type=model_name,
-                            model_ds=model_ds,          # el dataset donde está guardado el modelo entrenado
-                            dataset_name=test_ds_name,  # el dataset de test
+                            model_ds=model_ds,
+                            dataset_name=test_ds_name,
                             output_ds=output_ds,
                             dataset_id=dataset_id
                         ).tag([
@@ -193,9 +192,9 @@ def create_pipeline(**kwargs) -> Pipeline:
                         create_ORCA_SVOREX_evaluation_pipeline(
                             param_key=full_key,
                             model_type=model_name,
-                            model_ds=model_ds,           # nombre del dataset del modelo entrenado
-                            dataset_name=test_ds_name,   # dataset de test
-                            output_ds=output_ds,         # donde vuelcan los resultados
+                            model_ds=model_ds,
+                            dataset_name=test_ds_name,
+                            output_ds=output_ds,
                             dataset_id=dataset_id
                         ).tag([
                             full_key,

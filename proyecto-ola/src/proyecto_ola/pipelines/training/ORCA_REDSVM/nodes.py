@@ -31,7 +31,7 @@ def Train_ORCA_REDSVM(dataset, params, param_type, cv_settings, dataset_id):
 
     search = GridSearchCV(
         estimator=REDSVM(),
-        param_grid=params,          # <-- esto se carga de tu parameters.yml
+        param_grid=params,
         cv=cv,
         scoring="neg_mean_absolute_error",
         n_jobs=-1

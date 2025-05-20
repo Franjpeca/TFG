@@ -10,6 +10,7 @@ def clean_data_all(*datasets):
     for dataset in datasets:
         cleaned_data = clean_data(dataset)
         cleaned_list.append(cleaned_data)
+
     return tuple(cleaned_list)
 
 
@@ -19,6 +20,7 @@ def clean_data(data: pd.DataFrame) -> pd.DataFrame:
 
     data = data.dropna()
     data = data.drop(columns=[data.columns[-2]])
+    
     return data
 
 

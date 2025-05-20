@@ -22,7 +22,7 @@ from proyecto_ola.pipelines.training.ORCA_SVOREX import pipeline as ORCA_SVOREX_
 from kedro.pipeline import pipeline as pipeline_factory
 
 def register_pipelines():
-    # Carga de parámetros
+    # Carga de parametros
     config_loader = OmegaConfigLoader(conf_source="conf")
     params = config_loader.get("parameters")
 
@@ -34,30 +34,9 @@ def register_pipelines():
 
     return {
         # Pipeline completo en el orden correcto
-        "__default__": preprocessing
-                       + training
-                       + evaluation
-                       + visualization,
+        "__default__": preprocessing + training + evaluation,
         "preprocessing": preprocessing,
-        "training":     training,
-        "evaluation":   evaluation,
+        "training": training,
+        "evaluation": evaluation,
         "visualization": visualization,
     }
-    
-        #"training": training_pipeline.create_pipeline
-        # Pipelines de metodos (subpipelines)
-        # MORD
-        #"MORD_LogisticAT": MORD_LogisticAT_pipeline.create_pipeline(),
-       
-        #"MORD_LogisticIT": MORD_LogisticIT_pipeline.create_pipeline(),
-        #"MORD_LAD": MORD_LAD_pipeline.create_pipeline(),
-        #"MORD_OrdinalRidge": MORD_OrdinalRidge_pipeline.create_pipeline(),
-        #"MORD_MulticlassLogistic": MORD_MulticlassLogistic_pipeline.create_pipeline(),
-        
-        # ORCA
-        #"ORCA_OrdinalDecomposition": ORCA_OrdinalDecomposition_pipeline.create_pipeline()
-        
-        #"ORCA_NNOP": ORCA_NNOP_pipeline.create_pipeline(),
-        #"ORCA_NNPOM": ORCA_NNPOM_pipeline.create_pipeline(),
-        #"ORCA_REDSVM": ORCA_REDSVM_pipeline.create_pipeline(),
-        #"ORCA_SVOREX": ORCA_SVOREX_pipeline.create_pipeline()

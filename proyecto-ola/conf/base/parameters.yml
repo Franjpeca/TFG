@@ -17,75 +17,150 @@ test_datasets:
 cv_settings:
   n_splits: 5
   random_state: 32
-
+#
 model_parameters:
   LogisticAT:
     grid_001: # Representa combinacion de parametros
       param_grid:
-        alpha: [0.01, 0.1, 0.5]
+        alpha: [0.1]
         max_iter: [500]
-
+#
   LAD:
     grid_001:
       param_grid:
-        C: [0.001, 0.01, 0.1]
-        max_iter: [30000, 40000, 150000, 1000000]
-
+        C: [0.001]
+        max_iter: [30000]
+#
   LogisticIT:
     grid_001:
       param_grid:
-        alpha: [0.001, 0.1]
-        max_iter: [1000, 10000]
-
+        alpha: [0.001]
+        max_iter: [1000]
+#
   OrdinalRidge:
     grid_001:
       param_grid:
-        alpha: [0.001, 0.01, 0.1, 1, 5]
-        max_iter: [1000, 10000]
-
+        alpha: [0.001, 5]
+        max_iter: [1000]
+#
   NNOP:
     grid_001:
       param_grid:
-        hiddenN: [16, 32]
-        lambdaValue: [0.0001, 0.001]
+        hiddenN: [16]
+        lambdaValue: [0.0001]
         iterations: [200]
-        epsilonInit: [0.01, 0.05]
-
+        epsilonInit: [0.01]
+#
   NNPOM:
     grid_001:
       param_grid:
         hiddenN: [8, 16]
-        lambdaValue: [0.01, 0.1]
-        iterations: [100, 200]
+        lambdaValue: [0.01]
+        iterations: [100]
         epsilonInit: [0.01]
-
+#
   OrdinalDecomposition:
     grid_001:
       param_grid:
         base_classifier:
           - "sklearn.linear_model.LogisticRegression"
-          - "sklearn.linear_model.LogisticRegression"
         parameters:
           - {max_iter: 1000, C: 1.0}
-          - {max_iter: 2000, C: 0.1}
-
+#
   REDSVM:
     grid_001:
       param_grid:
-        c: [0.1, 1.0]
-        t: [0, 2]
-        d: [2]               # grado para poly
-        g: [0.001, 0.01]     # gamma para RBF
+        c: [0.1]
+        t: [0]
+        d: [2]         
+        g: [0.001]     
         r: [0.0]
         e: [0.01]
         h: [0]
-        m: [128, 256]
-
+        m: [128]
+#
   SVOREX:
     grid_001:
       param_grid:
-        c: [0.01, 0.1]
+        c: [0.01]
         kernel_type: [0, 2]
-        k: [5]              # número de clases
-        p: [3]              # solo relevante si kernel_type=1
-        t: [0.001, 0.01]
+        k: [5] 
+        p: [3]
+        t: [0.001]
+
+
+#cv_settings:
+#  n_splits: 5
+#  random_state: 32
+#
+#model_parameters:
+#  LogisticAT:
+#    grid_001: # Representa combinacion de parametros
+#      param_grid:
+#        alpha: [0.01, 0.1, 0.5]
+#        max_iter: [500]
+#
+#  LAD:
+#    grid_001:
+#      param_grid:
+#        C: [0.001, 0.01, 0.1]
+#        max_iter: [30000, 40000, 150000, 1000000]
+#
+#  LogisticIT:
+#    grid_001:
+#      param_grid:
+#        alpha: [0.001, 0.1]
+#        max_iter: [1000, 10000]
+#
+#  OrdinalRidge:
+#    grid_001:
+#      param_grid:
+#        alpha: [0.001, 0.01, 0.1, 1, 5]
+#        max_iter: [1000, 10000]
+#
+#  NNOP:
+#    grid_001:
+#      param_grid:
+#        hiddenN: [16, 32]
+#        lambdaValue: [0.0001, 0.001]
+#        iterations: [200]
+#        epsilonInit: [0.01, 0.05]
+#
+#  NNPOM:
+#    grid_001:
+#      param_grid:
+#        hiddenN: [8, 16]
+#        lambdaValue: [0.01, 0.1]
+#        iterations: [100, 200]
+#        epsilonInit: [0.01]
+#
+#  OrdinalDecomposition:
+#    grid_001:
+#      param_grid:
+#        base_classifier:
+#          - "sklearn.linear_model.LogisticRegression"
+#          - "sklearn.linear_model.LogisticRegression"
+#        parameters:
+#          - {max_iter: 1000, C: 1.0}
+#          - {max_iter: 2000, C: 0.1}
+#
+#  REDSVM:
+#    grid_001:
+#      param_grid:
+#        c: [0.1, 1.0]
+#        t: [0, 2]
+#        d: [2]              
+#        g: [0.001, 0.01]    
+#        r: [0.0]
+#        e: [0.01]
+#        h: [0]
+#        m: [128, 256]
+#
+#  SVOREX:
+#    grid_001:
+#      param_grid:
+#        c: [0.01, 0.1]
+#        kernel_type: [0, 2]
+#        k: [5]
+#        p: [3]
+#        t: [0.001, 0.01]

@@ -26,17 +26,14 @@ def Evaluate_ORCA_SVOREX(model, dataset, model_id, model_type, dataset_id):
     logger.info(f"\n[Evaluating] Evaluando modelo:\n\t{model_id}")
     logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
 
-    # separar X / y y mapear etiquetas de 1 a 5 (igual que en entrenamiento)
     X = dataset.iloc[:, :-1].values.astype(np.float32)
     y_raw = dataset.iloc[:, -1]
-    label_mapping = model.label_mapping  # {"A":1, ..., "E":5}
+    label_mapping = model.label_mapping
     y = pd.Series(y_raw).map(label_mapping).astype(int).values
 
-    # escalar
     X_scaled = model.scaler.transform(X)
 
-    # predecir
-    y_pred = model.predict(X_scaled)  # vectores de 1..5
+    y_pred = model.predict(X_scaled)
 
     logger.info(f"[Evaluating] Predicciones (primeros 10): {y_pred[:10]}")
     real_dist = dict(pd.Series(y).value_counts().sort_index())
@@ -44,20 +41,20 @@ def Evaluate_ORCA_SVOREX(model, dataset, model_id, model_type, dataset_id):
     logger.info(f"[Evaluating] Distribución real (y): {real_dist}")
     logger.info(f"[Evaluating] Distribución predicha (y_pred): {pred_dist}")
 
-    # métricas nominales
+    # Metricas nominales
     nominal_metrics = {
         "accuracy": accuracy_score(y, y_pred),
         "f1_score":  f1_score(y, y_pred, average="weighted")
     }
-    # métricas ordinales
+    # Metricas ordinales
     ordinal_metrics = {
         "qwk":  cohen_kappa_score(y, y_pred, weights="quadratic"),
         "mae":  mean_absolute_error(y, y_pred),
         "amae": amae(y, y_pred)
     }
 
-    logger.info(f"[Evaluating] Métricas nominales:\n\t{nominal_metrics}")
-    logger.info(f"[Evaluating] Métricas ordinales:\n\t{ordinal_metrics}")
+    logger.info(f"[Evaluating] Metricas nominales:\n\t{nominal_metrics}")
+    logger.info(f"[Evaluating] Metricas ordinales:\n\t{ordinal_metrics}")
 
     return {
         "model_id":    f"{model_type}(" + ", ".join(f"{k}={v}" for k, v in model.get_params().items()) + ")",

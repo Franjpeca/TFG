@@ -22,11 +22,11 @@ def Train_MORD_LAD(dataset, params, param_type, cv_settings, dataset_id):
 
     logger.info(f"\n[Training] Entrenando LAD con GridSearch (MAE) con el dataset: {dataset_id} ...")
 
-    # Escalado de características
+    # Escalado de caracteristicas
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    # Configuración de validación cruzada
+    # Configuracion de validacion cruzada
     cv = StratifiedKFold(
         n_splits=cv_settings["n_splits"],
         shuffle=True,

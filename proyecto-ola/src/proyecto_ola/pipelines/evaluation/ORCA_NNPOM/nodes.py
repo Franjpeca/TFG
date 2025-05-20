@@ -55,6 +55,6 @@ def Evaluate_ORCA_NNPOM(model, dataset, model_id, model_type, dataset_id):
         "ordinal_metrics": ordinal_metrics,
     }
 
-    logger.info(f"[Evaluating] Métricas nominales:\n\t{nominal_metrics}")
-    logger.info(f"[Evaluating] Métricas ordinales:\n\t{ordinal_metrics}")
+    logger.info(f"[Evaluating] Metricas nominales:\n\t{nominal_metrics}")
+    logger.info(f"[Evaluating] Metricas ordinales:\n\t{ordinal_metrics}")
     return results

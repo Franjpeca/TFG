@@ -39,7 +39,7 @@ def Evaluate_MORD_LAD(model, dataset, model_id, model_type, dataset_id):
         label_encoder = LabelEncoder()
         y = label_encoder.fit_transform(y)
 
-    # Predicción y redondeo explícito
+    # Prediccion y redondeo explicito
     y_pred_raw = model.predict(X.values)
     y_pred = np.clip(np.round(y_pred_raw), 0, 4).astype(int)
 
@@ -47,13 +47,13 @@ def Evaluate_MORD_LAD(model, dataset, model_id, model_type, dataset_id):
     logger.info(f"[Evaluating] DEBUG Distribución real (y): {dict(pd.Series(y).value_counts().sort_index())}")
     logger.info(f"[Evaluating] DEBUG Distribución predicha (y_pred): {dict(pd.Series(y_pred).value_counts().sort_index())}")
 
-    # Métricas nominales
+    # Metricas nominales
     nominal_metrics = {
         "accuracy": accuracy_score(y, y_pred),
         "f1_score": f1_score(y, y_pred, average="weighted"),
     }
 
-    # Métricas ordinales
+    # Metricas ordinales
     ordinal_metrics = {
         "qwk": cohen_kappa_score(y, y_pred, weights="quadratic"),
         "mae": mean_absolute_error(y, y_pred),

@@ -1,7 +1,6 @@
 from kedro.pipeline import Pipeline
 from kedro.io import MemoryDataset
 
-# Importa todos los subpipelines
 # Mord
 from proyecto_ola.pipelines.training.MORD_LogisticAT.pipeline import create_pipeline as create_MORD_LogisticAT_pipeline
 from proyecto_ola.pipelines.training.MORD_LogisticIT.pipeline import create_pipeline as create_MORD_LogisticIT_pipeline
@@ -37,6 +36,7 @@ def create_pipeline(**kwargs) -> Pipeline:
             cv_str = f"cv_{cv['n_splits']}_rs_{cv['random_state']}"
 
             for train_ds in train_datasets:
+
                 dataset_id = train_ds.replace("cleaned_", "").replace("_train_ordinal", "")
                 full_key = f"{model_name}_{combo_id}_{dataset_id}_{hyper_str}_{cv_str}"
                 output_ds = f"training.{run_id}.Model_{full_key}"
@@ -214,29 +214,3 @@ def create_pipeline(**kwargs) -> Pipeline:
                     )
 
     return sum(subpipelines, Pipeline([]))
-            # elif model_name == "LogisticIT":
-            #     all_pipelines.append(create_MORD_LogisticIT_pipeline(params=config))
-            # elif model_name == "LAD":
-            #     all_pipelines.append(create_MORD_LAD_pipeline(params=config))
-            # elif model_name == "OrdinalRidge":
-            #     all_pipelines.append(create_MORD_OrdinalRidge_pipeline(params=config))
-            # elif model_name == "MulticlassLogistic":
-            #     all_pipelines.append(create_MORD_MulticlassLogistic_pipeline(params=config))
-            # elif model_name == "NNOP":
-            #     all_pipelines.append(create_ORCA_NNOP_pipeline(params=config))
-            # elif model_name == "NNPOM":
-            #     all_pipelines.append(create_ORCA_NNPOM_pipeline(params=config))
-            #elif model_name == "OrdinalDecomposition":
-                #print("Contenido de OrdinalDecomposition desde el pipeline general:", config) 
-                #all_pipelines.append(create_OrdinalDecomposition_pipeline(param_key=param_key, params=config))
-            #elif model_name == "REDSVM":
-            #    all_pipelines.append(create_ORCA_REDSVM_pipeline(params=config))
-            #elif model_name == "SVOREX":
-            #    all_pipelines.append(create_ORCA_SVOREX_pipeline(params=config))
-            #else:
-                #raise ValueError(f"Modelo desconocido: {model_name}")
-                #print(f"Modelo desconocido: {model_name}")
-            
-            #print(f"Total de subpipelines creados: {len(subpipelines)}")
-        
-            #return sum(subpipelines, Pipeline([]))

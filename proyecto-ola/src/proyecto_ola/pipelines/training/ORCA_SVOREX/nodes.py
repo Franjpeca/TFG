@@ -36,7 +36,7 @@ def Train_ORCA_SVOREX(dataset, params, param_type, cv_settings, dataset_id):
 
     search = GridSearchCV(
         estimator=SVOREX(),
-        param_grid=params,                     # debe venir de params:model_parameters.SVOREX.<combo>.param_grid
+        param_grid=params,
         cv=cv,
         scoring="neg_mean_absolute_error",
         n_jobs=-1
@@ -44,7 +44,7 @@ def Train_ORCA_SVOREX(dataset, params, param_type, cv_settings, dataset_id):
     search.fit(X_scaled, y)
 
     best_model = search.best_estimator_
-    best_model.label_mapping = label_mapping   # para usar en predict
+    best_model.label_mapping = label_mapping 
     best_model.scaler = scaler
 
     logger.info(f"[Training] Mejor MAE obtenido: {-search.best_score_:.5f}")
