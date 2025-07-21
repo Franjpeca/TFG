@@ -1,12 +1,10 @@
 import logging
-from pathlib import Path
 from kedro.pipeline import Pipeline
 
 from proyecto_ola.pipelines.evaluation.MORD_LAD.pipeline import create_pipeline as create_MORD_LAD_pipeline
 from proyecto_ola.pipelines.evaluation.MORD_LogisticAT.pipeline import create_pipeline as create_MORD_LogisticAT_pipeline
 from proyecto_ola.pipelines.evaluation.MORD_LogisticIT.pipeline import create_pipeline as create_MORD_LogisticIT_pipeline
 from proyecto_ola.pipelines.evaluation.MORD_OrdinalRidge.pipeline import create_pipeline as create_MORD_OrdinalRidge_pipeline
-
 from proyecto_ola.pipelines.evaluation.ORCA_NNOP import create_pipeline as create_ORCA_NNOP_pipeline
 from proyecto_ola.pipelines.evaluation.ORCA_NNPOM.pipeline import create_pipeline as create_ORCA_NNPOM_pipeline
 from proyecto_ola.pipelines.evaluation.ORCA_OrdinalDecomposition.pipeline import create_pipeline as create_ORCA_OrdinalDecomposition_pipeline
@@ -15,6 +13,18 @@ from proyecto_ola.pipelines.evaluation.ORCA_SVOREX.pipeline import create_pipeli
 
 logger = logging.getLogger(__name__)
 
+MODEL_PIPELINES = {
+    "LAD": create_MORD_LAD_pipeline,
+    "LogisticAT": create_MORD_LogisticAT_pipeline,
+    "LogisticIT": create_MORD_LogisticIT_pipeline,
+    "OrdinalRidge": create_MORD_OrdinalRidge_pipeline,
+    "NNOP": create_ORCA_NNOP_pipeline,
+    "NNPOM": create_ORCA_NNPOM_pipeline,
+    "OrdinalDecomposition": create_ORCA_OrdinalDecomposition_pipeline,
+    "REDSVM": create_ORCA_REDSVM_pipeline,
+    "SVOREX": create_ORCA_SVOREX_evaluation_pipeline,
+}
+
 def create_pipeline(**kwargs) -> Pipeline:
     params = kwargs.get("params", {})
     run_id = params.get("run_id", "debug")
@@ -22,6 +32,7 @@ def create_pipeline(**kwargs) -> Pipeline:
     test_datasets = params.get("test_datasets", [])
     model_params = params.get("model_parameters", {})
     train_datasets = params.get("training_datasets", [])
+    cv_default = params.get("cv_settings", {"n_splits": 5, "random_state": 42})
 
     if isinstance(evaluate_only, str):
         evaluate_only = [evaluate_only]
@@ -29,12 +40,16 @@ def create_pipeline(**kwargs) -> Pipeline:
     subpipelines = []
 
     for model_name, combos in model_params.items():
+        if model_name not in MODEL_PIPELINES:
+            logger.warning(f"Modelo no reconocido: {model_name}")
+            continue
+
         for combo_id, cfg in combos.items():
             if "param_grid" not in cfg:
                 continue
 
+            cv = cfg.get("cv_settings", cv_default)
             hyper_str = "gridsearch"
-            cv = cfg.get("cv_settings", params.get("cv_settings", {"n_splits": 5, "random_state": 42}))
             cv_str = f"cv_{cv['n_splits']}_rs_{cv['random_state']}"
 
             for train_ds in train_datasets:
@@ -51,161 +66,25 @@ def create_pipeline(**kwargs) -> Pipeline:
                 model_ds = f"training.{run_id}.Model_{full_key}"
                 output_ds = f"evaluation.{run_id}.Metrics_{full_key}"
 
-                if model_name == "LAD":
-                    subpipelines.append(
-                        create_MORD_LAD_pipeline(
-                            param_key=full_key,
-                            model_type=model_name,
-                            model_ds=model_ds,
-                            dataset_name=test_ds_name,
-                            output_ds=output_ds,
-                            dataset_id=dataset_id,
-                        ).tag([
-                            full_key,
-                            f"dataset_{dataset_id}",
-                            f"model_{model_name}",
-                            "pipeline_evaluation",
-                        ])
-                    )
+                pipeline_fn = MODEL_PIPELINES[model_name]
+                subpipeline = pipeline_fn(
+                    param_key=full_key,
+                    model_type=model_name,
+                    model_ds=model_ds,
+                    dataset_name=test_ds_name,
+                    output_ds=output_ds,
+                    dataset_id=dataset_id,
+                ).tag([
+                    full_key,
+                    f"dataset_{dataset_id}",
+                    f"model_{model_name}",
+                    "pipeline_evaluation",
+                ])
 
-                if model_name == "LogisticAT":
-                    subpipelines.append(
-                        create_MORD_LogisticAT_pipeline(
-                            param_key=full_key,
-                            model_type=model_name,
-                            model_ds=model_ds,
-                            dataset_name=test_ds_name,
-                            output_ds=output_ds,
-                            dataset_id=dataset_id,
-                        ).tag([
-                            full_key,
-                            f"dataset_{dataset_id}",
-                            f"model_{model_name}",
-                            "pipeline_evaluation",
-                        ])
-                    )
-
-                if model_name == "LogisticIT":
-                    subpipelines.append(
-                        create_MORD_LogisticIT_pipeline(
-                            param_key=full_key,
-                            model_type=model_name,
-                            model_ds=model_ds,
-                            dataset_name=test_ds_name,
-                            output_ds=output_ds,
-                            dataset_id=dataset_id,
-                        ).tag([
-                            full_key,
-                            f"dataset_{dataset_id}",
-                            f"model_{model_name}",
-                            "pipeline_evaluation",
-                        ])
-                    )
-
-                if model_name == "OrdinalRidge":
-                    subpipelines.append(
-                        create_MORD_OrdinalRidge_pipeline(
-                            param_key=full_key,
-                            model_type=model_name,
-                            model_ds=model_ds,
-                            dataset_name=test_ds_name,
-                            output_ds=output_ds,
-                            dataset_id=dataset_id,
-                        ).tag([
-                            full_key,
-                            f"dataset_{dataset_id}",
-                            f"model_{model_name}",
-                            "pipeline_evaluation",
-                        ])
-                    )
-
-                if model_name == "NNOP":
-                    subpipelines.append(
-                        create_ORCA_NNOP_pipeline(
-                            param_key=full_key,
-                            model_type=model_name,
-                            model_ds=model_ds,
-                            dataset_name=test_ds_name,
-                            output_ds=output_ds,
-                            dataset_id=dataset_id,
-                        ).tag([
-                            full_key,
-                            f"dataset_{dataset_id}",
-                            f"model_{model_name}",
-                            "pipeline_evaluation",
-                        ])
-                    )
-
-                if model_name == "NNPOM":
-                    subpipelines.append(
-                        create_ORCA_NNPOM_pipeline(
-                            param_key=full_key,
-                            model_type=model_name,
-                            model_ds=model_ds,
-                            dataset_name=test_ds_name,
-                            output_ds=output_ds,
-                            dataset_id=dataset_id,
-                        ).tag([
-                            full_key,
-                            f"dataset_{dataset_id}",
-                            f"model_{model_name}",
-                            "pipeline_evaluation",
-                        ])
-                    )
-
-                if model_name == "OrdinalDecomposition":
-                    subpipelines.append(
-                        create_ORCA_OrdinalDecomposition_pipeline(
-                            param_key=full_key,
-                            model_type=model_name,
-                            model_ds=model_ds,
-                            dataset_name=test_ds_name,
-                            output_ds=output_ds,
-                            dataset_id=dataset_id,
-                        ).tag([
-                            full_key,
-                            f"dataset_{dataset_id}",
-                            f"model_{model_name}",
-                            "pipeline_evaluation",
-                        ])
-                    )
-
-                if model_name == "REDSVM":
-                    subpipelines.append(
-                        create_ORCA_REDSVM_pipeline(
-                            param_key=full_key,
-                            model_type=model_name,
-                            model_ds=model_ds,
-                            dataset_name=test_ds_name,
-                            output_ds=output_ds,
-                            dataset_id=dataset_id
-                        ).tag([
-                            full_key,
-                            f"dataset_{dataset_id}",
-                            f"model_{model_name}",
-                            "pipeline_evaluation",
-                        ])
-                    )
-
-                if model_name == "SVOREX":
-                    subpipelines.append(
-                        create_ORCA_SVOREX_evaluation_pipeline(
-                            param_key=full_key,
-                            model_type=model_name,
-                            model_ds=model_ds,
-                            dataset_name=test_ds_name,
-                            output_ds=output_ds,
-                            dataset_id=dataset_id
-                        ).tag([
-                            full_key,
-                            f"dataset_{dataset_id}",
-                            f"model_{model_name}",
-                            "pipeline_evaluation"
-                        ])
-                    )
+                subpipelines.append(subpipeline)
 
     if not subpipelines:
-        logger.info("No se procesaron subpipelines de evaluación: no se hallaron modelos validos.")
+        logger.info("No se procesaron subpipelines de evaluación: no se hallaron modelos válidos.")
         return Pipeline([])
 
     return sum(subpipelines, Pipeline([]))

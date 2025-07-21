@@ -1,4 +1,5 @@
 import os
+import datetime
 from kedro.framework.hooks import hook_impl
 from kedro.config import OmegaConfigLoader
 from kedro.io import DataCatalog, MemoryDataset
@@ -28,8 +29,11 @@ class DynamicModelCatalogHook:
         train_datasets = params.get("training_datasets", [])
         default_cv = params.get("cv_settings", {"n_splits": 5, "random_state": 42})
 
-        models_dir = os.path.join("data", "06_models", run_id)
-        output_dir = os.path.join("data", "07_model_output", run_id)
+        # Generamos un timestamp para identificar la ejecución
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        execution_folder = f"{run_id}_{timestamp}"
+        models_dir = os.path.join("data", "06_models", execution_folder)
+        output_dir = os.path.join("data", "07_model_output", execution_folder)
         os.makedirs(models_dir, exist_ok=True)
         os.makedirs(output_dir, exist_ok=True)
 
