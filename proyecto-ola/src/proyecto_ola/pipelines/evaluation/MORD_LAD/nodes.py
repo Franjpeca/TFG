@@ -28,7 +28,25 @@ def amae(y_true, y_pred):
 
     return np.mean(per_class_errors)
 
-def Evaluate_MORD_LAD(model, dataset, model_id, model_type, dataset_id):
+def Predict_MORD_LAD(model, dataset, model_id, dataset_id):
+    logger.info(f"\n[Evaluating] Prediciendo con el modelo:\n\t{model_id}")
+    logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
+
+    X = dataset.iloc[:, :-1]
+    y = dataset.iloc[:, -1]
+
+    if y.dtype == 'O':
+        label_encoder = LabelEncoder()
+        y = label_encoder.fit_transform(y)
+
+    # Predicción con redondeo y recorte al rango esperado
+    y_pred_raw = model.predict(X.values)
+    y_pred = np.clip(np.round(y_pred_raw), 0, 4).astype(int)
+
+    logger.info(f"[Evaluating] DEBUG Predicciones (primeros 10): {y_pred[:10]}")
+    return y_pred.tolist()
+
+def Evaluate_MORD_LAD(model, dataset, y_pred, model_id, model_type, dataset_id):
     logger.info(f"\n[Evaluating] Evaluando modelo:\n\t{model_id}")
     logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
 
@@ -39,21 +57,18 @@ def Evaluate_MORD_LAD(model, dataset, model_id, model_type, dataset_id):
         label_encoder = LabelEncoder()
         y = label_encoder.fit_transform(y)
 
-    # Prediccion y redondeo explicito
-    y_pred_raw = model.predict(X.values)
-    y_pred = np.clip(np.round(y_pred_raw), 0, 4).astype(int)
+    y_pred = np.asarray(y_pred)
 
-    logger.info(f"[Evaluating] DEBUG Predicciones (primeros 10): {y_pred[:10]}")
     logger.info(f"[Evaluating] DEBUG Distribución real (y): {dict(pd.Series(y).value_counts().sort_index())}")
     logger.info(f"[Evaluating] DEBUG Distribución predicha (y_pred): {dict(pd.Series(y_pred).value_counts().sort_index())}")
 
-    # Metricas nominales
+    # Métricas nominales
     nominal_metrics = {
         "accuracy": accuracy_score(y, y_pred),
         "f1_score": f1_score(y, y_pred, average="weighted"),
     }
 
-    # Metricas ordinales
+    # Métricas ordinales
     ordinal_metrics = {
         "qwk": cohen_kappa_score(y, y_pred, weights="quadratic"),
         "mae": mean_absolute_error(y, y_pred),
@@ -67,6 +82,6 @@ def Evaluate_MORD_LAD(model, dataset, model_id, model_type, dataset_id):
         "ordinal_metrics": ordinal_metrics,
     }
 
-    logger.info(f"[Evaluating] Metricas de evaluacion nominales :\n\t{nominal_metrics}")
-    logger.info(f"[Evaluating] Metricas de evaluacion ordinales :\n\t{ordinal_metrics}")
+    logger.info(f"[Evaluating] Métricas nominales:\n\t{nominal_metrics}")
+    logger.info(f"[Evaluating] Métricas ordinales:\n\t{ordinal_metrics}")
     return results

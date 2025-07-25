@@ -6,19 +6,16 @@ import numpy as np
 from sklearn.metrics import accuracy_score, f1_score, cohen_kappa_score, mean_absolute_error
 from sklearn.preprocessing import LabelEncoder
 
-# ORCA path
 sys.path.append('/mnt/c/Users/francisco.perez/Desktop/TFG/proyecto-ola/orca-python')
 
-# Logger
 logger = logging.getLogger(__name__)
-
 
 def amae(y_true, y_pred):
     y_true = np.asarray(y_true)
     y_pred = np.asarray(y_pred)
     classes = np.unique(y_true)
-
     per_class_errors = []
+
     for c in classes:
         idx = np.where(y_true == c)[0]
         if len(idx) == 0:
@@ -28,9 +25,9 @@ def amae(y_true, y_pred):
 
     return np.mean(per_class_errors)
 
-
-def Evaluate_ORCA_NNOP(model, dataset, model_id, model_type, dataset_id):
-    logger.info(f"\n[Evaluating] Evaluando modelo:\n\t{model_id}")
+# 🧠 Nodo de predicción
+def Predict_ORCA_NNOP(model, dataset, model_id, dataset_id):
+    logger.info(f"\n[Evaluating] Prediciendo con ORCA-NNOP:\n\t{model_id}")
     logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
 
     X = dataset.iloc[:, :-1].values.astype(np.float32)
@@ -44,14 +41,24 @@ def Evaluate_ORCA_NNOP(model, dataset, model_id, model_type, dataset_id):
         X = model.scaler.transform(X)
 
     y_pred = model.predict(X)
+    return y_pred.tolist()
 
-    # Metricas nominales
+# 📊 Nodo de evaluación
+def Evaluate_ORCA_NNOP(model, dataset, y_pred, model_id, model_type, dataset_id):
+    logger.info(f"\n[Evaluating] Evaluando modelo ORCA-NNOP:\n\t{model_id}")
+    logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
+
+    y = dataset.iloc[:, -1]
+
+    if y.dtype == "O":
+        label_encoder = LabelEncoder()
+        y = label_encoder.fit_transform(y)
+
     nominal_metrics = {
         "accuracy": accuracy_score(y, y_pred),
         "f1_score": f1_score(y, y_pred, average="weighted"),
     }
 
-    # Metricas ordinales
     ordinal_metrics = {
         "qwk": cohen_kappa_score(y, y_pred, weights="quadratic"),
         "mae": mean_absolute_error(y, y_pred),
@@ -65,6 +72,6 @@ def Evaluate_ORCA_NNOP(model, dataset, model_id, model_type, dataset_id):
         "ordinal_metrics": ordinal_metrics,
     }
 
-    logger.info(f"[Evaluating] Metricas de evaluación nominales :\n\t{nominal_metrics}")
-    logger.info(f"[Evaluating] Metricas de evaluación ordinales :\n\t{ordinal_metrics}")
+    logger.info(f"[Evaluating] Métricas nominales:\n\t{nominal_metrics}")
+    logger.info(f"[Evaluating] Métricas ordinales:\n\t{ordinal_metrics}")
     return results

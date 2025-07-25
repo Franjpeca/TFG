@@ -34,6 +34,7 @@ class DynamicModelCatalogHook:
         execution_folder = f"{run_id}_{timestamp}"
         models_dir = os.path.join("data", "06_models", execution_folder)
         output_dir = os.path.join("data", "07_model_output", execution_folder)
+        metrics_dir = os.path.join("data", "08_model_metrics", execution_folder)
         os.makedirs(models_dir, exist_ok=True)
         os.makedirs(output_dir, exist_ok=True)
 
@@ -62,12 +63,19 @@ class DynamicModelCatalogHook:
                     if full_key not in catalog.list():
                         catalog.add(full_key, PickleDataset(filepath=model_path, save_args={"protocol": 4}))
 
+                    # Registro de predicciones
+                    pred_name = f"Predictions_{full_key}"
+                    pred_ds_key = f"evaluation.{run_id}.{pred_name}"
+                    pred_path = os.path.join(output_dir, f"{pred_name}.json")
+                    if pred_ds_key not in catalog.list():
+                        catalog.add(pred_ds_key, JSONDataset(filepath=pred_path))
+
                     # Registro de metricas
-                    output_name = f"Metrics_{full_key}"
-                    output_ds_key = f"evaluation.{run_id}.{output_name}"
-                    output_path = os.path.join(output_dir, f"{output_name}.json")
-                    if output_ds_key not in catalog.list():
-                        catalog.add(output_ds_key, JSONDataset(filepath=output_path))
+                    metrics_name = f"Metrics_{full_key}"
+                    metrics_ds_key = f"evaluation.{run_id}.{metrics_name}"
+                    metrics_path = os.path.join(metrics_dir, f"{metrics_name}.json")
+                    if metrics_ds_key not in catalog.list():
+                        catalog.add(metrics_ds_key, JSONDataset(filepath=metrics_path))
 
                     # Param type
                     param_type_key = f"params:model_parameters.{model_name}.{combo_id}.param_type"

@@ -28,10 +28,11 @@ def amae(y_true, y_pred):
 
     return np.mean(per_class_errors)
 
-def Evaluate_MORD_LogisticAT(model, dataset, model_id, model_type, dataset_id):
-    logger.info(f"\n[Evaluating] Evaluando modelo:\n\t{model_id}")
-    logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
 
+def Predict_MORD_LogisticAT(model, dataset, model_id, dataset_id):
+    logger.info(f"\n[Evaluating] Prediciendo con el modelo:\n\t{model_id}")
+    logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
+    
     X = dataset.iloc[:, :-1]
     y = dataset.iloc[:, -1]
 
@@ -39,7 +40,18 @@ def Evaluate_MORD_LogisticAT(model, dataset, model_id, model_type, dataset_id):
         label_encoder = LabelEncoder()
         y = label_encoder.fit_transform(y)
 
-    y_pred = model.predict(X)
+    return model.predict(X).tolist()
+
+
+def Evaluate_MORD_LogisticAT(model, dataset, y_pred, model_id, model_type, dataset_id):
+    logger.info(f"\n[Evaluating] Evaluando el modelo:\n\t{model_id}")
+    
+    X = dataset.iloc[:, :-1]
+    y = dataset.iloc[:, -1]
+
+    if y.dtype == 'O':
+        label_encoder = LabelEncoder()
+        y = label_encoder.fit_transform(y)
 
     # Metricas nominales
     nominal_metrics = {

@@ -15,7 +15,7 @@ test_datasets:
   - cleaned_46069_test_ordinal
 
 cv_settings:
-  n_splits: 5
+  n_splits: 2
   random_state: 32
 #
 model_parameters:

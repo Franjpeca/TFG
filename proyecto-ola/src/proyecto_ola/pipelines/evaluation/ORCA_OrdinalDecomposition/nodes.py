@@ -25,8 +25,9 @@ def amae(y_true, y_pred):
 
     return np.mean(per_class_errors)
 
-def Evaluate_ORCA_OrdinalDecomposition(model, dataset, model_id, model_type, dataset_id):
-    logger.info(f"\n[Evaluating] Evaluando modelo:\n\t{model_id}")
+
+def Predict_ORCA_OrdinalDecomposition(model, dataset, model_id, dataset_id):
+    logger.info(f"\n[Evaluating] Prediciendo con modelo:\n\t{model_id}")
     logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
 
     X = dataset.iloc[:, :-1].values.astype(np.float32)
@@ -36,10 +37,22 @@ def Evaluate_ORCA_OrdinalDecomposition(model, dataset, model_id, model_type, dat
         label_encoder = LabelEncoder()
         y = label_encoder.fit_transform(y)
 
-    # Preprocesamiento consistente con el entrenamiento
     X_scaled = model.scaler.transform(X)
     y_pred = model.predict(X_scaled)
 
+    return y_pred.tolist()
+
+
+def Evaluate_ORCA_OrdinalDecomposition(model, dataset, y_pred, model_id, model_type, dataset_id):
+    logger.info(f"\n[Evaluating] Evaluando modelo:\n\t{model_id}")
+    logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
+
+    y = dataset.iloc[:, -1]
+    if y.dtype == 'O':
+        label_encoder = LabelEncoder()
+        y = label_encoder.fit_transform(y)
+
+    # Métricas
     nominal_metrics = {
         "accuracy": accuracy_score(y, y_pred),
         "f1_score": f1_score(y, y_pred, average="weighted"),
@@ -58,7 +71,6 @@ def Evaluate_ORCA_OrdinalDecomposition(model, dataset, model_id, model_type, dat
         "ordinal_metrics": ordinal_metrics,
     }
 
-    logger.info(f"[Evaluating] Metricas de evaluación nominales:\n\t{nominal_metrics}")
-    logger.info(f"[Evaluating] Metricas de evaluación ordinales:\n\t{ordinal_metrics}")
-
+    logger.info(f"[Evaluating] Métricas nominales:\n\t{nominal_metrics}")
+    logger.info(f"[Evaluating] Métricas ordinales:\n\t{ordinal_metrics}")
     return results

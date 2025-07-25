@@ -1,0 +1,90 @@
+\ifglsentryexists{iot}{}%
+{%
+\gls@defglossaryentry{iot}%
+{%
+name={IoT},%
+sort={IoT},%
+type={main},%
+first={Internet of Things\glsspace (IoT)},%
+firstplural={Internet of Thingss\glsspace (IoTs)},%
+text={IoT},%
+plural={IoTs},%
+description={Internet of Things},%
+descriptionplural={Internet of Things\acrpluralsuffix },%
+symbol={\relax },%
+symbolplural={\relax },%
+user1={},%
+user2={},%
+user3={},%
+user4={},%
+user5={},%
+user6={},%
+long={Internet of Things},%
+longplural={Internet of Thingss},%
+short={IoT},%
+shortplural={IoTs},%
+counter={page},%
+parent={},%
+%
+}%
+}%
+\ifglsentryexists{slm}{}%
+{%
+\gls@defglossaryentry{slm}%
+{%
+name={SLM},%
+sort={SLM},%
+type={main},%
+first={Small Language Model\glsspace (SLM)},%
+firstplural={Small Language Models\glsspace (SLMs)},%
+text={SLM},%
+plural={SLMs},%
+description={Small Language Model},%
+descriptionplural={Small Language Model\acrpluralsuffix },%
+symbol={\relax },%
+symbolplural={\relax },%
+user1={},%
+user2={},%
+user3={},%
+user4={},%
+user5={},%
+user6={},%
+long={Small Language Model},%
+longplural={Small Language Models},%
+short={SLM},%
+shortplural={SLMs},%
+counter={page},%
+parent={},%
+%
+}%
+}%
+\ifglsentryexists{llm}{}%
+{%
+\gls@defglossaryentry{llm}%
+{%
+name={LLM},%
+sort={LLM},%
+type={main},%
+first={Large Language Model\glsspace (LLM)},%
+firstplural={Large Language Models\glsspace (LLMs)},%
+text={LLM},%
+plural={LLMs},%
+description={Large Language Model},%
+descriptionplural={Large Language Model\acrpluralsuffix },%
+symbol={\relax },%
+symbolplural={\relax },%
+user1={},%
+user2={},%
+user3={},%
+user4={},%
+user5={},%
+user6={},%
+long={Large Language Model},%
+longplural={Large Language Models},%
+short={LLM},%
+shortplural={LLMs},%
+counter={page},%
+parent={},%
+%
+}%
+}%

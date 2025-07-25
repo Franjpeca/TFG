@@ -1,0 +1,56 @@
+\chapter{Código del programa}
+
+
+\section{Programa Principal}
+
+\lstset{style=codestyle, language=C}
+\begin{lstlisting}[frame=single]
+// Esto es un comentario.
+const int PIN_LED = 7;
+
+int pin_azul = 0;           
+int pin_verde = 1;
+int pin_rojo = 2;
+
+void setup() {
+    pinMode(PIN_LED , OUTPUT);
+}
+
+void loop() {
+    digitalWrite(PIN_LED, HIGH);
+    delay(500);
+    digitalWrite(PIN_LED, LOW);
+    delay(500);
+}
+
+\end{lstlisting}
+
+
+\section{Programa Secundario}
+
+\lstset{style=codestyle, language=C}
+\begin{lstlisting}[frame=single]
+// Esto es un comentario.
+const int PIN_LED = 7;
+
+int pin_azul = 0;           
+int pin_verde = 1;
+int pin_rojo = 2;
+
+
+
+void setup() {
+    pinMode(PIN_LED , OUTPUT);
+}
+
+
+void loop() {
+    digitalWrite(PIN_LED, HIGH);
+    delay(500);
+    digitalWrite(PIN_LED, LOW);
+    delay(500);
+}
+
+\end{lstlisting}
+	
+	

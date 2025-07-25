@@ -1,0 +1,41 @@
+\chapter{Introducción}
+\label{ch:introduccion}
+
+
+\indent El primer capítulo de este documento pretende aterrizar al lector en la meteria y temática en la que se basa este proyecto. Se conocerán conceptos clave y relevantes para comprender el área del machine learning junto con diferentes técnicas aplicadas en este área. Es de interés también dar una breve introducción al problema de la latura de ola, que busca resolver este proyecto junto con las herramientas y técnologías usadas para ello.\vspace{1em}
+
+\section{Inteligencia Artificial}
+\indent En el presente, no es extraño afirmar que la inteligencia artificial es una de las áreas mas importantes actualmente en la informática, tanto en el área de la investigación como en el ámbito empresarial. Esta relevancia se debe a la variedad de aplicaciones que ofrece, desde el diagnóstico médico y la automatización industrial, hasta la detección de fraudes financieros o la personalización de contenidos en plataformas digitales. En todo caso, la inteligencia artifical permite resolver problemas complejos mediante el tratamiento y análisis de grandes volúmenes de datos.
+
+\indent Uno de los pilares de este área es el aprendizaje automático \textit{(machine learning)}, donde la idea clave de esta es que los programas (o sistemas) pueden aprender desde datos que se le proporcionan, sin la necesidad de programar aquellas tareas que solventarán con este conocimiento nuevo aprendido por dichos datos.\vspace{1em}
+
+\indent Para cumplir los objetivos de un proyecto de machine learning, se debe de pasar por diferentes etapas, cada una con una estructura clara, trazable y reproducible. Contar con un flujo de trabajo bien definido no solo se facilita el desarrollo técnico, sino que también se permite comparar distintos enfoques y garantizar la calidad del proyecto final.
+
+\indent Estas etapas suelen incluir la recopilación y preprocesamiento de datos, la selección y extracción de características, el entrenamiento y validación de modelos, y finalmente, su evaluación y despliegue. Cada fase aporta un valor específico al proceso global, y su correcta ejecución es clave para obtener resultados fiables, interpretables y aplicables a problemas reales.\vspace{1em}
+
+\section{Tipos de aprendizaje automático}
+\indent Una vez definidos los componentes esenciales de un proyecto de este ámbito, es importante diferenciar los distintos tipos de aprendizaje que existen. En este proyecto, nos centraremos en el aprendizaje supervisado, en el que el modelo aprende a partir de un conjunto de datos etiquetados. Los datos etiquetados son ejemplos que incluyen tanto las características de entrada como la respuesta esperada, lo que permite al sistema identificar patrones durante el entrenamiento y con ello lograr predecir o estimar nuevos datos no vistos previamente.
+
+Dentro del aprendizaje supervisado, existen principalmente dos grandes tipos de tareas: la clasificación y la regresión. La clasificación consiste en dar a cada dato de entrada una clase o categoría conccreta dentro de un conjunto limitado de estas. Ejemplos típicos son la detección de coreos electrónicos no deseados, el diagnósitoc basado en síntomas o la detección de objetos en imágenes. El otro tipo existente se llama regresión y se basa en la predicción de valores continuos, como el precio de la vivienda.\vspace{1em}
+
+\indent Desde una perspectiva más técnica y tratando el típo de variable, el proyecto encaja en la clasificación ordinal. Esta es una tarea del área anteriormetne descrita pero que trata datos donde las clases presentan un orden entre sus diferentes valores. Algunos ejemplos comunes de clasificación ordinal son la predicción de niveles de satisfacción (“bajo”, “medio”, “alto”), grados de severidad médica (“leve”, “moderado”, “grave”) o la valoración de calidad en encuestas (“muy insatisfecho” a “muy satisfecho”). 
+
+A diferencia de la clasificación convencional, aquí es importante que el modelo tenga en cuenta ese orden, ya que no todos los errores tienen la misma gravedad. 
+Para ello, se utilizan algoritmos diseñados específicamente para trabajar con este tipo de datos, capaces de respetar la estructura ordinal de las clases. Algunos ejemplos son LogisticAT, OrdinalRidge o técnicas de descomposición como Ordinal Decomposition. Dichos métodos se podrán observar en el documento. 
+
+Este enfoque es especialmente útil en problemas donde las variables objetivo se obtienen a partir de la discretización de magnitudes continuas, como la altura significativa de ola, y donde es crucial mantener la coherencia ordinal para evitar errores graves en la toma de decisiones.
+
+\vspace{1em}
+
+
+
+\section{La energía undimotriz}
+El objeto de estudio de este proyecto es la energía undimotriz y el impacto de la altura de la ola en ella. La energía undimotriz es una fuente de energía renovable que aprovecha el movimiento de las olas en del mar para generar electricidad. Este típo de energía busca beneficiarse de zonas costeras con alta actividad marítima. 
+
+El funcionamiento básico se basa en el uso de estructuras en mar abierto que convierten el movimiento del oleaje en energía mecánica, que posteriormente se transforma en energía eléctrica utilizable. Sin embargo, su uso eficiente presenta problemas técnicos, especialmente relacionados con la predicción precisa de variables clave, como la altura de una ola en un tiempo próximo.\vspace{1em}
+
+Dicha predicción de la altura de ola presenta una alta variabilidad debido a fenómienos climatológicos extremos, ruido en los datos tomados por los intrumentos, además de otros fallos en la medición. La consecuencia directa de esto es que se complica la predicción de las variables, dificultando el conocer los cambios bruscos en el estado del mar, junto con la estimacion de la producción de energía además de poner en riesgo los dispositivos físicos usados.
+
+Por estos motivos, es útil enfrentar este problema aplicando técnicas ya comentadas, como la clasificación ordinal. Con esto, se disminuyen los errores graves de predicción, optimizando la eficiencia y fiabilidad de los sistemas de este tipo de energía.
+
+

@@ -1,0 +1,13 @@
+En el archivo "_datos_proyecto.tex" debes introducir los siguientes datos:
+- Título del TFG
+- Nombre del autor
+- Nombre del director o directores
+- Grado que cursas
+
+El archivo principal del proyecto es "__memoria.tex". Es el archivo que se compila.
+
+CONDIERACIONES LATEX:
+- Para entrecomillar una palabra, en latex se hace de la siguiente forma:
+    * "Palabra" (MAL)
+    * ``Palabra'' (BIEN)'
+
