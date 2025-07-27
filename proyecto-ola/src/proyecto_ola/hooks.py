@@ -113,24 +113,3 @@ class DynamicModelCatalogHook:
         if "evaluated_keys" not in catalog.list():
             catalog.add("evaluated_keys", MemoryDataset(copy_mode="assign"))
         catalog._datasets["evaluated_keys"].data = evaluated_keys
-
-
-
-class DynamicModelCatalogHook:
-    @hook_impl
-    def after_catalog_created(self, catalog):
-        # 1) execution_folder ficticio
-        catalog.add_feed_dict(
-            {"params:execution_folder": "viz_placeholder"},
-            replace=False,
-        )
-
-        # 2) placeholders param_type por cada modelo/combos declarados
-        #    en los YAML de configuración
-        conf_loader = OmegaConfigLoader(conf_source="conf")  # base + local
-        params_cfg = conf_loader.get("parameters", {})
-        for model, combos in params_cfg.get("model_parameters", {}).items():
-            for combo in combos:
-                key = f"params:model_parameters.{model}.{combo}.param_type"
-                if key not in catalog.list():
-                    catalog.add_feed_dict({key: "viz_placeholder"}, replace=False)
