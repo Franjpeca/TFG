@@ -1,10 +1,9 @@
 import sys
 import logging
-import pandas as pd
 import numpy as np
+import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score, cohen_kappa_score, mean_absolute_error
 
-# ORCA
 sys.path.append("/home/fran/TFG/proyecto-ola/orca-python")
 from orca_python.classifiers import SVOREX
 
@@ -33,36 +32,36 @@ def Predict_ORCA_SVOREX(model, dataset, model_id, dataset_id):
     X_scaled = model.scaler.transform(X)
     y_pred = model.predict(X_scaled)
 
-    return y_pred # No hace falta to list, ya devuelve una lista en principio
+    return y_pred, y.tolist(), model.get_params()
 
-def Evaluate_ORCA_SVOREX(model, dataset, y_pred, model_id, model_type, dataset_id, execution_folder):
+def Evaluate_ORCA_SVOREX(y_true, y_pred, model_params, model_id, model_type, dataset_id, execution_folder):
     logger.info(f"\n[Evaluating] Evaluando SVOREX:\n\t{model_id}")
     logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
+    logger.info(f"[Evaluating] Carpeta de ejecución:\n\t{execution_folder}")
 
-    y_raw = dataset.iloc[:, -1]
-    y = pd.Series(y_raw).map(model.label_mapping).astype(int).values
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
 
     logger.info(f"[Evaluating] Predicciones (primeros 10): {y_pred[:10]}")
-    real_dist = dict(pd.Series(y).value_counts().sort_index())
+    real_dist = dict(pd.Series(y_true).value_counts().sort_index())
     pred_dist = dict(pd.Series(y_pred).value_counts().sort_index())
     logger.info(f"[Evaluating] Distribución real (y): {real_dist}")
     logger.info(f"[Evaluating] Distribución predicha (y_pred): {pred_dist}")
 
     nominal_metrics = {
-        "accuracy": accuracy_score(y, y_pred),
-        "f1_score": f1_score(y, y_pred, average="weighted")
+        "accuracy": accuracy_score(y_true, y_pred),
+        "f1_score": f1_score(y_true, y_pred, average="weighted")
     }
     ordinal_metrics = {
-        "qwk": cohen_kappa_score(y, y_pred, weights="quadratic"),
-        "mae": mean_absolute_error(y, y_pred),
-        "amae": amae(y, y_pred)
+        "qwk": cohen_kappa_score(y_true, y_pred, weights="quadratic"),
+        "mae": mean_absolute_error(y_true, y_pred),
+        "amae": amae(y_true, y_pred)
     }
 
-    logger.info(f"[Evaluating] Métricas nominales:\n\t{nominal_metrics}")
-    logger.info(f"[Evaluating] Métricas ordinales:\n\t{ordinal_metrics}")
+    model_id_str = f"{model_type}(" + ", ".join(f"{k}={v}" for k, v in model_params.items()) + ")"
 
     return {
-        "model_id": f"{model_type}(" + ", ".join(f"{k}={v}" for k, v in model.get_params().items()) + ")",
+        "model_id": model_id_str,
         "dataset_id": dataset_id,
         "execution_folder": execution_folder,
         "nominal_metrics": nominal_metrics,

@@ -5,15 +5,15 @@ def make_predict_wrapper(predict_func, model_id, dataset_id):
     return _predict
 
 def make_evaluate_wrapper(evaluate_func, model_id, model_type, dataset_id):
-    def _evaluate(model, dataset, y_pred, execution_folder):
+    def _evaluate(y_true, y_pred, model_params, execution_folder):
         return evaluate_func(
-            model=model,
-            dataset=dataset,
+            y_true=y_true,
             y_pred=y_pred,
+            model_params=model_params,
+            execution_folder=execution_folder,
             model_id=model_id,
             model_type=model_type,
             dataset_id=dataset_id,
-            execution_folder=execution_folder,
         )
     _evaluate.__name__ = f"evaluate_{model_id}"
     return _evaluate

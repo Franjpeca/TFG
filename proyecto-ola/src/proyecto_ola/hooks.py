@@ -72,7 +72,7 @@ class DynamicModelCatalogHook:
                         catalog.add(full_key, PickleDataset(filepath=model_path, save_args={"protocol": 4}))
 
                     # Registro de predicciones
-                    pred_name = f"Predictions_{full_key}"
+                    pred_name = f"Predicted_Labels_{full_key}"
                     pred_ds_key = f"evaluation.{run_id}.{pred_name}"
                     pred_path = os.path.join(output_dir, f"{pred_name}.json")
                     if pred_ds_key not in catalog.list():

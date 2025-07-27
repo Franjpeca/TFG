@@ -66,7 +66,7 @@ def create_pipeline(**kwargs) -> Pipeline:
 
                 model_ds = f"training.{run_id}.Model_{full_key}"
                 output_ds = f"evaluation.{run_id}.Metrics_{full_key}"
-                prediction_ds = f"evaluation.{run_id}.Predictions_{full_key}"
+                prediction_ds = f"evaluation.{run_id}.Predicted_Labels_{full_key}"
 
                 pipeline_fn = MODEL_PIPELINES[model_name]
                 subpipeline = pipeline_fn(

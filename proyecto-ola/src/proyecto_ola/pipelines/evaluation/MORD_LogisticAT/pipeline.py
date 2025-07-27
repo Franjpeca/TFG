@@ -26,7 +26,11 @@ def create_pipeline(param_key: str,
             node(
                 func=wrapped_predict,
                 inputs=[model_ds, dataset_name],
-                outputs=prediction_ds,
+                outputs=[
+                        prediction_ds,
+                        f"expected_labels_{param_key}",
+                        f"model_params_{param_key}"
+                    ],
                 name=f"PREDICT_{param_key}",
                 tags=[
                     param_key,
@@ -39,9 +43,9 @@ def create_pipeline(param_key: str,
             node(
                 func=wrapped_evaluate,
                 inputs=[
-                    model_ds,
-                    dataset_name,
+                    f"expected_labels_{param_key}",
                     prediction_ds,
+                    f"model_params_{param_key}",
                     "params:execution_folder",
                 ],
                 outputs=output_ds,

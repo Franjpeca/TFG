@@ -40,40 +40,46 @@ def Predict_MORD_LogisticAT(model, dataset, model_id, dataset_id):
         label_encoder = LabelEncoder()
         y = label_encoder.fit_transform(y)
 
-    return model.predict(X).tolist()
+    y_pred = model.predict(X)
+    return y_pred.tolist(), y.tolist(), model.get_params()
 
 
-def Evaluate_MORD_LogisticAT(model, dataset, y_pred, model_id, model_type, dataset_id, execution_folder):
+def Evaluate_MORD_LogisticAT(y_true, y_pred, model_params, model_id, model_type, dataset_id, execution_folder):
     logger.info(f"\n[Evaluating] Evaluando el modelo:\n\t{model_id}")
-    
-    X = dataset.iloc[:, :-1]
-    y = dataset.iloc[:, -1]
+    logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
+    logger.info(f"[Evaluating] Carpeta de ejecución:\n\t{execution_folder}")
 
-    if y.dtype == 'O':
-        label_encoder = LabelEncoder()
-        y = label_encoder.fit_transform(y)
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
 
-    # Metricas nominales
+    logger.info(f"[Evaluating] DEBUG Distribución real (y): {dict(pd.Series(y_true).value_counts().sort_index())}")
+    logger.info(f"[Evaluating] DEBUG Distribución predicha (y_pred): {dict(pd.Series(y_pred).value_counts().sort_index())}")
+
+    # Métricas nominales
     nominal_metrics = {
-        "accuracy": accuracy_score(y, y_pred),
-        "f1_score": f1_score(y, y_pred, average="weighted"),
+        "accuracy": accuracy_score(y_true, y_pred),
+        "f1_score": f1_score(y_true, y_pred, average="weighted"),
     }
 
-    # Metricas ordinales
+    # Métricas ordinales
     ordinal_metrics = {
-        "qwk": cohen_kappa_score(y, y_pred, weights="quadratic"),
-        "mae": mean_absolute_error(y, y_pred),
-        "amae": amae(y, y_pred),
+        "qwk": cohen_kappa_score(y_true, y_pred, weights="quadratic"),
+        "mae": mean_absolute_error(y_true, y_pred),
+        "amae": amae(y_true, y_pred),
     }
+
+    # Construir model_id desde el dict recibido
+    model_id_str = f"{model_type}(" + ", ".join(f"{k}={v}" for k, v in model_params.items()) + ")"
 
     results = {
-        "model_id": f"{model_type}(" + ", ".join(f"{k}={v}" for k, v in model.get_params().items()) + ")",
+        "model_id": model_id_str,
         "dataset_id": dataset_id,
         "execution_folder": execution_folder,
         "nominal_metrics": nominal_metrics,
         "ordinal_metrics": ordinal_metrics,
     }
 
-    logger.info(f"[Evaluating] Metricas de evaluacion nominales :\n\t{nominal_metrics}")
-    logger.info(f"[Evaluating] Metricas de evaluacion ordinales :\n\t{ordinal_metrics}")
+    logger.info(f"[Evaluating] model_id: {model_id_str}")
+    logger.info(f"[Evaluating] Métricas nominales:\n\t{nominal_metrics}")
+    logger.info(f"[Evaluating] Métricas ordinales:\n\t{ordinal_metrics}")
     return results
