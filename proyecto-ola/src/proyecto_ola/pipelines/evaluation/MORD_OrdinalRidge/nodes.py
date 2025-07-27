@@ -40,7 +40,7 @@ def Predict_MORD_OrdinalRidge(model, dataset, model_id, dataset_id):
     y_pred = model.predict(np.asarray(X))
     return y_pred.tolist()
 
-def Evaluate_MORD_OrdinalRidge(model, dataset, y_pred, model_id, model_type, dataset_id):
+def Evaluate_MORD_OrdinalRidge(model, dataset, y_pred, model_id, model_type, dataset_id, execution_folder):
     logger.info(f"\n[Evaluating] Evaluando modelo OrdinalRidge:\n\t{model_id}")
 
     X = dataset.iloc[:, :-1]
@@ -64,6 +64,7 @@ def Evaluate_MORD_OrdinalRidge(model, dataset, y_pred, model_id, model_type, dat
     results = {
         "model_id": f"{model_type}(" + ", ".join(f"{k}={v}" for k, v in model.get_params().items()) + ")",
         "dataset_id": dataset_id,
+        "execution_folder": execution_folder,
         "nominal_metrics": nominal_metrics,
         "ordinal_metrics": ordinal_metrics,
     }

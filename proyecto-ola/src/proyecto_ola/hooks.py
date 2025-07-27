@@ -7,6 +7,7 @@ from kedro_datasets.pickle import PickleDataset
 from kedro_datasets.json import JSONDataset
 from kedro_datasets.matplotlib import MatplotlibWriter
 
+
 class DynamicModelCatalogHook:
     @hook_impl
     def before_pipeline_run(self, run_params: dict, catalog: DataCatalog) -> None:
@@ -32,6 +33,13 @@ class DynamicModelCatalogHook:
         # Generamos un timestamp para identificar la ejecución
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         execution_folder = f"{run_id}_{timestamp}"
+
+        # Guardar execution_folder como parámetro accesible en el catálogo
+        if "params:execution_folder" not in catalog.list():
+            catalog.add("params:execution_folder", MemoryDataset(data=execution_folder, copy_mode="assign"))
+        else:
+            catalog._datasets["params:execution_folder"].data = execution_folder
+
         models_dir = os.path.join("data", "06_models", execution_folder)
         output_dir = os.path.join("data", "07_model_output", execution_folder)
         metrics_dir = os.path.join("data", "08_model_metrics", execution_folder)
@@ -70,7 +78,7 @@ class DynamicModelCatalogHook:
                     if pred_ds_key not in catalog.list():
                         catalog.add(pred_ds_key, JSONDataset(filepath=pred_path))
 
-                    # Registro de metricas
+                    # Registro de métricas
                     metrics_name = f"Metrics_{full_key}"
                     metrics_ds_key = f"evaluation.{run_id}.{metrics_name}"
                     metrics_path = os.path.join(metrics_dir, f"{metrics_name}.json")
@@ -86,7 +94,7 @@ class DynamicModelCatalogHook:
                     if model_name not in catalog.list():
                         catalog.add(model_name, MemoryDataset(data=model_name, copy_mode="assign"))
 
-                    # Parametros dinamicos por clave
+                    # Parámetros dinámicos por clave
                     train_dataset_id_param = f"params:{full_key}_train_dataset_id"
                     dataset_id_param = f"params:{full_key}_dataset_id"
                     if train_dataset_id_param not in catalog.list():
@@ -101,8 +109,7 @@ class DynamicModelCatalogHook:
                         if output_viz_key not in catalog.list():
                             catalog.add(output_viz_key, MatplotlibWriter(filepath=output_viz_path))
 
-        # Añadir y rellenar el dataset de evaluated_keys (Por testear)
+        # Añadir y rellenar el dataset de evaluated_keys (por testear)
         if "evaluated_keys" not in catalog.list():
             catalog.add("evaluated_keys", MemoryDataset(copy_mode="assign"))
-
         catalog._datasets["evaluated_keys"].data = evaluated_keys

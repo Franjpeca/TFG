@@ -9,7 +9,9 @@ def create_pipeline(param_key: str,
                     dataset_name: str,
                     prediction_ds: str,
                     output_ds: str,
-                    dataset_id: str) -> Pipeline:
+                    dataset_id: str,
+                    execution_folder: str,
+                    ) -> Pipeline:
 
     # Nodo de evaluación con metadatos vía partial
     wrapped_evaluate = partial(
@@ -17,6 +19,7 @@ def create_pipeline(param_key: str,
         model_id=param_key,
         model_type=model_type,
         dataset_id=dataset_id,
+        execution_folder=execution_folder,
     )
     wrapped_evaluate = update_wrapper(wrapped_evaluate, Evaluate_MORD_LogisticAT)
 

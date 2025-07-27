@@ -46,9 +46,10 @@ def Predict_MORD_LAD(model, dataset, model_id, dataset_id):
     logger.info(f"[Evaluating] DEBUG Predicciones (primeros 10): {y_pred[:10]}")
     return y_pred.tolist()
 
-def Evaluate_MORD_LAD(model, dataset, y_pred, model_id, model_type, dataset_id):
+def Evaluate_MORD_LAD(model, dataset, y_pred, model_id, model_type, dataset_id, execution_folder):
     logger.info(f"\n[Evaluating] Evaluando modelo:\n\t{model_id}")
     logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
+    logger.info(f"[Evaluating] Carpeta de ejecución:\n\t{execution_folder}")
 
     X = dataset.iloc[:, :-1]
     y = dataset.iloc[:, -1]
@@ -78,6 +79,7 @@ def Evaluate_MORD_LAD(model, dataset, y_pred, model_id, model_type, dataset_id):
     results = {
         "model_id": f"{model_type}(" + ", ".join(f"{k}={v}" for k, v in model.get_params().items()) + ")",
         "dataset_id": dataset_id,
+        "execution_folder": execution_folder,
         "nominal_metrics": nominal_metrics,
         "ordinal_metrics": ordinal_metrics,
     }

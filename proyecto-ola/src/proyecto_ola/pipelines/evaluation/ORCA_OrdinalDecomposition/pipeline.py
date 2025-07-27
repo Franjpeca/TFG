@@ -8,7 +8,9 @@ def create_pipeline(param_key: str,
                     dataset_name: str,
                     prediction_ds: str,
                     output_ds: str,
-                    dataset_id: str) -> Pipeline:
+                    dataset_id: str,
+                    execution_folder: str,
+                    ) -> Pipeline:
 
     wrapped_predict = partial(
         Predict_ORCA_OrdinalDecomposition,
@@ -22,6 +24,7 @@ def create_pipeline(param_key: str,
         model_id=param_key,
         model_type=model_type,
         dataset_id=dataset_id,
+        execution_folder=execution_folder,
     )
     wrapped_evaluate = update_wrapper(wrapped_evaluate, Evaluate_ORCA_OrdinalDecomposition)
 

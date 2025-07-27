@@ -44,7 +44,7 @@ def Predict_MORD_LogisticIT(model, dataset, model_id, dataset_id):
     logger.info(f"[Evaluating] Predicciones (primeros 10): {y_pred[:10]}")
     return y_pred.tolist()
 
-def Evaluate_MORD_LogisticIT(model, dataset, y_pred, model_id, model_type, dataset_id):
+def Evaluate_MORD_LogisticIT(model, dataset, y_pred, model_id, model_type, dataset_id, execution_folder):
     logger.info(f"\n[Evaluating] Evaluando modelo:\n\t{model_id}")
     logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
 
@@ -76,6 +76,7 @@ def Evaluate_MORD_LogisticIT(model, dataset, y_pred, model_id, model_type, datas
     results = {
         "model_id": f"{model_type}(" + ", ".join(f"{k}={v}" for k, v in model.get_params().items()) + ")",
         "dataset_id": dataset_id,
+        "execution_folder": execution_folder,
         "nominal_metrics": nominal_metrics,
         "ordinal_metrics": ordinal_metrics,
     }

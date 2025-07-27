@@ -35,7 +35,7 @@ def Predict_ORCA_SVOREX(model, dataset, model_id, dataset_id):
 
     return y_pred # No hace falta to list, ya devuelve una lista en principio
 
-def Evaluate_ORCA_SVOREX(model, dataset, y_pred, model_id, model_type, dataset_id):
+def Evaluate_ORCA_SVOREX(model, dataset, y_pred, model_id, model_type, dataset_id, execution_folder):
     logger.info(f"\n[Evaluating] Evaluando SVOREX:\n\t{model_id}")
     logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
 
@@ -64,6 +64,7 @@ def Evaluate_ORCA_SVOREX(model, dataset, y_pred, model_id, model_type, dataset_i
     return {
         "model_id": f"{model_type}(" + ", ".join(f"{k}={v}" for k, v in model.get_params().items()) + ")",
         "dataset_id": dataset_id,
+        "execution_folder": execution_folder,
         "nominal_metrics": nominal_metrics,
         "ordinal_metrics": ordinal_metrics
     }

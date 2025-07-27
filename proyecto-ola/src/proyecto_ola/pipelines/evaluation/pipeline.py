@@ -13,21 +13,26 @@ from proyecto_ola.pipelines.evaluation.ORCA_SVOREX.pipeline import create_pipeli
 
 logger = logging.getLogger(__name__)
 
+#MODEL_PIPELINES = {
+#    "LAD": create_MORD_LAD_pipeline,
+#    "LogisticAT": create_MORD_LogisticAT_pipeline,
+#    "LogisticIT": create_MORD_LogisticIT_pipeline,
+#    "OrdinalRidge": create_MORD_OrdinalRidge_pipeline,
+#    "NNOP": create_ORCA_NNOP_pipeline,
+#    "NNPOM": create_ORCA_NNPOM_pipeline,
+#    "OrdinalDecomposition": create_ORCA_OrdinalDecomposition_pipeline,
+#    "REDSVM": create_ORCA_REDSVM_pipeline,
+#    "SVOREX": create_ORCA_SVOREX_evaluation_pipeline,
+#}
+
 MODEL_PIPELINES = {
-    "LAD": create_MORD_LAD_pipeline,
     "LogisticAT": create_MORD_LogisticAT_pipeline,
-    "LogisticIT": create_MORD_LogisticIT_pipeline,
-    "OrdinalRidge": create_MORD_OrdinalRidge_pipeline,
-    "NNOP": create_ORCA_NNOP_pipeline,
-    "NNPOM": create_ORCA_NNPOM_pipeline,
-    "OrdinalDecomposition": create_ORCA_OrdinalDecomposition_pipeline,
-    "REDSVM": create_ORCA_REDSVM_pipeline,
-    "SVOREX": create_ORCA_SVOREX_evaluation_pipeline,
 }
 
 def create_pipeline(**kwargs) -> Pipeline:
     params = kwargs.get("params", {})
     run_id = params.get("run_id", "debug")
+    execution_folder = params.get("execution_folder", f"{run_id}_notimestamp")
     evaluate_only = params.get("evaluate_only", None)
     test_datasets = params.get("test_datasets", [])
     model_params = params.get("model_parameters", {})
@@ -76,6 +81,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                     prediction_ds=prediction_ds,
                     output_ds=output_ds,
                     dataset_id=dataset_id,
+                    execution_folder = execution_folder,
                 ).tag([
                     full_key,
                     f"dataset_{dataset_id}",
