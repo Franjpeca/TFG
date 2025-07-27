@@ -8,6 +8,7 @@ from kedro_datasets.json import JSONDataset
 from kedro_datasets.matplotlib import MatplotlibWriter
 
 
+
 class DynamicModelCatalogHook:
     @hook_impl
     def before_pipeline_run(self, run_params: dict, catalog: DataCatalog) -> None:
@@ -34,11 +35,10 @@ class DynamicModelCatalogHook:
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         execution_folder = f"{run_id}_{timestamp}"
 
-        # Guardar execution_folder como parámetro accesible en el catálogo
-        if "params:execution_folder" not in catalog.list():
-            catalog.add("params:execution_folder", MemoryDataset(data=execution_folder, copy_mode="assign"))
-        else:
-            catalog._datasets["params:execution_folder"].data = execution_folder
+        catalog.add_feed_dict(
+            {"params:execution_folder": execution_folder},
+            replace=True,
+)
 
         models_dir = os.path.join("data", "06_models", execution_folder)
         output_dir = os.path.join("data", "07_model_output", execution_folder)
@@ -113,3 +113,24 @@ class DynamicModelCatalogHook:
         if "evaluated_keys" not in catalog.list():
             catalog.add("evaluated_keys", MemoryDataset(copy_mode="assign"))
         catalog._datasets["evaluated_keys"].data = evaluated_keys
+
+
+
+class DynamicModelCatalogHook:
+    @hook_impl
+    def after_catalog_created(self, catalog):
+        # 1) execution_folder ficticio
+        catalog.add_feed_dict(
+            {"params:execution_folder": "viz_placeholder"},
+            replace=False,
+        )
+
+        # 2) placeholders param_type por cada modelo/combos declarados
+        #    en los YAML de configuración
+        conf_loader = OmegaConfigLoader(conf_source="conf")  # base + local
+        params_cfg = conf_loader.get("parameters", {})
+        for model, combos in params_cfg.get("model_parameters", {}).items():
+            for combo in combos:
+                key = f"params:model_parameters.{model}.{combo}.param_type"
+                if key not in catalog.list():
+                    catalog.add_feed_dict({key: "viz_placeholder"}, replace=False)
