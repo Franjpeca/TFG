@@ -8,7 +8,7 @@ import mord
 
 logger = logging.getLogger(__name__)
 
-def Train_MORD_OrdinalRidge(dataset, params, param_type, cv_settings, dataset_id):
+def Train_MORD_OrdinalRidge(dataset, params, cv_settings, model_id, dataset_id):
     X = dataset.iloc[:, :-1]
     y_raw = dataset.iloc[:, -1]
 

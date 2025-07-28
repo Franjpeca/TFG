@@ -13,7 +13,7 @@ from orca_python.classifiers import OrdinalDecomposition
 
 logger = logging.getLogger(__name__)
 
-def Train_ORCA_OrdinalDecomposition(dataset, params, param_type, cv_settings, dataset_id):
+def Train_ORCA_OrdinalDecomposition(dataset, params, cv_settings, model_id, dataset_id):
     X = dataset.iloc[:, :-1].values.astype(np.float32)
     y_raw = dataset.iloc[:, -1]
 

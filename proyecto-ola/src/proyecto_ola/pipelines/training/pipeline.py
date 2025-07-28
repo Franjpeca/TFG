@@ -68,7 +68,6 @@ def create_pipeline(**kwargs) -> Pipeline:
                     param_ds=param_ds,
                     output_ds=output_ds,
                     dataset_name=train_ds,
-                    param_type=param_type,
                     cv_settings="params:cv_settings",
                     dataset_id=dataset_id,
                 ).tag([

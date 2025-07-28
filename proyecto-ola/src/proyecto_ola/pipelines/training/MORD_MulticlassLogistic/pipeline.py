@@ -7,7 +7,6 @@ def create_pipeline(param_key: str,
                     param_ds: str,
                     output_ds: str,
                     dataset_name: str,
-                    param_type: str,
                     cv_settings: str,
                     dataset_id: str
                     ) -> Pipeline:

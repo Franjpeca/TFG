@@ -10,7 +10,7 @@ sys.path.append('/home/fran/TFG/proyecto-ola/orca-python')
 
 logger = logging.getLogger(__name__)
 
-def Train_MORD_LogisticAT(dataset, params, param_type, cv_settings, dataset_id):
+def Train_MORD_LogisticAT(dataset, params, cv_settings, model_id, dataset_id):
     X = dataset.iloc[:, :-1]
     y_raw = dataset.iloc[:, -1]
 
@@ -18,6 +18,7 @@ def Train_MORD_LogisticAT(dataset, params, param_type, cv_settings, dataset_id):
     y_mapped = y_raw.map(label_mapping).astype(int)
 
     logger.info(f"\n[Training] Entrenando LogisticAT con GridSearch (MAE) con el dataset: {dataset_id} ...")
+    logger.info(f"\n[Training] Model id: {model_id} ...")
 
     cv = StratifiedKFold(
         n_splits=cv_settings["n_splits"],

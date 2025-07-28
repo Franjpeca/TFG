@@ -1,22 +1,20 @@
 from kedro.pipeline import Pipeline, node
-from kedro.io import DataCatalog, MemoryDataset
+from proyecto_ola.utils.wrappers import make_train_wrapper
 from .nodes import Train_ORCA_REDSVM
-from functools import partial, update_wrapper
 
 def create_pipeline(param_key: str,
                     model_type: str,
                     param_ds: str,
                     output_ds: str,
                     dataset_name: str,
-                    param_type: str,
                     cv_settings: str,
                     dataset_id: str) -> Pipeline:
 
-    wrapped = partial(
+    wrapped = make_train_wrapper(
         Train_ORCA_REDSVM,
+        model_id=param_key,
         dataset_id=dataset_id
     )
-    wrapped = update_wrapper(wrapped, Train_ORCA_REDSVM)
 
     return Pipeline([
         node(
@@ -24,11 +22,10 @@ def create_pipeline(param_key: str,
             inputs=[
                 dataset_name,
                 param_ds,
-                param_type,
                 cv_settings
             ],
             outputs=output_ds,
-            name=f"TRAINING_Node_{param_key}",
+            name=f"TRAIN_{param_key}",
             tags=[
                 param_key,
                 f"dataset_{dataset_id}",
