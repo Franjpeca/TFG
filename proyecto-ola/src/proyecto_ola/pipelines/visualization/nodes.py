@@ -1,63 +1,58 @@
-import matplotlib
 import matplotlib.pyplot as plt
-import pandas as pd
-import logging
+import warnings
+import textwrap
 
-logger = logging.getLogger(__name__)
+def Visualize_Nominal_Metric(metrics_jsons, metric, dataset_id, execution_folder, metric_type="nominal"):
+    data = [(j["model_id"], j["nominal_metrics"].get(metric))
+            for j in metrics_jsons
+            if j.get("nominal_metrics", {}).get(metric) is not None]
+    if not data:
+        return None
 
-def Visualization_Overview(json_data):
-    logger.info(f"[Visualization] Mostrando overview para {json_data['dataset_id']}")
+    models, values = zip(*sorted(data, key=lambda x: x[1], reverse=True))
+    labels = [textwrap.shorten(m, width=25, placeholder="…") for m in models]
 
-    df = pd.DataFrame({
-        "Métrica de Evaluación": list(json_data["nominal_metrics"]) + list(json_data["ordinal_metrics"]),
-        "Valor": list(json_data["nominal_metrics"].values()) + list(json_data["ordinal_metrics"].values())
-    })
+    fig_height = max(4, 0.5 * len(models))
+    fig, ax = plt.subplots(figsize=(12, fig_height))
+    ax.barh(range(len(models)), values)
+    ax.set_yticks(range(len(models)))
+    ax.set_yticklabels(labels, fontsize=8)
+    ax.invert_yaxis()
+    ax.set_xlabel(metric, fontsize=10)
+    ax.set_ylabel("Modelos", fontsize=10)
+    ax.set_title(f"{metric} – Dataset {dataset_id}", fontsize=12)
 
-    fig, ax = plt.subplots(figsize=(8, 4))
-
-    bars = ax.bar(df["Métrica de Evaluación"], df["Valor"], color="lightgreen")
-    ax.bar_label(bars, fmt="%.3f")
-
-    ax.set_title(f"Resumen de métricas de evaluación\nDataset: {json_data['dataset_id']}\nModelo: {json_data['model_id']}")
-    ax.set_ylabel("Valor de la métrica (rango 0-1)")
-    ax.set_ylim(0, 1)
-
-    fig.tight_layout()
-
-    return fig
-
-
-def Visualization_Distributions(json_data):
-    logger.info(f"[Visualization] Mostrando distribuciones para {json_data['dataset_id']}")
-
-    fig, ax = plt.subplots(figsize=(6, 4))
-
-    nominal = json_data["nominal_metrics"]
-    bars = ax.bar(nominal.keys(), nominal.values(), color="skyblue")
-
-    ax.bar_label(bars, fmt="%.3f")
-    ax.set_title(f"Métricas de evaluación para variables Nominales\nDataset: {json_data['dataset_id']}\nModelo: {json_data['model_id']}")
-    ax.set_ylabel("Valor de la métrica (rango 0-1)")
-    ax.set_ylim(0, 1)
-
-    fig.tight_layout()
+    fig.subplots_adjust(left=0.35)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fig.tight_layout()
 
     return fig
 
 
-def Visualization_Correlations(json_data):
-    logger.info(f"[Visualization] Mostrando correlaciones para {json_data['dataset_id']}")
+def Visualize_Ordinal_Metric(metrics_jsons, metric, dataset_id, execution_folder, metric_type="ordinal"):
+    data = [(j["model_id"], j["ordinal_metrics"].get(metric))
+            for j in metrics_jsons
+            if j.get("ordinal_metrics", {}).get(metric) is not None]
+    if not data:
+        return None
 
-    fig, ax = plt.subplots(figsize=(6, 4))
+    models, values = zip(*sorted(data, key=lambda x: x[1], reverse=True))
+    labels = [textwrap.shorten(m, width=25, placeholder="…") for m in models]
 
-    ordinal = json_data["ordinal_metrics"]
-    bars = ax.bar(ordinal.keys(), ordinal.values(), color="salmon")
-    ax.bar_label(bars, fmt="%.3f")
+    fig_height = max(4, 0.5 * len(models))
+    fig, ax = plt.subplots(figsize=(12, fig_height))
+    ax.barh(range(len(models)), values)
+    ax.set_yticks(range(len(models)))
+    ax.set_yticklabels(labels, fontsize=8)
+    ax.invert_yaxis()
+    ax.set_xlabel(metric, fontsize=10)
+    ax.set_ylabel("Modelos", fontsize=10)
+    ax.set_title(f"{metric} – Dataset {dataset_id}", fontsize=12)
 
-    ax.set_title(f"Métricas de evaluación para variables Ordinales\nDataset: {json_data['dataset_id']}\nModelo: {json_data['model_id']}")
-    ax.set_ylabel("Valor de la métrica (rango 0-1)")
-    ax.set_ylim(0, 1)
-
-    fig.tight_layout()
+    fig.subplots_adjust(left=0.35)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fig.tight_layout()
 
     return fig

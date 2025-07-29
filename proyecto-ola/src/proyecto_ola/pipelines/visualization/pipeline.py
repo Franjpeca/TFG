@@ -1,39 +1,39 @@
 import logging
 from pathlib import Path
-from functools import partial, update_wrapper
+from functools import update_wrapper
+from typing import Optional, List
+
 from kedro.pipeline import Pipeline, node, pipeline
-from .nodes import Visualization_Overview, Visualization_Distributions, Visualization_Correlations
-from typing import Optional
+from .nodes import Visualize_Nominal_Metric, Visualize_Ordinal_Metric
+from proyecto_ola.utils.wrappers import make_nominal_viz_wrapper, make_ordinal_viz_wrapper
 
 logger = logging.getLogger(__name__)
 
-def get_execution_folder(run_id: Optional[str] = None) -> str:
-    """
-    Busca la carpeta más reciente en data/08_model_metrics/ que empiece por run_id_
-    Si run_id no se da, busca la más reciente de todas.
-    """
+
+def get_execution_folder(run_id: Optional[str] = None) -> Optional[str]:
     base_dir = Path("data/08_model_metrics")
     if not base_dir.exists():
-        raise FileNotFoundError("No existe el directorio data/08_model_metrics")
+        return None
 
-    if run_id:
-        candidates = sorted(base_dir.glob(f"{run_id}_*"), key=lambda p: p.stat().st_mtime)
-    else:
-        candidates = sorted(base_dir.glob("*_*"), key=lambda p: p.stat().st_mtime)
+    pattern = f"{run_id}_*" if run_id else "*_*"
+    candidates = sorted(base_dir.glob(pattern), key=lambda p: p.stat().st_mtime)
 
     if not candidates:
-        raise FileNotFoundError(f"No se encontraron carpetas con run_id={run_id or '*'} en {base_dir}")
+        return None
 
-    folder = candidates[-1].name
-    logger.info(f"[VISUALIZATION] Usando carpeta de métricas: {folder}")
-    return folder
+    return candidates[-1].name
 
 
 def create_pipeline(**kwargs) -> Pipeline:
     params = kwargs.get("params", {})
-    run_id = params.get("run_id")  # <- este es opcional
-    execution_folder = get_execution_folder(run_id)
+    execution_folder = get_execution_folder(params.get("run_id"))
 
+    if not execution_folder:
+        logger.warning("[VISUALIZATION] No se encontró ninguna carpeta de métricas en 08_model_metrics. Pipeline vacío.")
+        return Pipeline([])
+
+    nominal_metrics = params.get("nominal_metrics", ["accuracy", "f1_score"])
+    ordinal_metrics = params.get("ordinal_metrics", ["qwk", "mae", "amae"])
 
     model_params = params.get("model_parameters", {})
     train_datasets = params.get("training_datasets", [])
@@ -43,15 +43,13 @@ def create_pipeline(**kwargs) -> Pipeline:
         evaluated_keys = [evaluated_keys]
 
     subpipelines = []
+    datasets_map = {}
 
     for model_name, combos in model_params.items():
         for combo_id, cfg in combos.items():
-            if "param_grid" not in cfg:
-                continue
-
-            hyper_str = "gridsearch"
-            cv = cfg.get("cv_settings", default_cv)
-            cv_str = f"cv_{cv['n_splits']}_rs_{cv['random_state']}"
+            hyper_str = "gridsearch" if "param_grid" in cfg else "hyperparams"
+            cv_cfg = cfg.get("cv_settings", default_cv)
+            cv_str = f"cv_{cv_cfg['n_splits']}_rs_{cv_cfg['random_state']}"
 
             for train_ds in train_datasets:
                 dataset_id = train_ds.replace("cleaned_", "").replace("_train_ordinal", "")
@@ -60,35 +58,50 @@ def create_pipeline(**kwargs) -> Pipeline:
                 if evaluated_keys and full_key not in evaluated_keys:
                     continue
 
-                input_json = f"evaluation.{execution_folder}.Metrics_{full_key}"
+                json_key = f"evaluation.{execution_folder}.Metrics_{full_key}"
+                datasets_map.setdefault(dataset_id, []).append(json_key)
 
-                subpipelines.append(
-                    pipeline(
-                        [
-                            node(
-                                func=Visualization_Overview,
-                                inputs=[input_json],
-                                outputs=f"visualization.{execution_folder}.{full_key}_overview",
-                                name=f"VISUALIZATION_overview_{full_key}",
-                            ),
-                            node(
-                                func=Visualization_Distributions,
-                                inputs=[input_json],
-                                outputs=f"visualization.{execution_folder}.{full_key}_distributions",
-                                name=f"VISUALIZATION_distributions_{full_key}",
-                            ),
-                            node(
-                                func=Visualization_Correlations,
-                                inputs=[input_json],
-                                outputs=f"visualization.{execution_folder}.{full_key}_correlations",
-                                name=f"VISUALIZATION_correlations_{full_key}",
-                            ),
-                        ]
+    for dataset_id, metric_inputs in datasets_map.items():
+        for metric_name in nominal_metrics:
+            wrapped = make_nominal_viz_wrapper(
+                viz_func=Visualize_Nominal_Metric,
+                metric=metric_name,
+                dataset_id=dataset_id,
+                execution_folder=execution_folder,
+            )
+            wrapped = update_wrapper(wrapped, Visualize_Nominal_Metric)
+            subpipelines.append(
+                pipeline([
+                    node(
+                        func=wrapped,
+                        inputs=metric_inputs,
+                        outputs=f"visualization.{execution_folder}.{dataset_id}.{metric_name}",
+                        name=f"VIS_NOMINAL_{metric_name.upper()}_{dataset_id}"
                     )
-                )
+                ])
+            )
+
+        for metric_name in ordinal_metrics:
+            wrapped = make_ordinal_viz_wrapper(
+                viz_func=Visualize_Ordinal_Metric,
+                metric=metric_name,
+                dataset_id=dataset_id,
+                execution_folder=execution_folder,
+            )
+            wrapped = update_wrapper(wrapped, Visualize_Ordinal_Metric)
+            subpipelines.append(
+                pipeline([
+                    node(
+                        func=wrapped,
+                        inputs=metric_inputs,
+                        outputs=f"visualization.{execution_folder}.{dataset_id}.{metric_name}",
+                        name=f"VIS_ORDINAL_{metric_name.upper()}_{dataset_id}"
+                    )
+                ])
+            )
 
     if not subpipelines:
-        logger.info("No se procesaron subpipelines de visualización: no se hallaron métricas esperadas.")
+        logger.info("No se generó ningún subpipeline: no se hallaron métricas evaluadas.")
         return Pipeline([])
 
     return sum(subpipelines, Pipeline([]))
