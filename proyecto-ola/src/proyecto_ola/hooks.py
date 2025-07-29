@@ -7,7 +7,8 @@ from kedro_datasets.pickle import PickleDataset
 from kedro_datasets.json import JSONDataset
 from kedro_datasets.matplotlib import MatplotlibWriter
 
-
+from kedro_datasets.json import JSONDataset
+from pathlib import Path
 
 class DynamicModelCatalogHook:
     @hook_impl
@@ -102,14 +103,46 @@ class DynamicModelCatalogHook:
                     if dataset_id_param not in catalog.list():
                         catalog.add(dataset_id_param, MemoryDataset(data=dataset_id))
 
-                    # Visualizaciones
-                    for stage in ["overview", "distributions", "correlations"]:
-                        output_viz_key = f"visualization.{run_id}.{full_key}_{stage}"
-                        output_viz_path = os.path.join("data", "08_reporting", run_id, dataset_id, stage, f"{full_key}.png")
-                        if output_viz_key not in catalog.list():
-                            catalog.add(output_viz_key, MatplotlibWriter(filepath=output_viz_path))
 
         # Añadir y rellenar el dataset de evaluated_keys (por testear)
         if "evaluated_keys" not in catalog.list():
             catalog.add("evaluated_keys", MemoryDataset(copy_mode="assign"))
         catalog._datasets["evaluated_keys"].data = evaluated_keys
+
+        # Parte de visualization
+        if "visualization" in str(run_params.get("pipeline_name", "")):
+
+            base_dir = Path("data/08_model_metrics")
+
+            # Se busca la carpeta a usar co nlas metricas
+            if run_id and (base_dir / run_id).is_dir():
+                # Si se pasa el nombre mas reciente
+                vis_folder = run_id
+            elif run_id and any(base_dir.glob(f"{run_id}_*")):
+                # Si pasa solo el prefijo se usa la mas reciente con ese
+                vis_folder = sorted(
+                    base_dir.glob(f"{run_id}_*"),
+                    key=lambda p: p.stat().st_mtime
+                )[-1].name
+            else:
+                # Si no se pasa nada usa la mas reciente
+                folders = sorted(
+                    base_dir.glob("*_*"),
+                    key=lambda p: p.stat().st_mtime
+                )
+                if not folders:
+                    raise FileNotFoundError(f"No hay métricas en {base_dir}. Ejecuta training/evaluation primero.")
+                vis_folder = folders[-1].name
+
+            # Registrar cada Metrics_*.json en el DataCatalog
+            metrics_dir = base_dir / vis_folder
+            for f in metrics_dir.glob("Metrics_*.json"):
+                ds_key = f"evaluation.{vis_folder}.{f.stem}"
+                if ds_key not in catalog.list():
+                    catalog.add(ds_key, JSONDataset(filepath=str(f)))
+
+            # Se lo permite pasar al pipeline (params:execution_folder)
+            catalog.add_feed_dict({"params:execution_folder": vis_folder}, replace=True)
+
+            print(f"[HOOK] Visualization ► usando carpeta '{vis_folder}' "
+                f"y registrados {len(list(metrics_dir.glob('Metrics_*.json')))} datasets.")
