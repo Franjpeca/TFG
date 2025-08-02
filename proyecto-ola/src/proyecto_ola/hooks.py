@@ -100,17 +100,24 @@ class DynamicModelCatalogHook:
     @hook_impl
     def after_node_run(self, node, inputs, outputs, catalog):
         from matplotlib.figure import Figure
+
         for output_name, value in outputs.items():
-            if not isinstance(value, Figure):
-                continue
             if not output_name.startswith("visualization."):
                 continue
+
             parts = output_name.split(".")
             _, run_id, dataset_id, metric = parts
             metric_type = "ordinal" if metric in ["qwk", "mae", "amae"] else "nominal"
-            d = os.path.join("data", "09_reporting", run_id, dataset_id, metric_type)
-            os.makedirs(d, exist_ok=True)
-            p = os.path.join(d, f"{metric}.png")
-            if output_name not in catalog.list():
-                catalog.add(output_name, MatplotlibWriter(filepath=p))
-            catalog.save(output_name, value)
+            out_dir = os.path.join("data", "09_reporting", run_id, dataset_id, metric_type)
+            os.makedirs(out_dir, exist_ok=True)
+
+            if isinstance(value, Figure):
+                figures = [value]
+            elif isinstance(value, (list, tuple)) and all(isinstance(v, Figure) for v in value):
+                figures = list(value)
+            else:
+                continue
+
+            for idx, fig in enumerate(figures, 1):
+                p = os.path.join(out_dir, f"{metric}_{dataset_id}_page{idx}.png")
+                MatplotlibWriter(filepath=p).save(fig)

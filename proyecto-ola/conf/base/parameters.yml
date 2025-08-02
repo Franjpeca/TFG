@@ -1,5 +1,7 @@
 run_id: "001" # Representa ejecucion global
 
+max_models_per_plot: 20
+
 training_datasets:
   - cleaned_46014_train_ordinal
   - cleaned_46025_train_ordinal

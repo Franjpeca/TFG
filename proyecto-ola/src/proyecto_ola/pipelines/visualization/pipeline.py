@@ -34,6 +34,7 @@ def create_pipeline(**kwargs) -> Pipeline:
 
     nominal_metrics = params.get("nominal_metrics", ["accuracy", "f1_score"])
     ordinal_metrics = params.get("ordinal_metrics", ["qwk", "mae", "amae"])
+    max_models_per_plot = params.get("max_models_per_plot", 20)
 
     model_params = params.get("model_parameters", {})
     train_datasets = params.get("training_datasets", [])
@@ -68,6 +69,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                 metric=metric_name,
                 dataset_id=dataset_id,
                 execution_folder=execution_folder,
+                max_models_per_plot=max_models_per_plot,
             )
             wrapped = update_wrapper(wrapped, Visualize_Nominal_Metric)
             subpipelines.append(
@@ -87,6 +89,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                 metric=metric_name,
                 dataset_id=dataset_id,
                 execution_folder=execution_folder,
+                max_models_per_plot=max_models_per_plot,
             )
             wrapped = update_wrapper(wrapped, Visualize_Ordinal_Metric)
             subpipelines.append(

@@ -33,27 +33,36 @@ def make_evaluate_wrapper(evaluate_func, model_id, model_type, dataset_id):
     return _evaluate
 
 
-def make_nominal_viz_wrapper(viz_func, metric, dataset_id, execution_folder):
+def make_nominal_viz_wrapper(
+    viz_func, metric, dataset_id, execution_folder, max_models_per_plot
+):
     def _viz_nominal(*metrics_jsons):
         return viz_func(
             metrics_jsons=list(metrics_jsons),
             metric=metric,
             dataset_id=dataset_id,
             execution_folder=execution_folder,
-            metric_type="nominal"
+            metric_type="nominal",
+            max_models_per_plot=max_models_per_plot,
         )
+
     _viz_nominal.__name__ = f"viz_nominal_{metric}_{dataset_id}"
     return _viz_nominal
 
 
-def make_ordinal_viz_wrapper(viz_func, metric, dataset_id, execution_folder):
+def make_ordinal_viz_wrapper(
+    viz_func, metric, dataset_id, execution_folder, max_models_per_plot
+):
     def _viz_ordinal(*metrics_jsons):
         return viz_func(
             metrics_jsons=list(metrics_jsons),
             metric=metric,
             dataset_id=dataset_id,
             execution_folder=execution_folder,
-            metric_type="ordinal"
+            metric_type="ordinal",
+            max_models_per_plot=max_models_per_plot,
         )
+
     _viz_ordinal.__name__ = f"viz_ordinal_{metric}_{dataset_id}"
     return _viz_ordinal
+

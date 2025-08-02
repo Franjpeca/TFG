@@ -8,6 +8,13 @@ This is your new Kedro project with Kedro-Viz and PySpark setup, which was gener
 
 Take a look at the [Kedro documentation](https://docs.kedro.org) to get started.
 
+## Visualization
+
+The visualization pipeline can now split model metric charts into multiple
+pages. Use the ``max_models_per_plot`` parameter (default ``20``) to control
+how many models appear on each page; resulting images are saved as
+``metric_dataset_pageX.png``.
+
 ## Rules and guidelines
 
 In order to get the best out of the template:
