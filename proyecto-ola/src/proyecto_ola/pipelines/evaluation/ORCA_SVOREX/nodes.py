@@ -3,6 +3,8 @@ import logging
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score, cohen_kappa_score, mean_absolute_error
+from sklearn.preprocessing import LabelEncoder
+
 
 sys.path.append("/home/fran/TFG/proyecto-ola/orca-python")
 from orca_python.classifiers import SVOREX
@@ -22,22 +24,42 @@ def amae(y_true, y_pred):
     return np.mean(per_class_errors)
 
 def Predict_ORCA_SVOREX(model, dataset, model_id, dataset_id):
-    logger.info(f"\n[Evaluating] Prediciendo con SVOREX:\n\t{model_id}")
+    logger.info(f"\n[Evaluating] Prediciendo con el modelo:\n\t{model_id}")
     logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
+    
+    X = dataset.iloc[:, :-1]
+    y = dataset.iloc[:, -1]
 
-    X = dataset.iloc[:, :-1].values.astype(np.float32)
-    y_raw = dataset.iloc[:, -1]
-    y = pd.Series(y_raw).map(model.label_mapping).astype(int).values
+    if y.dtype == 'O':
+        label_encoder = LabelEncoder()
+        y = label_encoder.fit_transform(y)
+    else:
+        y = y.astype(int)
+        vals = np.unique(y)
+        if 0 not in vals and vals.min() >= 1:
+            y = y - 1
 
-    X_scaled = model.scaler.transform(X)
-    y_pred = model.predict(X_scaled)
+    y_pred = model.predict(X)
 
-    return y_pred, y.tolist(), model.get_params()
+    y_pred_list = [int(v) - 1 for v in np.asarray(y_pred).tolist()]
+    y_true_list = [int(v) for v in np.asarray(y).tolist()]
+
+    return (
+        {"y_pred": y_pred_list, "y_true": y_true_list},
+        y_true_list,
+        model.get_params(),
+    )
+
 
 def Evaluate_ORCA_SVOREX(y_true, y_pred, model_params, model_id, model_type, dataset_id, execution_folder):
-    logger.info(f"\n[Evaluating] Evaluando SVOREX:\n\t{model_id}")
+    logger.info(f"\n[Evaluating] Evaluando el modelo:\n\t{model_id}")
     logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
     logger.info(f"[Evaluating] Carpeta de ejecución:\n\t{execution_folder}")
+
+    if isinstance(y_pred, dict) and "y_pred" in y_pred:
+        if "y_true" in y_pred:
+            y_true = y_pred["y_true"]
+        y_pred = y_pred["y_pred"]
 
     y_true = np.asarray(y_true)
     y_pred = np.asarray(y_pred)
@@ -60,10 +82,15 @@ def Evaluate_ORCA_SVOREX(y_true, y_pred, model_params, model_id, model_type, dat
 
     model_id_str = f"{model_type}(" + ", ".join(f"{k}={v}" for k, v in model_params.items()) + ")"
 
-    return {
+    results = {
         "model_id": model_id_str,
         "dataset_id": dataset_id,
         "execution_folder": execution_folder,
         "nominal_metrics": nominal_metrics,
-        "ordinal_metrics": ordinal_metrics
+        "ordinal_metrics": ordinal_metrics,
     }
+
+    logger.info(f"[Evaluating] model_id: {model_id_str}")
+    logger.info(f"[Evaluating] Métricas nominales:\n\t{nominal_metrics}")
+    logger.info(f"[Evaluating] Métricas ordinales:\n\t{ordinal_metrics}")
+    return results

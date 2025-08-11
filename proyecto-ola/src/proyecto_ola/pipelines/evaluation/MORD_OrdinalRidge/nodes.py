@@ -23,22 +23,36 @@ def amae(y_true, y_pred):
     return np.mean(per_class_errors)
 
 def Predict_MORD_OrdinalRidge(model, dataset, model_id, dataset_id):
-    logger.info(f"\n[Evaluating] Prediciendo con OrdinalRidge:\n\t{model_id}")
+    logger.info(f"\n[Evaluating] Prediciendo con el modelo:\n\t{model_id}")
     logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
-
+    
     X = dataset.iloc[:, :-1]
     y = dataset.iloc[:, -1]
 
     if y.dtype == 'O':
-        y = LabelEncoder().fit_transform(y)
+        label_encoder = LabelEncoder()
+        y = label_encoder.fit_transform(y)
 
-    y_pred = model.predict(np.asarray(X))
-    return y_pred.tolist(), y.tolist(), model.get_params()
+    y_pred = model.predict(X)
+
+    y_pred_list = [int(v) for v in y_pred.tolist()]
+    y_true_list = [int(v) for v in np.asarray(y).tolist()]
+
+    return (
+        {"y_pred": y_pred_list, "y_true": y_true_list},
+        y_true_list,
+        model.get_params(),
+    )
 
 def Evaluate_MORD_OrdinalRidge(y_true, y_pred, model_params, model_id, model_type, dataset_id, execution_folder):
-    logger.info(f"\n[Evaluating] Evaluando modelo OrdinalRidge:\n\t{model_id}")
+    logger.info(f"\n[Evaluating] Evaluando el modelo:\n\t{model_id}")
     logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
     logger.info(f"[Evaluating] Carpeta de ejecución:\n\t{execution_folder}")
+
+    if isinstance(y_pred, dict) and "y_pred" in y_pred:
+        if "y_true" in y_pred:
+            y_true = y_pred["y_true"]
+        y_pred = y_pred["y_pred"]
 
     y_true = np.asarray(y_true)
     y_pred = np.asarray(y_pred)
