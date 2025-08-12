@@ -42,8 +42,6 @@ def Train_ORCA_SVOREX(dataset, params, cv_settings, model_id, dataset_id):
     search.fit(X, y_fit)
 
     best_model = search.best_estimator_
-    best_model._label_mapping = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}
-    best_model._label_offset = 1
 
     logger.info(f"[Training] Mejor MAE: {-search.best_score_:.5f}")
     logger.info(f"[Training] Mejor modelo: {best_model}")

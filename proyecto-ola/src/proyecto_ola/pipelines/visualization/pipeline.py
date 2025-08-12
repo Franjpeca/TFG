@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_execution_folder(run_id: Optional[str] = None) -> Optional[str]:
-    base_dir = Path("data/08_model_metrics")
+    base_dir = Path("data/06_model_metrics")
     if not base_dir.exists():
         return None
 
