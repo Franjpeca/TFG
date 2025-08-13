@@ -142,7 +142,7 @@ def create_pipeline(**kwargs) -> Pipeline:
         dataset_id = tokens[-6]  # robusto aunque combo_id tenga '_'
 
         if model_name not in MODEL_PIPELINES:
-            logger.warning(f"Modelo no reconocido (omitido): {model_name}")
+            logger.warning(f"Modelo no reconocido (se omite): {model_name}")
             continue
 
         model_ds = f"training.{run_id}.Model_{full_key}"

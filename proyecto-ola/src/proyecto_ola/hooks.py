@@ -35,9 +35,9 @@ class DynamicModelCatalogHook:
         if is_eval:
             latest = self._latest_folder_by_inner_files(MODELS_BASE, "Model_*.pkl")
             if latest:
-                logger.info(f"[evaluation] Usando carpeta (última por ficheros): {latest.name}")
+                logger.info(f"[Evaluating] Usando carpeta (última por ficheros): {latest.name}")
                 return latest.name
-            logger.warning(f"[evaluation] No se encontraron modelos para run_id={run_id}.")
+            logger.warning(f"[Evaluating] No se encontraron modelos para run_id={run_id}.")
             return f"{run_id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
         else:
             return f"{run_id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
