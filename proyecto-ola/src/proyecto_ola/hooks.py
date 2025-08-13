@@ -60,7 +60,7 @@ class DynamicModelCatalogHook:
             files = list(d.glob(pattern))
             if not files:
                 continue
-            ts = d.stat().st_mtime
+            ts = max(f.stat().st_mtime for f in files)
             if ts > best_ts:
                 best_ts, best_dir = ts, d
         return best_dir
