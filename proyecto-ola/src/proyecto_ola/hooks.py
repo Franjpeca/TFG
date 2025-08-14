@@ -98,10 +98,11 @@ class DynamicModelCatalogHook:
                     if len(toks) >= 6:
                         dataset_ids.add(toks[-6])
                 for dataset_id in dataset_ids:
-                    # Heatmap
-                    out_key = f"visualization.{vis_folder}.{dataset_id}.heatmap"
-                    out_path = REPORT_BASE / vis_folder / dataset_id / "heatmap.png"
-                    self._register_if_missing(catalog, out_key, MatplotlibWriter(filepath=str(out_path)))
+                    # [HEATMAP] Pre-registro del output del heatmap (una imagen por dataset)
+                    out_key = f"visualization.{vis_folder}.{dataset_id}.heatmap"   # [HEATMAP]
+                    out_path = REPORT_BASE / vis_folder / dataset_id / "heatmap.png"  # [HEATMAP]
+                    self._register_if_missing(catalog, out_key, MatplotlibWriter(filepath=str(out_path)))  # [HEATMAP]
+
                     # Nominal
                     for m in nominal_metrics:
                         out_key = f"visualization.{vis_folder}.{dataset_id}.{m}"
@@ -256,9 +257,10 @@ class DynamicModelCatalogHook:
 
             metric_lc = str(metric).lower()
             if metric_lc == "heatmap":
-                out_dir = REPORT_BASE / run_folder / dataset_id
-                out_dir.mkdir(parents=True, exist_ok=True)
-                out_path = out_dir / "heatmap.png"
+                # [HEATMAP] Guardado especial del heatmap en carpeta plana del dataset (sin nominal/ordinal)
+                out_dir = REPORT_BASE / run_folder / dataset_id   # [HEATMAP]
+                out_dir.mkdir(parents=True, exist_ok=True)        # [HEATMAP]
+                out_path = out_dir / "heatmap.png"                # [HEATMAP]
             else:
                 metric_type = "ordinal" if metric_lc in {"qwk", "mae", "amae"} else "nominal"
                 out_dir = REPORT_BASE / run_folder / dataset_id / metric_type

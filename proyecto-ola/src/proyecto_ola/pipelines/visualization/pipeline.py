@@ -4,8 +4,8 @@ from functools import update_wrapper
 from typing import Optional, List
 import sys
 from kedro.pipeline import Pipeline, node, pipeline
-from .nodes import Visualize_Nominal_Metric, Visualize_Ordinal_Metric
-from proyecto_ola.utils.wrappers import make_nominal_viz_wrapper, make_ordinal_viz_wrapper
+from .nodes import Visualize_Nominal_Metric, Visualize_Ordinal_Metric, Visualize_Heatmap_Metrics
+from proyecto_ola.utils.wrappers import make_nominal_viz_wrapper, make_ordinal_viz_wrapper, make_heatmap_viz_wrapper
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +33,8 @@ def create_pipeline(**kwargs) -> Pipeline:
     params = kwargs.get("params", {})
     nominal_metrics = params.get("nominal_metrics", ["accuracy", "f1_score"])
     ordinal_metrics = params.get("ordinal_metrics", ["qwk", "mae", "amae"])
+    # lista de métricas para el heatmap (puedes sobreescribir por params)
+    heatmap_metrics = params.get("heatmap_metrics", ["qwk", "mae", "amae", "f1_score", "accuracy"])
 
     # --- Leer execution_folder: 1) params; 2) CLI (--params ...); 3) autodetección
     execution_folder = params.get("execution_folder")
@@ -159,5 +161,24 @@ def create_pipeline(**kwargs) -> Pipeline:
                     )
                 ])
             )
+
+        # un único nodo por dataset que genera el heatmap (modelos × métricas)
+        wrapped_heatmap = make_heatmap_viz_wrapper(
+            viz_func=Visualize_Heatmap_Metrics,
+            metrics=heatmap_metrics,
+            dataset_id=dataset_id,
+            execution_folder=execution_folder,
+        )
+        wrapped_heatmap = update_wrapper(wrapped_heatmap, Visualize_Heatmap_Metrics)
+        subpipelines.append(
+            pipeline([
+                node(
+                    func=wrapped_heatmap,
+                    inputs=metric_inputs,
+                    outputs=f"visualization.{execution_folder}.{dataset_id}.heatmap",
+                    name=f"VIS_HEATMAP_{dataset_id}",
+                )
+            ])
+        )
 
     return sum(subpipelines, Pipeline([]))

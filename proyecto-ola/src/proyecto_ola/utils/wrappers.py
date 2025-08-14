@@ -62,3 +62,17 @@ def make_ordinal_viz_wrapper(viz_func, metric, dataset_id, execution_folder):
     _viz_ordinal.__name__ = f"viz_ordinal_{metric}_{dataset_id}"
     _viz_ordinal.__qualname__ = _viz_ordinal.__name__
     return _viz_ordinal
+
+
+def make_heatmap_viz_wrapper(viz_func, metrics, dataset_id, execution_folder):
+    def _viz_heatmap(*metrics_jsons):
+        return viz_func(
+            metrics_jsons=list(metrics_jsons),
+            metrics=list(metrics),
+            dataset_id=dataset_id,
+            execution_folder=execution_folder,
+            metric_type="heatmap",
+        )
+    _viz_heatmap.__name__ = f"viz_heatmap_{dataset_id}"
+    _viz_heatmap.__qualname__ = _viz_heatmap.__name__
+    return _viz_heatmap
