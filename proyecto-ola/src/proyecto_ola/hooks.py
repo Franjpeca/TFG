@@ -77,7 +77,7 @@ class DynamicModelCatalogHook:
         forced_folder = params.get("execution_folder")
         is_eval = self._is_eval(pipeline_name)
 
-        # VISUALIZATION
+        # ───────────────────────────── VISUALIZATION ─────────────────────────────
         if self._is_viz(pipeline_name):
             base_dir = METRICS_BASE
             vis_folder = forced_folder or (self._latest_folder_by_inner_files(base_dir, "Metrics_*.json") or Path(""))
@@ -85,14 +85,38 @@ class DynamicModelCatalogHook:
                 vis_folder = Path(vis_folder).name
                 if "params:execution_folder" not in catalog.list():
                     catalog.add_feed_dict({"params:execution_folder": vis_folder}, replace=True)
+                # Inputs para visualización
                 for f in (METRICS_BASE / vis_folder).glob("Metrics_*.json"):
                     ds_key = f"evaluation.{vis_folder}.{f.stem}"
                     self._register_if_missing(catalog, ds_key, JSONDataset(filepath=str(f)))
+                # Pre-registro de outputs (para que persista al devolver Figure)
+                nominal_metrics = params.get("nominal_metrics", ["accuracy", "f1_score"])
+                ordinal_metrics = params.get("ordinal_metrics", ["qwk", "mae", "amae"])
+                dataset_ids = set()
+                for f in (METRICS_BASE / vis_folder).glob("Metrics_*.json"):
+                    toks = f.stem.replace("Metrics_", "", 1).split("_")
+                    if len(toks) >= 6:
+                        dataset_ids.add(toks[-6])
+                for dataset_id in dataset_ids:
+                    # Heatmap
+                    out_key = f"visualization.{vis_folder}.{dataset_id}.heatmap"
+                    out_path = REPORT_BASE / vis_folder / dataset_id / "heatmap.png"
+                    self._register_if_missing(catalog, out_key, MatplotlibWriter(filepath=str(out_path)))
+                    # Nominal
+                    for m in nominal_metrics:
+                        out_key = f"visualization.{vis_folder}.{dataset_id}.{m}"
+                        out_path = REPORT_BASE / vis_folder / dataset_id / "nominal" / f"{m}.png"
+                        self._register_if_missing(catalog, out_key, MatplotlibWriter(filepath=str(out_path)))
+                    # Ordinal
+                    for m in ordinal_metrics:
+                        out_key = f"visualization.{vis_folder}.{dataset_id}.{m}"
+                        out_path = REPORT_BASE / vis_folder / dataset_id / "ordinal" / f"{m}.png"
+                        self._register_if_missing(catalog, out_key, MatplotlibWriter(filepath=str(out_path)))
             else:
                 logger.warning("[VISUALIZATION] No se encontró ninguna carpeta de métricas válida.")
             return
 
-        # EVALUATION o TRAINING
+        # ──────────────────────── EVALUATION o TRAINING ─────────────────────────
         execution_folder = forced_folder or self._choose_exec_folder_last_with_models(run_id, is_eval)
         if "params:execution_folder" not in catalog.list():
             catalog.add_feed_dict({"params:execution_folder": execution_folder}, replace=True)
@@ -108,6 +132,7 @@ class DynamicModelCatalogHook:
 
         evaluated_keys: List[str] = []
 
+        # ─────────────── Rama EVALUATION directa (kedro -p evaluation) ─────────
         if is_eval:
             for pkl in models_dir.glob("Model_*.pkl"):
                 full_key = pkl.stem.replace("Model_", "", 1)
@@ -120,17 +145,28 @@ class DynamicModelCatalogHook:
 
                 pred_name = f"Predicted_Labels_{full_key}"
                 metr_name = f"Metrics_{full_key}"
+
+                # Claves oficiales (por compatibilidad con tus pipelines)
                 self._register_if_missing(
-                    catalog,
-                    f"evaluation.{run_id}.{pred_name}",
+                    catalog, f"evaluation.{run_id}.{pred_name}",
                     JSONDataset(filepath=str(output_dir / f"{pred_name}.json")),
                 )
                 self._register_if_missing(
-                    catalog,
-                    f"evaluation.{run_id}.{metr_name}",
+                    catalog, f"evaluation.{run_id}.{metr_name}",
                     JSONDataset(filepath=str(metrics_dir / f"{metr_name}.json")),
                 )
 
+                # Alias con execution_folder (útil para visualización/lecturas)
+                self._register_if_missing(
+                    catalog, f"evaluation.{execution_folder}.{pred_name}",
+                    JSONDataset(filepath=str(output_dir / f"{pred_name}.json")),
+                )
+                self._register_if_missing(
+                    catalog, f"evaluation.{execution_folder}.{metr_name}",
+                    JSONDataset(filepath=str(metrics_dir / f"{metr_name}.json")),
+                )
+
+                # dataset_id para downstream
                 try:
                     _, _, dataset_id, _, _ = full_key.split("_", 4)
                 except ValueError:
@@ -146,6 +182,7 @@ class DynamicModelCatalogHook:
             catalog.add_feed_dict({"params:evaluated_keys": evaluated_keys}, replace=True)
             return
 
+        # ───────────── Rama TRAINING (pre-registro para que EVAL persista) ─────
         for model_name, combos in model_params.items():
             for combo_id, cfg in combos.items():
                 if "param_grid" not in cfg:
@@ -166,14 +203,28 @@ class DynamicModelCatalogHook:
                     self._register_if_missing(catalog, full_key, ds_model)
 
                     pred_name = f"Predicted_Labels_{full_key}"
-                    pred_ds_key = f"evaluation.{run_id}.{pred_name}"
                     pred_path = output_dir / f"{pred_name}.json"
-                    self._register_if_missing(catalog, pred_ds_key, JSONDataset(filepath=str(pred_path)))
-
                     metrics_name = f"Metrics_{full_key}"
-                    metrics_ds_key = f"evaluation.{run_id}.{metrics_name}"
                     metrics_path = metrics_dir / f"{metrics_name}.json"
-                    self._register_if_missing(catalog, metrics_ds_key, JSONDataset(filepath=str(metrics_path)))
+
+                    # Claves oficiales con run_id (coinciden con evaluation pipeline)
+                    self._register_if_missing(
+                        catalog, f"evaluation.{run_id}.{pred_name}",
+                        JSONDataset(filepath=str(pred_path)),
+                    )
+                    self._register_if_missing(
+                        catalog, f"evaluation.{run_id}.{metrics_name}",
+                        JSONDataset(filepath=str(metrics_path)),
+                    )
+                    # Alias con execution_folder (útil para visualización)
+                    self._register_if_missing(
+                        catalog, f"evaluation.{execution_folder}.{pred_name}",
+                        JSONDataset(filepath=str(pred_path)),
+                    )
+                    self._register_if_missing(
+                        catalog, f"evaluation.{execution_folder}.{metrics_name}",
+                        JSONDataset(filepath=str(metrics_path)),
+                    )
 
                     param_type_key = f"params:model_parameters.{model_name}.{combo_id}.param_type"
                     self._register_if_missing(catalog, param_type_key, MemoryDataset(data="param_grid", copy_mode="assign"))
@@ -198,16 +249,22 @@ class DynamicModelCatalogHook:
                 continue
 
             try:
-                _, run_id, dataset_id, metric = output_name.split(".")
+                _, run_folder, dataset_id, metric = output_name.split(".")
             except ValueError:
                 logger.warning(f"[viz] Nombre de output inesperado: {output_name}")
                 continue
 
-            metric_type = "ordinal" if metric in {"qwk", "mae", "amae"} else "nominal"
-            out_dir = REPORT_BASE / run_id / dataset_id / metric_type
-            out_dir.mkdir(parents=True, exist_ok=True)
+            metric_lc = str(metric).lower()
+            if metric_lc == "heatmap":
+                out_dir = REPORT_BASE / run_folder / dataset_id
+                out_dir.mkdir(parents=True, exist_ok=True)
+                out_path = out_dir / "heatmap.png"
+            else:
+                metric_type = "ordinal" if metric_lc in {"qwk", "mae", "amae"} else "nominal"
+                out_dir = REPORT_BASE / run_folder / dataset_id / metric_type
+                out_dir.mkdir(parents=True, exist_ok=True)
+                out_path = out_dir / f"{metric}.png"
 
-            out_path = out_dir / f"{metric}.png"
             if output_name not in catalog.list():
                 catalog.add(output_name, MatplotlibWriter(filepath=str(out_path)))
             catalog.save(output_name, value)
