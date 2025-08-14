@@ -76,3 +76,23 @@ def make_heatmap_viz_wrapper(viz_func, metrics, dataset_id, execution_folder):
     _viz_heatmap.__name__ = f"viz_heatmap_{dataset_id}"
     _viz_heatmap.__qualname__ = _viz_heatmap.__name__
     return _viz_heatmap
+
+
+def make_scatter_qwk_mae_viz_wrapper(viz_func, dataset_id, execution_folder, x_metric="mae", y_metric="qwk"):
+    """
+    Envuelve la función de visualización del scatter (QWK vs MAE) para fijar
+    dataset y carpeta de ejecución. Recibe dinámicamente todos los JSON de
+    métricas como *args desde Kedro.
+    """
+    def _viz_scatter(*metrics_jsons):
+        return viz_func(
+            metrics_jsons=list(metrics_jsons),
+            dataset_id=dataset_id,
+            execution_folder=execution_folder,
+            x_metric=x_metric,   # MAE en X por defecto
+            y_metric=y_metric,   # QWK en Y por defecto
+            metric_type="scatter",
+        )
+    _viz_scatter.__name__ = f"viz_scatter_qwk_mae_{dataset_id}"
+    _viz_scatter.__qualname__ = _viz_scatter.__name__
+    return _viz_scatter

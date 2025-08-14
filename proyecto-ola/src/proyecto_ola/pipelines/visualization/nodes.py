@@ -65,6 +65,9 @@ def Visualize_Nominal_Metric(metrics_jsons, metric, dataset_id, execution_folder
 
 
 def Visualize_Heatmap_Metrics(metrics_jsons, metrics, dataset_id, execution_folder, metric_type="heatmap"):
+    import numpy as np
+    import matplotlib.pyplot as plt
+
     if not metrics_jsons:
         return None
 
@@ -72,19 +75,13 @@ def Visualize_Heatmap_Metrics(metrics_jsons, metrics, dataset_id, execution_fold
     invert_metrics = {"mae", "amae"}  # métricas a minimizar
 
     # 1) Recopilar valores por modelo y métrica
-    #    Estructura esperada en cada json:
-    #    - j["model_id"]
-    #    - j["nominal_metrics"]{accuracy, f1_score}
-    #    - j["ordinal_metrics"]{qwk, mae, amae}
     models = []
-    values_matrix = []  # matriz con valores reales (no normalizados)
+    values_matrix = []
 
     for j in metrics_jsons:
         model_id = j.get("model_id")
         if model_id is None:
-            # si no hay model_id, saltamos
             continue
-
         row_vals = []
         for m in metrics:
             if m in {"qwk", "mae", "amae"}:
@@ -92,7 +89,6 @@ def Visualize_Heatmap_Metrics(metrics_jsons, metrics, dataset_id, execution_fold
             else:
                 v = j.get("nominal_metrics", {}).get(m)
             row_vals.append(v if v is not None else np.nan)
-        # si la fila está totalmente vacía, ignoramos ese modelo
         if not np.all(np.isnan(row_vals)):
             models.append(model_id)
             values_matrix.append(row_vals)
@@ -100,31 +96,23 @@ def Visualize_Heatmap_Metrics(metrics_jsons, metrics, dataset_id, execution_fold
     if not values_matrix:
         return None
 
-    values = np.array(values_matrix, dtype=float)  # shape: (n_models, n_metrics)
+    values = np.array(values_matrix, dtype=float)
+    norm = np.full_like(values, np.nan)
 
-    # 2) Normalización por columna a [0,1], invirtiendo 'mae' y 'amae'
-    norm = np.empty_like(values)
-    norm[:] = np.nan
     for j_col, m in enumerate(metrics):
         col = values[:, j_col]
         mask = ~np.isnan(col)
         if not np.any(mask):
             continue
-
         vmin = np.nanmin(col)
         vmax = np.nanmax(col)
         if np.isclose(vmax, vmin):
-            # todos iguales -> poner 1.0 para no “apagar” la columna
             norm[mask, j_col] = 1.0
-            continue
-
-        if m in invert_metrics:
-            # mayor es mejor tras invertir
+        elif m in invert_metrics:
             norm[mask, j_col] = (vmax - col[mask]) / (vmax - vmin)
         else:
             norm[mask, j_col] = (col[mask] - vmin) / (vmax - vmin)
 
-    # 3) Plot
     labels = [clean_label(m) for m in models]
     n_models, n_metrics = norm.shape
 
@@ -132,31 +120,87 @@ def Visualize_Heatmap_Metrics(metrics_jsons, metrics, dataset_id, execution_fold
     fig_height = max(4, 0.5 * n_models + 1)
     fig, ax = plt.subplots(figsize=(fig_width, fig_height))
 
-    # imshow sobre matriz normalizada (0–1), colormap viridis
-    im = ax.imshow(norm, aspect="auto", cmap="viridis", vmin=0.0, vmax=1.0)
+    im = ax.imshow(norm, aspect="auto", cmap="cividis", vmin=0.0, vmax=1.0)
+    cbar = plt.colorbar(im, ax=ax, fraction=0.04, pad=0.02)
+    cbar.set_label("Valor normalizado (0 peor → 1 mejor)", fontsize=10)
 
-    # ticks y etiquetas
     ax.set_xticks(np.arange(n_metrics))
     ax.set_yticks(np.arange(n_models))
     ax.set_xticklabels(metrics, rotation=45, ha="right")
     ax.set_yticklabels(labels, fontsize=10)
 
-    # anotar valores reales dentro de las celdas
-    # elegir color del texto para contraste (negro en celdas claras, blanco en oscuras)
     for i in range(n_models):
         for j_col in range(n_metrics):
             val = values[i, j_col]
+            shade = norm[i, j_col]
             if np.isnan(val):
-                txt = "-"
-                # Si la celda es NaN, píntalo tenue (texto gris)
-                ax.text(j_col, i, txt, ha="center", va="center", color="0.7", fontsize=9)
+                ax.text(j_col, i, "-", ha="center", va="center", color="0.7", fontsize=9)
             else:
-                txt = f"{val:.3f}"
-                shade = norm[i, j_col]
-                color = "black" if (not np.isnan(shade) and shade > 0.6) else "white"
-                ax.text(j_col, i, txt, ha="center", va="center", color=color, fontsize=9)
+                color = "black" if shade > 0.6 else "white"
+                txt = f"{val:.2f}\n({shade:.1f})"
+                ax.text(j_col, i, txt, ha="center", va="center", color=color, fontsize=8)
 
-    ax.set_title(f"Comparativa de métricas – Dataset {dataset_id}")
-    fig.tight_layout()
+    ax.set_title(f"Comparativa de métricas – Dataset {dataset_id}", fontsize=13)
+    fig.suptitle("(Normalizado por columna; MAE/AMAE invertidas)", fontsize=10, y=0.95)
+
+    fig.tight_layout(rect=[0, 0, 1, 0.96])
+    return fig
+
+
+def Visualize_Scatter_QWKvsMAE(
+    metrics_jsons,
+    dataset_id,
+    execution_folder,
+    x_metric="mae",
+    y_metric="qwk",
+    metric_type="scatter",
+):
+    """
+    Genera un scatter con MAE en X y QWK en Y.
+    - Un punto por modelo (si tiene ambas métricas).
+    - Etiqueta con nombre corto del modelo.
+    - Cuadrícula ligera.
+    - Título: “QWK vs MAE – Dataset XXXX”.
+    Devuelve un matplotlib.figure.Figure.
+    """
+    if not metrics_jsons:
+        return None
+
+    xs, ys, labels = [], [], []
+    for j in metrics_jsons:
+        ordm = j.get("ordinal_metrics", {}) or {}
+        x = ordm.get(x_metric)
+        y = ordm.get(y_metric)
+        if x is None or y is None:
+            continue
+
+        # Etiqueta corta = nombre de modelo (sin hiperparámetros)
+        model_id = j.get("model_id", "Model")
+        m = re.match(r"(\w+)", model_id)
+        short = m.group(1) if m else "Model"
+
+        xs.append(x)
+        ys.append(y)
+        labels.append(short)
+
+    if not xs:
+        return None
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.scatter(xs, ys)
+
+    # Etiquetas cercanas al punto con pequeño desplazamiento
+    for x, y, text in zip(xs, ys, labels):
+        ax.annotate(text, (x, y), textcoords="offset points", xytext=(4, 4), fontsize=9)
+
+    ax.set_xlabel("MAE (↓ mejor)")
+    ax.set_ylabel("QWK (↑ mejor)")
+    ax.set_title(f"QWK vs MAE – Dataset {dataset_id}")
+    ax.grid(True, which="both", linestyle="--", alpha=0.3)
+    ax.margins(0.05)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        fig.tight_layout()
 
     return fig

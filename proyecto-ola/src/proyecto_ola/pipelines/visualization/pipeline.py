@@ -4,8 +4,8 @@ from functools import update_wrapper
 from typing import Optional, List
 import sys
 from kedro.pipeline import Pipeline, node, pipeline
-from .nodes import Visualize_Nominal_Metric, Visualize_Ordinal_Metric, Visualize_Heatmap_Metrics
-from proyecto_ola.utils.wrappers import make_nominal_viz_wrapper, make_ordinal_viz_wrapper, make_heatmap_viz_wrapper
+from .nodes import Visualize_Nominal_Metric, Visualize_Ordinal_Metric, Visualize_Heatmap_Metrics, Visualize_Scatter_QWKvsMAE
+from proyecto_ola.utils.wrappers import make_nominal_viz_wrapper, make_ordinal_viz_wrapper, make_heatmap_viz_wrapper, make_scatter_qwk_mae_viz_wrapper
 
 logger = logging.getLogger(__name__)
 
@@ -162,7 +162,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                 ])
             )
 
-        # un único nodo por dataset que genera el heatmap (modelos × métricas)
+        # HEATMAP (una por dataset)
         wrapped_heatmap = make_heatmap_viz_wrapper(
             viz_func=Visualize_Heatmap_Metrics,
             metrics=heatmap_metrics,
@@ -180,5 +180,23 @@ def create_pipeline(**kwargs) -> Pipeline:
                 )
             ])
         )
+
+        # SCATTER QWK vs MAE (una por dataset)
+        wrapped_scatter = make_scatter_qwk_mae_viz_wrapper(  
+            viz_func=Visualize_Scatter_QWKvsMAE,              
+            dataset_id=dataset_id,                            
+            execution_folder=execution_folder,                
+        )
+        wrapped_scatter = update_wrapper(wrapped_scatter, Visualize_Scatter_QWKvsMAE)  
+        subpipelines.append(                                                            
+            pipeline([                                                                  
+                node(                                                                   
+                    func=wrapped_scatter,                                              
+                    inputs=metric_inputs,                                              
+                    outputs=f"visualization.{execution_folder}.{dataset_id}.scatter_qwk_mae",  
+                    name=f"VIS_SCATTER_QWK_MAE_{dataset_id}",                          
+                )                                                                       
+            ])                                                                          
+        )                                                                               
 
     return sum(subpipelines, Pipeline([]))

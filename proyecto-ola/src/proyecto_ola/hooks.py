@@ -20,6 +20,28 @@ METRICS_BASE = Path("data") / "06_model_metrics"
 REPORT_BASE = Path("data") / "07_reporting"
 
 
+import os
+import datetime
+import logging
+from pathlib import Path
+from typing import Dict, Any, List
+
+from kedro.framework.hooks import hook_impl
+from kedro.config import OmegaConfigLoader
+from kedro.io import DataCatalog, MemoryDataset
+from kedro_datasets.pickle import PickleDataset
+from kedro_datasets.json import JSONDataset
+from kedro_datasets.matplotlib import MatplotlibWriter
+from matplotlib.figure import Figure
+from typing import Optional
+logger = logging.getLogger(__name__)
+
+MODELS_BASE = Path("data") / "04_models"
+OUTPUT_BASE = Path("data") / "05_model_output"
+METRICS_BASE = Path("data") / "06_model_metrics"
+REPORT_BASE = Path("data") / "07_reporting"
+
+
 class DynamicModelCatalogHook:
     def _is_eval(self, pipeline_name: str) -> bool:
         return "evaluation" in str(pipeline_name)
@@ -98,11 +120,14 @@ class DynamicModelCatalogHook:
                     if len(toks) >= 6:
                         dataset_ids.add(toks[-6])
                 for dataset_id in dataset_ids:
-                    # [HEATMAP] Pre-registro del output del heatmap (una imagen por dataset)
-                    out_key = f"visualization.{vis_folder}.{dataset_id}.heatmap"   # [HEATMAP]
-                    out_path = REPORT_BASE / vis_folder / dataset_id / "heatmap.png"  # [HEATMAP]
-                    self._register_if_missing(catalog, out_key, MatplotlibWriter(filepath=str(out_path)))  # [HEATMAP]
-
+                    # [HEATMAP]
+                    out_key = f"visualization.{vis_folder}.{dataset_id}.heatmap"
+                    out_path = REPORT_BASE / vis_folder / dataset_id / "heatmap.png"
+                    self._register_if_missing(catalog, out_key, MatplotlibWriter(filepath=str(out_path)))
+                    # [SCATTER] pre-registro del scatter (una por dataset)
+                    scat_key = f"visualization.{vis_folder}.{dataset_id}.scatter_qwk_mae"  # [SCATTER]
+                    scat_path = REPORT_BASE / vis_folder / dataset_id / "scatter_qwk_mae.png"  # [SCATTER]
+                    self._register_if_missing(catalog, scat_key, MatplotlibWriter(filepath=str(scat_path)))  # [SCATTER]
                     # Nominal
                     for m in nominal_metrics:
                         out_key = f"visualization.{vis_folder}.{dataset_id}.{m}"
@@ -257,10 +282,15 @@ class DynamicModelCatalogHook:
 
             metric_lc = str(metric).lower()
             if metric_lc == "heatmap":
-                # [HEATMAP] Guardado especial del heatmap en carpeta plana del dataset (sin nominal/ordinal)
-                out_dir = REPORT_BASE / run_folder / dataset_id   # [HEATMAP]
-                out_dir.mkdir(parents=True, exist_ok=True)        # [HEATMAP]
-                out_path = out_dir / "heatmap.png"                # [HEATMAP]
+                # [HEATMAP] carpeta plana del dataset
+                out_dir = REPORT_BASE / run_folder / dataset_id
+                out_dir.mkdir(parents=True, exist_ok=True)
+                out_path = out_dir / "heatmap.png"
+            elif metric_lc == "scatter_qwk_mae":  # [SCATTER]
+                # [SCATTER] carpeta plana del dataset
+                out_dir = REPORT_BASE / run_folder / dataset_id
+                out_dir.mkdir(parents=True, exist_ok=True)
+                out_path = out_dir / "scatter_qwk_mae.png"
             else:
                 metric_type = "ordinal" if metric_lc in {"qwk", "mae", "amae"} else "nominal"
                 out_dir = REPORT_BASE / run_folder / dataset_id / metric_type
