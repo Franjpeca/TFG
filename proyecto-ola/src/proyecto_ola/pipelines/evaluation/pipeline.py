@@ -44,7 +44,7 @@ def _is_pure_eval_run_from_cli() -> bool:
 
 def create_pipeline(**kwargs) -> Pipeline:
     params = kwargs.get("params", {})
-    run_id = params.get("run_id", "debug")
+    run_id = params.get("run_id", "001")
     evaluate_only = params.get("evaluate_only", None)
 
     # Para construir combinaciones cuando no dependemos del disco

@@ -100,6 +100,7 @@ Este comando generará todas las gráficas posibles para los modelos evaluados e
 kedro run -p visualization \
   --params execution_folder=001_20250815_184843   --to-outputs=visualization.001_20250815_184843.46053.qwk
 ```
+Los ficheros con las métricas deben de exitir antes de ejecutarse dicho comando y debe de tener la nomenclatura correcta.
 
 > 🧠 **Nota importante:** Los comandos generados por **Kedro Viz** no añaden automáticamente el argumento `--pipeline=visualization`.  
 > Por eso, si se desea lanzar visualización desde la CLI con `--to-outputs`, hay que especificar explícitamente el pipeline con `-p visualization`.

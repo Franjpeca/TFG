@@ -32,7 +32,7 @@ MODEL_PIPELINES = {
 
 def create_pipeline(**kwargs) -> Pipeline:
     params = kwargs.get("params", {})
-    run_id = params.get("run_id", "debug")
+    run_id = params.get("run_id", "001")
     model_params = params.get("model_parameters", {})
     train_datasets = params.get("training_datasets", [])
     cv_default = params.get("cv_settings", {"n_splits": 5, "random_state": 42})

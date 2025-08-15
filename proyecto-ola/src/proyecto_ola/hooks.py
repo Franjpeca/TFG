@@ -20,28 +20,6 @@ METRICS_BASE = Path("data") / "06_model_metrics"
 REPORT_BASE = Path("data") / "07_reporting"
 
 
-import os
-import datetime
-import logging
-from pathlib import Path
-from typing import Dict, Any, List
-
-from kedro.framework.hooks import hook_impl
-from kedro.config import OmegaConfigLoader
-from kedro.io import DataCatalog, MemoryDataset
-from kedro_datasets.pickle import PickleDataset
-from kedro_datasets.json import JSONDataset
-from kedro_datasets.matplotlib import MatplotlibWriter
-from matplotlib.figure import Figure
-from typing import Optional
-logger = logging.getLogger(__name__)
-
-MODELS_BASE = Path("data") / "04_models"
-OUTPUT_BASE = Path("data") / "05_model_output"
-METRICS_BASE = Path("data") / "06_model_metrics"
-REPORT_BASE = Path("data") / "07_reporting"
-
-
 class DynamicModelCatalogHook:
     def _is_eval(self, pipeline_name: str) -> bool:
         return "evaluation" in str(pipeline_name)
