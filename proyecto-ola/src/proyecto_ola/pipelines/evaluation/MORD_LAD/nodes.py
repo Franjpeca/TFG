@@ -5,9 +5,6 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score, cohen_kappa_score, mean_absolute_error
 from sklearn.preprocessing import LabelEncoder
 
-# ORCA path (si aplica)
-sys.path.append('/mnt/c/Users/francisco.perez/Desktop/TFG/proyecto-ola/orca-python')
-
 logger = logging.getLogger(__name__)
 
 def amae(y_true, y_pred):

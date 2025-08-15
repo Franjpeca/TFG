@@ -6,8 +6,6 @@ import logging
 import mord
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 
-sys.path.append('/home/fran/TFG/proyecto-ola/orca-python')
-
 logger = logging.getLogger(__name__)
 
 def Train_MORD_LogisticAT(dataset, params, cv_settings, model_id, dataset_id):

@@ -1,100 +1,120 @@
-# proyecto_ola
+# TFG - Predicción Ordinal de Altura de Olas con Kedro
 
-[![Powered by Kedro](https://img.shields.io/badge/powered_by-kedro-ffc900?logo=kedro)](https://kedro.org)
+Este repositorio contiene el Trabajo de Fin de Grado (TFG) sobre predicción ordinal de la altura de olas mediante modelos de Machine Learning, implementado con el framework **Kedro**.
 
-## Overview
+---
 
-This is your new Kedro project with Kedro-Viz and PySpark setup, which was generated using `kedro 0.19.10`.
+## 📦 Requisitos
 
-Take a look at the [Kedro documentation](https://docs.kedro.org) to get started.
+- Python 3.9+
+- pip
 
-## Rules and guidelines
+---
 
-In order to get the best out of the template:
+## 📂 Estructura de datos
 
-* Don't remove any lines from the `.gitignore` file we provide
-* Make sure your results can be reproduced by following a [data engineering convention](https://docs.kedro.org/en/stable/faq/faq.html#what-is-data-engineering-convention)
-* Don't commit data to your repository
-* Don't commit any credentials or your local configuration to your repository. Keep all your credentials and local configuration in `conf/local/`
-
-## How to install dependencies
-
-Declare any dependencies in `requirements.txt` for `pip` installation.
-
-To install them, run:
+Este proyecto utiliza una estructura dinámica de carpetas según cada ejecución (`run_id` + `execution_folder`):
 
 ```
+data/
+├── 04_models/                # Modelos entrenados (PKL)
+├── 05_model_output/          # Predicciones (JSON)
+├── 06_model_metrics/         # Métricas (JSON)
+├── 07_reporting/             # Gráficas generadas por visualization
+│   └── <execution_folder>/
+│       └── <dataset_id>/
+│           ├── heatmap.png
+│           ├── scatter_qwk_mae.png
+│           ├── nominal/
+│           │   ├── accuracy.png
+│           │   └── f1_score.png
+│           └── ordinal/
+│               ├── qwk.png
+│               ├── mae.png
+│               └── amae.png
+```
+
+---
+
+## 🛠️ Instalación
+
+1. Clona el repositorio:
+
+```bash
+git clone https://github.com/Franjpeca/TFG.git
+cd TFG/proyecto-ola
+```
+
+2. Crea un entorno virtual:
+
+```bash
+python -m venv venv
+source venv/bin/activate  # o .\venv\Scripts\activate en Windows
+```
+
+3. Instala las dependencias:
+
+```bash
 pip install -r requirements.txt
 ```
 
-## How to run your Kedro pipeline
+> ⚠️ El archivo ya incluye la instalación de PyTorch CPU desde el repositorio oficial.
 
-You can run your Kedro project with:
+---
 
-```
+## ▶️ Ejecución general
+
+Para lanzar todos los pipelines (preprocesado, entrenamiento, evaluación):
+
+```bash
 kedro run
 ```
+Esto generará todos los resultados de los modelos encontrados en conf/base/parameters.yml.
 
-## How to test your Kedro project
+Para lanzar fases concretas:
 
-Have a look at the files `src/tests/test_run.py` and `src/tests/pipelines/data_science/test_pipeline.py` for instructions on how to write your tests. Run the tests as follows:
-
-```
-pytest
-```
-
-To configure the coverage threshold, look at the `.coveragerc` file.
-
-## Project dependencies
-
-To see and update the dependency requirements for your project use `requirements.txt`. Install the project requirements with `pip install -r requirements.txt`.
-
-[Further information about project dependencies](https://docs.kedro.org/en/stable/kedro_project_setup/dependencies.html#project-specific-dependencies)
-
-## How to work with Kedro and notebooks
-
-> Note: Using `kedro jupyter` or `kedro ipython` to run your notebook provides these variables in scope: `catalog`, `context`, `pipelines` and `session`.
->
-> Jupyter, JupyterLab, and IPython are already included in the project requirements by default, so once you have run `pip install -r requirements.txt` you will not need to take any extra steps before you use them.
-
-### Jupyter
-To use Jupyter notebooks in your Kedro project, you need to install Jupyter:
-
-```
-pip install jupyter
+```bash
+kedro run -p training
+kedro run -p evaluation
 ```
 
-After installing Jupyter, you can start a local notebook server:
+---
 
-```
-kedro jupyter notebook
-```
+## 📊 Visualización de resultados
 
-### JupyterLab
-To use JupyterLab, you need to install it:
+⚠️ El pipeline de visualización **no forma parte del `__default__`** para evitar errores cuando no hay métricas generadas. Está diseñado para ejecutarse manualmente y detectar automáticamente la última ejecución con resultados.
 
-```
-pip install jupyterlab
-```
+### 🔁 Ejecución completa del pipeline de visualización:
 
-You can also start JupyterLab:
-
-```
-kedro jupyter lab
+```bash
+kedro run -p visualization
 ```
 
-### IPython
-And if you want to run an IPython session:
+Este comando generará todas las gráficas posibles para los modelos evaluados en la última ejecución válida (por orden de modificación en disco).
 
+---
+
+### 🎯 Visualizar una métrica concreta (opcional):
+
+```bash
+kedro run -p visualization \
+  --params execution_folder=001_20250815_184843   --to-outputs=visualization.001_20250815_184843.46053.qwk
 ```
-kedro ipython
-```
 
-### How to ignore notebook output cells in `git`
-To automatically strip out all output cell contents before committing to `git`, you can use tools like [`nbstripout`](https://github.com/kynan/nbstripout). For example, you can add a hook in `.git/config` with `nbstripout --install`. This will run `nbstripout` before anything is committed to `git`.
+> 🧠 **Nota importante:** Los comandos generados por **Kedro Viz** no añaden automáticamente el argumento `--pipeline=visualization`.  
+> Por eso, si se desea lanzar visualización desde la CLI con `--to-outputs`, hay que especificar explícitamente el pipeline con `-p visualization`.
 
-> *Note:* Your output cells will be retained locally.
+---
 
-## Package your Kedro project
+## 🧠 Modelos incluidos
 
-[Further information about building project documentation and packaging your project](https://docs.kedro.org/en/stable/tutorial/package_a_project.html)
+- **MORD**: LAD, LogisticAT, LogisticIT, OrdinalRidge
+- **ORCA (dlordinal)**: NNPOM, NNOP, REDSVM, SVOREX, OrdinalDecomposition
+
+---
+
+## 📌 Detalles importantes
+
+- La identidad de ejecución se controla con `run_id` y `execution_folder`.
+- Todos los resultados se guardan en rutas únicas para facilitar comparaciones y evitar sobrescritura.
+- El hook dinámico asegura que los modelos, métricas y gráficas se registran y guardan correctamente incluso si no están en `catalog.yml`.

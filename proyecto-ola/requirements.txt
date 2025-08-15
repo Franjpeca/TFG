@@ -1,8 +1,26 @@
-ipython>=8.10
-jupyterlab>=3.0
-kedro-datasets>=3.0
-kedro-viz>=6.7.0
-kedro[jupyter]~=0.19.10
-notebook
-scikit-learn~=1.5.1
-setuptools; python_version >= "3.12"
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+#Kedro (ultima estable 0.19.x)
+kedro==0.19.14
+
+# Conectores(json, matplotlib)
+kedro-datasets[json,matplotlib]==8.0.0
+
+# Kedro Viz
+kedro-viz==11.0.2
+
+# Ciencia de datos
+numpy==1.26.4
+pandas==2.2.3
+scipy==1.13.1
+scikit-learn==1.4.2
+matplotlib==3.9.2
+Pillow==9.4.0
+torch==2.3.0+cpu
+
+# Modelos ordinales
+mord==0.7
+dlordinal==2.4.1
+
+# ORCA
+-e git+https://github.com/ayrna/orca-python@5475c99a26581f14fea9b981ada28b1ff1b4aa63#egg=orca_python

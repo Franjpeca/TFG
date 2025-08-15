@@ -9,8 +9,6 @@ from sklearn.pipeline import Pipeline
 
 from sklearn.preprocessing import StandardScaler
 
-sys.path.append('/home/fran/TFG/proyecto-ola/orca-python')
-
 logger = logging.getLogger(__name__)
 
 def Train_MORD_LAD(dataset, params, cv_settings, model_id, dataset_id):

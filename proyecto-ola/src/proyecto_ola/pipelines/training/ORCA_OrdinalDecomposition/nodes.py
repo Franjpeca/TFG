@@ -8,8 +8,6 @@ from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 
-sys.path.append('/home/fran/TFG/proyecto-ola/orca-python')
-
 import orca_python
 from orca_python.classifiers import OrdinalDecomposition
 

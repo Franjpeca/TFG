@@ -6,9 +6,6 @@ import numpy as np
 from sklearn.metrics import accuracy_score, f1_score, cohen_kappa_score, mean_absolute_error
 from sklearn.preprocessing import LabelEncoder
 
-# ORCA path
-sys.path.append('/mnt/c/Users/francisco.perez/Desktop/TFG/proyecto-ola/orca-python')
-
 # Logger
 logger = logging.getLogger(__name__)
 

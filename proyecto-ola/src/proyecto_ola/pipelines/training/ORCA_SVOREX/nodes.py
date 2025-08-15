@@ -6,8 +6,6 @@ import torch
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
-# ORCA
-sys.path.append("/home/fran/TFG/proyecto-ola/orca-python")
 from orca_python.classifiers import SVOREX
 
 logger = logging.getLogger(__name__)

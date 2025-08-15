@@ -7,9 +7,6 @@ import mord
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.preprocessing import LabelEncoder
 
-# ORCA path (ajusta si usas Windows/WSL)
-sys.path.append('/home/fran/TFG/proyecto-ola/orca-python')
-
 logger = logging.getLogger(__name__)
 
 def Train_MORD_MulticlassLogistic(dataset, params, param_type, cv_settings, dataset_id):
