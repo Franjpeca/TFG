@@ -19,7 +19,8 @@ def Train_ORCA_NNOP(dataset, params, cv_settings, model_id, dataset_id):
     label_mapping = {"A": 1, "B": 2, "C": 3, "D": 4, "E": 5}
     y = y_raw.map(label_mapping).astype(int).values
 
-    logger.info(f"\n[Training] Entrenando ORCA-NNOP con GridSearch (MAE) con el dataset: {dataset_id} ...")
+    logger.info(f"[Training] Entrenando ORCA-NNOP con GridSearch (MAE) con el dataset: {dataset_id} ...")
+    logger.info(f"[Training] Model id: {model_id} ...\n")
 
     cv = StratifiedKFold(
         n_splits=cv_settings["n_splits"],
@@ -51,6 +52,6 @@ def Train_ORCA_NNOP(dataset, params, cv_settings, model_id, dataset_id):
     best_model.scaler = best_model.named_steps["scaler"]
 
     logger.info(f"[Training] Mejor MAE obtenido: {-search.best_score_:.5f}")
-    logger.info(f"[Training] Mejor modelo obtenido:\n\t{best_model}")
+    logger.info(f"[Training] Mejor modelo obtenido:\n\t{best_model}\n\n")
 
     return best_model

@@ -17,7 +17,8 @@ def Train_MORD_MulticlassLogistic(dataset, params, param_type, cv_settings, data
     label_mapping = {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4}
     y_mapped = y_raw.map(label_mapping).astype(int)
 
-    logger.info(f"\n[Training] Entrenando MulticlassLogistic con GridSearch (MAE) con el dataset: {dataset_id} ...")
+    logger.info(f"[Training] Entrenando MulticlassLogistic con GridSearch (MAE) con el dataset: {dataset_id} ...")
+    logger.info(f"[Training] Model id: {model_id} ...\n")
 
     # Configuracion de validacion cruzada
     cv = StratifiedKFold(
@@ -41,6 +42,6 @@ def Train_MORD_MulticlassLogistic(dataset, params, param_type, cv_settings, data
     best_model.label_mapping = label_mapping
 
     logger.info(f"[Training] Mejor MAE obtenido: {-search.best_score_:.5f}")
-    logger.info(f"[Training] Mejor modelo obtenido:\n\t{best_model}")
+    logger.info(f"[Training] Mejor modelo obtenido:\n\t{best_model}\n\n")
 
     return best_model

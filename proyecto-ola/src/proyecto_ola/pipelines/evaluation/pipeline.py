@@ -91,9 +91,9 @@ def create_pipeline(**kwargs) -> Pipeline:
         d = Path("data") / "04_models" / exec_folder
         if d.exists() and any(d.glob("Model_*.pkl")):
             models_dir = d
-            logger.info(f"[evaluation] usando carpeta forzada: {models_dir.name}")
+            logger.info(f"[INFO] Usando la ejecucion indicada: {models_dir.name}\n\n")
         else:
-            logger.warning(f"[evaluation] La carpeta forzada no existe o no contiene modelos: {d}")
+            logger.warning(f"[INFO] La carpeta indicada no existe o no contiene modelos: {d}\n\n")
             models_dir = None
     else:
         base = Path("data") / "04_models"
@@ -107,7 +107,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                 best_ts, best_dir = ts, d
         models_dir = best_dir
         if models_dir:
-            logger.info(f"[evaluation] usando carpeta detectada: {models_dir.name}")
+            logger.info(f"[INFO] Usando ultima ejecucion: {models_dir.name}\n\n")
 
     # 3) Estrategia de construcción de keys
     full_keys_from_disk = []

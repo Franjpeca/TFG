@@ -20,7 +20,8 @@ def Train_ORCA_OrdinalDecomposition(dataset, params, cv_settings, model_id, data
     label_mapping = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}
     y = pd.Series(y_raw).map(label_mapping).astype(int).values
 
-    logger.info(f"\n[Training] Entrenando ORCA-OrdinalDecomposition con GridSearch (MAE) con el dataset: {dataset_id} ...")
+    logger.info(f"[Training] Entrenando ORCA-OrdinalDecomposition con GridSearch (MAE) con el dataset: {dataset_id} ...")
+    logger.info(f"[Training] Model id: {model_id} ...\n")
 
     torch.manual_seed(cv_settings["random_state"])
     np.random.seed(cv_settings["random_state"])
@@ -52,6 +53,6 @@ def Train_ORCA_OrdinalDecomposition(dataset, params, cv_settings, model_id, data
     best_model.scaler = best_model.named_steps["scaler"]
 
     logger.info(f"[Training] Mejor MAE obtenido: {-search.best_score_:.5f}")
-    logger.info(f"[Training] Mejor modelo obtenido:\n\t{best_model}")
+    logger.info(f"[Training] Mejor modelo obtenido:\n\t{best_model}\n\n")
 
     return best_model

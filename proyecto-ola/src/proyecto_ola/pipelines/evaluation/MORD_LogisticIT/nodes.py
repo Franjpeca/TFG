@@ -21,8 +21,8 @@ def amae(y_true, y_pred):
     return np.mean(per_class_errors)
 
 def Predict_MORD_LogisticIT(model, dataset, model_id, dataset_id):
-    logger.info(f"\n[Evaluating] Prediciendo con el modelo:\n\t{model_id}")
-    logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
+    logger.info(f"[Evaluating] Prediciendo con el modelo:\n\t{model_id}")
+    logger.info(f"[Evaluating] Dataset usado:\t{dataset_id}\n\n")
     
     X = dataset.iloc[:, :-1]
     y = dataset.iloc[:, -1]
@@ -43,9 +43,9 @@ def Predict_MORD_LogisticIT(model, dataset, model_id, dataset_id):
     )
 
 def Evaluate_MORD_LogisticIT(y_true, y_pred, model_params, model_id, model_type, dataset_id, execution_folder):
-    logger.info(f"\n[Evaluating] Evaluando el modelo:\n\t{model_id}")
+    logger.info(f"[Evaluating] Evaluando modelo:\n\t{model_id}")
     logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
-    logger.info(f"[Evaluating] Carpeta de ejecución:\n\t{execution_folder}")
+    logger.info(f"[Evaluating] Carpeta de ejecución:\n\t{execution_folder}\n\n")
 
     if isinstance(y_pred, dict) and "y_pred" in y_pred:
         if "y_true" in y_pred:
@@ -56,7 +56,7 @@ def Evaluate_MORD_LogisticIT(y_true, y_pred, model_params, model_id, model_type,
     y_pred = np.asarray(y_pred)
 
     logger.info(f"[Evaluating] Distribución real (y): {dict(pd.Series(y_true).value_counts().sort_index())}")
-    logger.info(f"[Evaluating] Distribución predicha (y_pred): {dict(pd.Series(y_pred).value_counts().sort_index())}")
+    logger.info(f"[Evaluating] Distribución predicha (y_pred): {dict(pd.Series(y_pred).value_counts().sort_index())}\n")
 
     nominal_metrics = {
         "accuracy": accuracy_score(y_true, y_pred),
@@ -81,5 +81,6 @@ def Evaluate_MORD_LogisticIT(y_true, y_pred, model_params, model_id, model_type,
 
     logger.info(f"[Evaluating] model_id: {model_id_str}")
     logger.info(f"[Evaluating] Métricas nominales:\n\t{nominal_metrics}")
-    logger.info(f"[Evaluating] Métricas ordinales:\n\t{ordinal_metrics}")
+    logger.info(f"[Evaluating] Métricas ordinales:\n\t{ordinal_metrics}\n\n")
+    
     return results

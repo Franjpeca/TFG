@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 
 def clean_data_all(*datasets):
     cleaned_list = []
-    logger.info("[Preprocessing] Limpiando los datasets ...")
+    logger.info("[Preprocessing] Limpiando los datasets ...\n")
 
     for dataset in datasets:
         cleaned_data = clean_data(dataset)
@@ -16,7 +16,7 @@ def clean_data_all(*datasets):
 
 def clean_data(data: pd.DataFrame) -> pd.DataFrame:
     if data.empty:
-        logger.warning("[Preprocessing] DataFrame vacio!")
+        logger.warning("[Preprocessing] DataFrame vacio!\n")
 
     data = data.dropna()
     data = data.drop(columns=[data.columns[-2]])

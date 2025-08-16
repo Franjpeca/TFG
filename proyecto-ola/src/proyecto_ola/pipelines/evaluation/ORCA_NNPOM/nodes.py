@@ -20,8 +20,8 @@ def amae(y_true, y_pred):
     return np.mean(per_class_errors)
 
 def Predict_ORCA_NNPOM(model, dataset, model_id, dataset_id):
-    logger.info(f"\n[Evaluating] Prediciendo con el modelo:\n\t{model_id}")
-    logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
+    logger.info(f"[Evaluating] Prediciendo con el modelo:\n\t{model_id}")
+    logger.info(f"[Evaluating] Dataset usado:\t{dataset_id}\n\n")
     
     X = dataset.iloc[:, :-1]
     y = dataset.iloc[:, -1]
@@ -35,7 +35,7 @@ def Predict_ORCA_NNPOM(model, dataset, model_id, dataset_id):
         if 0 not in vals and vals.min() >= 1:
             y = y - 1
 
-    y_pred = model.predict(X)
+    y_pred = model.predict(X.to_numpy())
 
     y_pred_list = [int(v) - 1 for v in np.asarray(y_pred).tolist()]
     y_true_list = [int(v) for v in np.asarray(y).tolist()]
@@ -47,9 +47,9 @@ def Predict_ORCA_NNPOM(model, dataset, model_id, dataset_id):
     )
 
 def Evaluate_ORCA_NNPOM(y_true, y_pred, model_params, model_id, model_type, dataset_id, execution_folder):
-    logger.info(f"\n[Evaluating] Evaluando el modelo:\n\t{model_id}")
+    logger.info(f"[Evaluating] Evaluando modelo:\n\t{model_id}")
     logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
-    logger.info(f"[Evaluating] Carpeta de ejecución:\n\t{execution_folder}")
+    logger.info(f"[Evaluating] Carpeta de ejecución:\n\t{execution_folder}\n")
 
     if isinstance(y_pred, dict) and "y_pred" in y_pred:
         if "y_true" in y_pred:
@@ -60,7 +60,7 @@ def Evaluate_ORCA_NNPOM(y_true, y_pred, model_params, model_id, model_type, data
     y_pred = np.asarray(y_pred)
 
     logger.info(f"[Evaluating] DEBUG Distribución real (y): {dict(pd.Series(y_true).value_counts().sort_index())}")
-    logger.info(f"[Evaluating] DEBUG Distribución predicha (y_pred): {dict(pd.Series(y_pred).value_counts().sort_index())}")
+    logger.info(f"[Evaluating] DEBUG Distribución predicha (y_pred): {dict(pd.Series(y_pred).value_counts().sort_index())}\n")
 
     nominal_metrics = {
         "accuracy": accuracy_score(y_true, y_pred),
@@ -85,5 +85,6 @@ def Evaluate_ORCA_NNPOM(y_true, y_pred, model_params, model_id, model_type, data
 
     logger.info(f"[Evaluating] model_id: {model_id_str}")
     logger.info(f"[Evaluating] Métricas nominales:\n\t{nominal_metrics}")
-    logger.info(f"[Evaluating] Métricas ordinales:\n\t{ordinal_metrics}")
+    logger.info(f"[Evaluating] Métricas ordinales:\n\t{ordinal_metrics}\n\n")
+    
     return results
