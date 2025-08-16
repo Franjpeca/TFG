@@ -1,7 +1,7 @@
 # Para parametros
 "models.*":
   type: pickle.PickleDataset
-  filepath: data/06_models/{name}.pkl
+  filepath: data/04_models/{name}.pkl
   versioned: true
 
 # Datasets

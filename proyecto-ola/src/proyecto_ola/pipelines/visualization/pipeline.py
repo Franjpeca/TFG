@@ -122,8 +122,6 @@ def create_pipeline(**kwargs) -> Pipeline:
                  name="VISUALIZATION_NOOP", tags=["pipeline_visualization"])
         ])
 
-    logger.info(f"[VISUALIZATION] Generando graficas ...\n\n")
-
     # Construcción de nodos por dataset y métrica
     for dataset_id, metric_inputs in datasets_map.items():
         for metric_name in nominal_metrics:

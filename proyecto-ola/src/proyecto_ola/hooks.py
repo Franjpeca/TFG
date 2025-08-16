@@ -121,7 +121,16 @@ class DynamicModelCatalogHook:
             return
 
         # ──────────────────────── EVALUATION o TRAINING ─────────────────────────
-        execution_folder = forced_folder or self._choose_exec_folder_last_with_models(run_id, is_eval)
+        # ⬇️ CAMBIO ÚNICO: no mirar carpetas en kedro run normal; solo en -p evaluation (o si se fuerza por CLI)
+        if forced_folder:
+            execution_folder = forced_folder
+        elif self._is_eval(pipeline_name) and pipeline_name == "evaluation":
+            latest = self._latest_folder_by_inner_files(MODELS_BASE, "Model_*.pkl")
+            execution_folder = latest.name if latest else f"{run_id}_{datetime.datetime.now():%Y%m%d_%H%M%S}"
+        else:
+            execution_folder = f"{run_id}_{datetime.datetime.now():%Y%m%d_%H%M%S}"
+        # ⬆️ FIN CAMBIO
+
         if "params:execution_folder" not in catalog.list():
             catalog.add_feed_dict({"params:execution_folder": execution_folder}, replace=True)
 
