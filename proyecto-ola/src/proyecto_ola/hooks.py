@@ -1,8 +1,7 @@
-import os
 import datetime
 import logging
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional, Tuple
 
 from kedro.framework.hooks import hook_impl
 from kedro.config import OmegaConfigLoader
@@ -11,279 +10,239 @@ from kedro_datasets.pickle import PickleDataset
 from kedro_datasets.json import JSONDataset
 from kedro_datasets.matplotlib import MatplotlibWriter
 from matplotlib.figure import Figure
-from typing import Optional
+
 logger = logging.getLogger(__name__)
 
+# Carpetas base (no cambiar)
 MODELS_BASE = Path("data") / "04_models"
 OUTPUT_BASE = Path("data") / "05_model_output"
 METRICS_BASE = Path("data") / "06_model_metrics"
 REPORT_BASE = Path("data") / "07_reporting"
 
 
+# Comprueba si es pipeline de evaluacion
+def is_evaluation(name: str) -> bool:
+    return "evaluation" in str(name)
+
+
+# Comprueba si es pipeline de visualizacion
+def is_visualization(name: str) -> bool:
+    return "visualization" in str(name)
+
+
+# Carga parametros desde conf/
+def load_parameters() -> Dict[str, Any]:
+    return OmegaConfigLoader(conf_source="conf").get("parameters", {}) or {}
+
+
+# Devuelve la ultima carpeta con ficheros que casen con el patron
+def find_latest_folder_with(base: Path, pattern: str) -> Optional[Path]:
+    if not base.exists():
+        return None
+    best, ts = None, -1.0
+    for folder in base.glob("*_*"):
+        files = list(folder.glob(pattern))
+        if not files:
+            continue
+        latest_mtime = max(f.stat().st_mtime for f in files)
+        if latest_mtime > ts:
+            ts, best = latest_mtime, folder
+    return best
+
+
+# Registra dataset si falta
+def register_if_missing(catalog: DataCatalog, key: str, dataset_obj) -> None:
+    if key not in catalog.list():
+        catalog.add(key, dataset_obj)
+
+
+# Setea params:* solo si cambia
+def set_param_if_changed(catalog: DataCatalog, param_key: str, value: Any) -> None:
+    try:
+        current = catalog.load(param_key)
+    except Exception:
+        current = object()
+    if current != value:
+        catalog.add_feed_dict({param_key: value}, replace=True)
+
+
+# Asegura carpetas de salida
+def ensure_dirs(is_eval: bool, models_dir: Path, outputs_dir: Path, metrics_dir: Path) -> None:
+    if not is_eval:
+        models_dir.mkdir(parents=True, exist_ok=True)
+    outputs_dir.mkdir(parents=True, exist_ok=True)
+    metrics_dir.mkdir(parents=True, exist_ok=True)
+
+
+# Resuelve carpeta de ejecucion
+def resolve_execution_folder(pipeline_name: str, run_id: str, forced: Optional[str]) -> str:
+    if forced:
+        return forced
+    if is_evaluation(pipeline_name) and pipeline_name == "evaluation":
+        latest = find_latest_folder_with(MODELS_BASE, "Model_*.pkl")
+        if latest:
+            logger.info(f"[Evaluating] Using folder: {latest.name}")
+            return latest.name
+        logger.warning(f"[Evaluating] No models found for run_id={run_id}.")
+    return f"{run_id}_{datetime.datetime.now():%Y%m%d_%H%M%S}"
+
+
+# Extrae dataset_id desde la clave completa
+def dataset_id_from_fullkey(full_key: str) -> str:
+    try:
+        return full_key.split("_", 4)[2]
+    except Exception:
+        logger.warning(f"[evaluation] Could not extract dataset_id from {full_key}")
+        return "unknown"
+
+
+# Extrae dataset_id desde el nombre del dataset de training
+def dataset_id_from_train_name(name: str) -> str:
+    return name.replace("cleaned_", "").replace("_train_ordinal", "")
+
+
+# Guarda evaluated_keys sin warnings
+def save_evaluated_keys(catalog: DataCatalog, keys: List[str]) -> None:
+    register_if_missing(catalog, "evaluated_keys", MemoryDataset(copy_mode="assign"))
+    catalog.save("evaluated_keys", keys)
+    set_param_if_changed(catalog, "params:evaluated_keys", keys)
+
+
+# Registra el modelo con clave oficial y alias
+def register_model(catalog: DataCatalog, run_id: str, full_key: str, model_path: Path) -> None:
+    ds = PickleDataset(filepath=str(model_path), backend="pickle", save_args={"protocol": 5})
+    register_if_missing(catalog, f"training.{run_id}.Model_{full_key}", ds)
+    register_if_missing(catalog, full_key, ds)
+
+
+# Registra JSON de predicciones y metricas
+def register_evaluation_outputs(
+    catalog: DataCatalog,
+    run_id: str,
+    execution_folder: str,
+    full_key: str,
+    outputs_dir: Path,
+    metrics_dir: Path,
+) -> None:
+    pred_name = f"Predicted_Labels_{full_key}"
+    metric_name = f"Metrics_{full_key}"
+    pred_path = outputs_dir / f"{pred_name}.json"
+    metric_path = metrics_dir / f"{metric_name}.json"
+    pairs: Tuple[Tuple[str, Path], ...] = (
+        (f"evaluation.{run_id}.{pred_name}", pred_path),
+        (f"evaluation.{run_id}.{metric_name}", metric_path),
+        (f"evaluation.{execution_folder}.{pred_name}", pred_path),
+        (f"evaluation.{execution_folder}.{metric_name}", metric_path),
+    )
+    for key, path in pairs:
+        register_if_missing(catalog, key, JSONDataset(filepath=str(path)))
+
+
+# Calcula la ruta de salida para figuras de visualizacion
+def visualization_output_path(output_name: str) -> Optional[Path]:
+    parts = output_name.split(".")
+    if len(parts) != 4 or parts[0] != "visualization":
+        return None
+    _, run_folder, dataset_id, metric = parts
+    metric_l = metric.lower()
+    base = REPORT_BASE / run_folder / dataset_id
+    if metric_l == "heatmap":
+        return base / "heatmap.png"
+    if metric_l == "scatter_qwk_mae":
+        return base / "scatter_qwk_mae.png"
+    sub = "ordinal" if metric_l in {"qwk", "mae", "amae"} else "nominal"
+    return base / sub / f"{metric}.png"
+
+
 class DynamicModelCatalogHook:
-    def _is_eval(self, pipeline_name: str) -> bool:
-        return "evaluation" in str(pipeline_name)
-
-    def _is_viz(self, pipeline_name: str) -> bool:
-        return "visualization" in str(pipeline_name)
-
-    def _load_params(self) -> Dict[str, Any]:
-        cfg = OmegaConfigLoader(conf_source="conf")
-        return cfg.get("parameters", {}) or {}
-
-    def _choose_exec_folder_last_with_models(self, run_id: str, is_eval: bool) -> str:
-        if is_eval:
-            latest = self._latest_folder_by_inner_files(MODELS_BASE, "Model_*.pkl")
-            if latest:
-                logger.info(f"[Evaluating] Usando carpeta (última por ficheros): {latest.name}")
-                return latest.name
-            logger.warning(f"[Evaluating] No se encontraron modelos para run_id={run_id}.")
-            return f"{run_id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        else:
-            return f"{run_id}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
-
-    def _ensure_dirs(self, is_eval: bool, models_dir: Path, output_dir: Path, metrics_dir: Path) -> None:
-        if not is_eval:
-            models_dir.mkdir(parents=True, exist_ok=True)
-        output_dir.mkdir(parents=True, exist_ok=True)
-        metrics_dir.mkdir(parents=True, exist_ok=True)
-
-    def _register_if_missing(self, catalog: DataCatalog, key: str, ds) -> None:
-        if key not in catalog.list():
-            catalog.add(key, ds)
-
-    def _latest_folder_by_inner_files(self, base: Path, pattern: str) -> Optional[Path]:
-        if not base.exists():
-            return None
-        best_dir, best_ts = None, -1.0
-        for d in base.glob("*_*"):
-            files = list(d.glob(pattern))
-            if not files:
-                continue
-            ts = max(f.stat().st_mtime for f in files)
-            if ts > best_ts:
-                best_ts, best_dir = ts, d
-        return best_dir
-
     @hook_impl
     def before_pipeline_run(self, run_params: dict, catalog: DataCatalog) -> None:
+        # Resuelve parametros base
         pipeline_name = run_params.get("pipeline_name", "")
-
-        params_file = self._load_params()
-        params_cli = run_params.get("extra_params", {})
-        params = {**params_file, **params_cli}
-
+        params = {**load_parameters(), **run_params.get("extra_params", {})}
         run_id = params.get("run_id", "001")
-        forced_folder = params.get("execution_folder")
-        is_eval = self._is_eval(pipeline_name)
+        forced_execution_folder = params.get("execution_folder")
 
-        # ───────────────────────────── VISUALIZATION ─────────────────────────────
-        if self._is_viz(pipeline_name):
-            base_dir = METRICS_BASE
-            vis_folder = forced_folder or (self._latest_folder_by_inner_files(base_dir, "Metrics_*.json") or Path(""))
-            if vis_folder:
-                vis_folder = Path(vis_folder).name
-                if "params:execution_folder" not in catalog.list():
-                    catalog.add_feed_dict({"params:execution_folder": vis_folder}, replace=True)
-                # Inputs para visualización
-                for f in (METRICS_BASE / vis_folder).glob("Metrics_*.json"):
-                    ds_key = f"evaluation.{vis_folder}.{f.stem}"
-                    self._register_if_missing(catalog, ds_key, JSONDataset(filepath=str(f)))
-                # Pre-registro de outputs (para que persista al devolver Figure)
-                nominal_metrics = params.get("nominal_metrics", ["accuracy", "f1_score"])
-                ordinal_metrics = params.get("ordinal_metrics", ["qwk", "mae", "amae"])
-                dataset_ids = set()
-                for f in (METRICS_BASE / vis_folder).glob("Metrics_*.json"):
-                    toks = f.stem.replace("Metrics_", "", 1).split("_")
-                    if len(toks) >= 6:
-                        dataset_ids.add(toks[-6])
-                for dataset_id in dataset_ids:
-                    # [HEATMAP]
-                    out_key = f"visualization.{vis_folder}.{dataset_id}.heatmap"
-                    out_path = REPORT_BASE / vis_folder / dataset_id / "heatmap.png"
-                    self._register_if_missing(catalog, out_key, MatplotlibWriter(filepath=str(out_path)))
-                    # [SCATTER] pre-registro del scatter (una por dataset)
-                    scat_key = f"visualization.{vis_folder}.{dataset_id}.scatter_qwk_mae"  # [SCATTER]
-                    scat_path = REPORT_BASE / vis_folder / dataset_id / "scatter_qwk_mae.png"  # [SCATTER]
-                    self._register_if_missing(catalog, scat_key, MatplotlibWriter(filepath=str(scat_path)))  # [SCATTER]
-                    # Nominal
-                    for m in nominal_metrics:
-                        out_key = f"visualization.{vis_folder}.{dataset_id}.{m}"
-                        out_path = REPORT_BASE / vis_folder / dataset_id / "nominal" / f"{m}.png"
-                        self._register_if_missing(catalog, out_key, MatplotlibWriter(filepath=str(out_path)))
-                    # Ordinal
-                    for m in ordinal_metrics:
-                        out_key = f"visualization.{vis_folder}.{dataset_id}.{m}"
-                        out_path = REPORT_BASE / vis_folder / dataset_id / "ordinal" / f"{m}.png"
-                        self._register_if_missing(catalog, out_key, MatplotlibWriter(filepath=str(out_path)))
-            else:
-                logger.warning("[VISUALIZATION] No se encontró ninguna carpeta de métricas válida.")
+        # Modo visualizacion: registra entradas JSON
+        if is_visualization(pipeline_name):
+            latest_metrics_dir = find_latest_folder_with(METRICS_BASE, "Metrics_*.json")
+            visualization_folder = forced_execution_folder or (latest_metrics_dir.name if latest_metrics_dir else None)
+            if not visualization_folder:
+                logger.warning("[VISUALIZATION] No valid metrics folder found.")
+                return
+            set_param_if_changed(catalog, "params:execution_folder", Path(visualization_folder).name)
+            metrics_root = METRICS_BASE / Path(visualization_folder).name
+            for file in metrics_root.glob("Metrics_*.json"):
+                key = f"evaluation.{Path(visualization_folder).name}.{file.stem}"
+                register_if_missing(catalog, key, JSONDataset(filepath=str(file)))
             return
 
-        # ──────────────────────── EVALUATION o TRAINING ─────────────────────────
-        # ⬇️ CAMBIO ÚNICO: no mirar carpetas en kedro run normal; solo en -p evaluation (o si se fuerza por CLI)
-        if forced_folder:
-            execution_folder = forced_folder
-        elif self._is_eval(pipeline_name) and pipeline_name == "evaluation":
-            latest = self._latest_folder_by_inner_files(MODELS_BASE, "Model_*.pkl")
-            execution_folder = latest.name if latest else f"{run_id}_{datetime.datetime.now():%Y%m%d_%H%M%S}"
-        else:
-            execution_folder = f"{run_id}_{datetime.datetime.now():%Y%m%d_%H%M%S}"
-        # ⬆️ FIN CAMBIO
+        # Modo training/evaluation: resuelve carpeta de ejecucion
+        execution_folder = resolve_execution_folder(pipeline_name, run_id, forced_execution_folder)
+        set_param_if_changed(catalog, "params:execution_folder", execution_folder)
 
-        if "params:execution_folder" not in catalog.list():
-            catalog.add_feed_dict({"params:execution_folder": execution_folder}, replace=True)
-
-        model_params = params.get("model_parameters", {})
-        train_datasets = params.get("training_datasets", [])
-        default_cv = params.get("cv_settings", {"n_splits": 5, "random_state": 42})
-
+        # Prepara directorios
         models_dir = MODELS_BASE / execution_folder
-        output_dir = OUTPUT_BASE / execution_folder
+        outputs_dir = OUTPUT_BASE / execution_folder
         metrics_dir = METRICS_BASE / execution_folder
-        self._ensure_dirs(is_eval, models_dir, output_dir, metrics_dir)
+        ensure_dirs(is_evaluation(pipeline_name), models_dir, outputs_dir, metrics_dir)
 
+        # Lee parametros de modelos/datasets/cv
+        model_parameters: Dict[str, Dict[str, Any]] = params.get("model_parameters", {})
+        training_datasets: List[str] = params.get("training_datasets", [])
+        default_cv: Dict[str, Any] = params.get("cv_settings", {"n_splits": 5, "random_state": 42})
+
+        # Construye items a registrar
+        if is_evaluation(pipeline_name):
+            items: List[Tuple[str, Path]] = [
+                (p.stem.replace("Model_", "", 1), p) for p in models_dir.glob("Model_*.pkl")
+            ]
+        else:
+            items = []
+            for model_name, combos in model_parameters.items():
+                for combo_id, cfg in combos.items():
+                    if "param_grid" not in cfg:
+                        continue
+                    cv_cfg = cfg.get("cv_settings", default_cv)
+                    cv_str = f"cv_{cv_cfg['n_splits']}_rs_{cv_cfg['random_state']}"
+                    for train_ds in training_datasets:
+                        dsid = dataset_id_from_train_name(train_ds)
+                        full_key = f"{model_name}_{combo_id}_{dsid}_gridsearch_{cv_str}"
+                        items.append((full_key, models_dir / f"Model_{full_key}.pkl"))
+
+        # Registra modelos, salidas y params por modelo
         evaluated_keys: List[str] = []
+        for full_key, model_path in items:
+            evaluated_keys.append(full_key)
+            register_model(catalog, run_id, full_key, model_path)
+            register_evaluation_outputs(
+                catalog=catalog,
+                run_id=run_id,
+                execution_folder=execution_folder,
+                full_key=full_key,
+                outputs_dir=outputs_dir,
+                metrics_dir=metrics_dir,
+            )
+            dsid = dataset_id_from_fullkey(full_key)
+            register_if_missing(catalog, f"params:{full_key}_train_dataset_id", MemoryDataset(copy_mode="assign"))
+            register_if_missing(catalog, f"params:{full_key}_dataset_id", MemoryDataset(copy_mode="assign"))
+            catalog.save(f"params:{full_key}_train_dataset_id", dsid)
+            catalog.save(f"params:{full_key}_dataset_id", dsid)
 
-        # ─────────────── Rama EVALUATION directa (kedro -p evaluation) ─────────
-        if is_eval:
-            for pkl in models_dir.glob("Model_*.pkl"):
-                full_key = pkl.stem.replace("Model_", "", 1)
-                evaluated_keys.append(full_key)
-
-                ds_model = PickleDataset(filepath=str(pkl), backend="pickle", save_args={"protocol": 5})
-                model_ds_key = f"training.{run_id}.Model_{full_key}"
-                self._register_if_missing(catalog, model_ds_key, ds_model)
-                self._register_if_missing(catalog, full_key, ds_model)
-
-                pred_name = f"Predicted_Labels_{full_key}"
-                metr_name = f"Metrics_{full_key}"
-
-                # Claves oficiales (por compatibilidad con tus pipelines)
-                self._register_if_missing(
-                    catalog, f"evaluation.{run_id}.{pred_name}",
-                    JSONDataset(filepath=str(output_dir / f"{pred_name}.json")),
-                )
-                self._register_if_missing(
-                    catalog, f"evaluation.{run_id}.{metr_name}",
-                    JSONDataset(filepath=str(metrics_dir / f"{metr_name}.json")),
-                )
-
-                # Alias con execution_folder (útil para visualización/lecturas)
-                self._register_if_missing(
-                    catalog, f"evaluation.{execution_folder}.{pred_name}",
-                    JSONDataset(filepath=str(output_dir / f"{pred_name}.json")),
-                )
-                self._register_if_missing(
-                    catalog, f"evaluation.{execution_folder}.{metr_name}",
-                    JSONDataset(filepath=str(metrics_dir / f"{metr_name}.json")),
-                )
-
-                # dataset_id para downstream
-                try:
-                    _, _, dataset_id, _, _ = full_key.split("_", 4)
-                except ValueError:
-                    dataset_id = "unknown"
-                    logger.warning(f"[evaluation] No se pudo extraer dataset_id de {full_key}")
-
-                self._register_if_missing(catalog, f"params:{full_key}_train_dataset_id", MemoryDataset(data=dataset_id))
-                self._register_if_missing(catalog, f"params:{full_key}_dataset_id", MemoryDataset(data=dataset_id))
-
-            if "evaluated_keys" not in catalog.list():
-                catalog.add("evaluated_keys", MemoryDataset(copy_mode="assign"))
-            catalog.save("evaluated_keys", evaluated_keys)
-            catalog.add_feed_dict({"params:evaluated_keys": evaluated_keys}, replace=True)
-            return
-
-        # ───────────── Rama TRAINING (pre-registro para que EVAL persista) ─────
-        for model_name, combos in model_params.items():
-            for combo_id, cfg in combos.items():
-                if "param_grid" not in cfg:
-                    continue
-                hyper_str = "gridsearch"
-                cv = cfg.get("cv_settings", default_cv)
-                cv_str = f"cv_{cv['n_splits']}_rs_{cv['random_state']}"
-
-                for train_ds in train_datasets:
-                    dataset_id = train_ds.replace("cleaned_", "").replace("_train_ordinal", "")
-                    full_key = f"{model_name}_{combo_id}_{dataset_id}_{hyper_str}_{cv_str}"
-                    model_path = models_dir / f"Model_{full_key}.pkl"
-                    evaluated_keys.append(full_key)
-
-                    ds_model = PickleDataset(filepath=str(model_path), backend="pickle", save_args={"protocol": 5})
-                    model_ds_key = f"training.{run_id}.Model_{full_key}"
-                    self._register_if_missing(catalog, model_ds_key, ds_model)
-                    self._register_if_missing(catalog, full_key, ds_model)
-
-                    pred_name = f"Predicted_Labels_{full_key}"
-                    pred_path = output_dir / f"{pred_name}.json"
-                    metrics_name = f"Metrics_{full_key}"
-                    metrics_path = metrics_dir / f"{metrics_name}.json"
-
-                    # Claves oficiales con run_id (coinciden con evaluation pipeline)
-                    self._register_if_missing(
-                        catalog, f"evaluation.{run_id}.{pred_name}",
-                        JSONDataset(filepath=str(pred_path)),
-                    )
-                    self._register_if_missing(
-                        catalog, f"evaluation.{run_id}.{metrics_name}",
-                        JSONDataset(filepath=str(metrics_path)),
-                    )
-                    # Alias con execution_folder (útil para visualización)
-                    self._register_if_missing(
-                        catalog, f"evaluation.{execution_folder}.{pred_name}",
-                        JSONDataset(filepath=str(pred_path)),
-                    )
-                    self._register_if_missing(
-                        catalog, f"evaluation.{execution_folder}.{metrics_name}",
-                        JSONDataset(filepath=str(metrics_path)),
-                    )
-
-                    param_type_key = f"params:model_parameters.{model_name}.{combo_id}.param_type"
-                    self._register_if_missing(catalog, param_type_key, MemoryDataset(data="param_grid", copy_mode="assign"))
-                    self._register_if_missing(catalog, model_name, MemoryDataset(data=model_name, copy_mode="assign"))
-
-                    td_param = f"params:{full_key}_train_dataset_id"
-                    id_param = f"params:{full_key}_dataset_id"
-                    self._register_if_missing(catalog, td_param, MemoryDataset(data=dataset_id))
-                    self._register_if_missing(catalog, id_param, MemoryDataset(data=dataset_id))
-
-        if "evaluated_keys" not in catalog.list():
-            catalog.add("evaluated_keys", MemoryDataset(copy_mode="assign"))
-        catalog.save("evaluated_keys", evaluated_keys)
-        catalog.add_feed_dict({"params:evaluated_keys": evaluated_keys}, replace=True)
+        # Guarda evaluated_keys
+        save_evaluated_keys(catalog, evaluated_keys)
 
     @hook_impl
     def after_node_run(self, node, inputs, outputs, catalog: DataCatalog):
+        # Persiste figuras de visualizacion
         for output_name, value in outputs.items():
-            if not isinstance(value, Figure):
+            if not (isinstance(value, Figure) and output_name.startswith("visualization.")):
                 continue
-            if not output_name.startswith("visualization."):
+            path = visualization_output_path(output_name)
+            if not path:
+                logger.warning(f"[visualization] Unexpected output name: {output_name}")
                 continue
-
-            try:
-                _, run_folder, dataset_id, metric = output_name.split(".")
-            except ValueError:
-                logger.warning(f"[viz] Nombre de output inesperado: {output_name}")
-                continue
-
-            metric_lc = str(metric).lower()
-            if metric_lc == "heatmap":
-                # [HEATMAP] carpeta plana del dataset
-                out_dir = REPORT_BASE / run_folder / dataset_id
-                out_dir.mkdir(parents=True, exist_ok=True)
-                out_path = out_dir / "heatmap.png"
-            elif metric_lc == "scatter_qwk_mae":  # [SCATTER]
-                # [SCATTER] carpeta plana del dataset
-                out_dir = REPORT_BASE / run_folder / dataset_id
-                out_dir.mkdir(parents=True, exist_ok=True)
-                out_path = out_dir / "scatter_qwk_mae.png"
-            else:
-                metric_type = "ordinal" if metric_lc in {"qwk", "mae", "amae"} else "nominal"
-                out_dir = REPORT_BASE / run_folder / dataset_id / metric_type
-                out_dir.mkdir(parents=True, exist_ok=True)
-                out_path = out_dir / f"{metric}.png"
-
+            path.parent.mkdir(parents=True, exist_ok=True)
             if output_name not in catalog.list():
-                catalog.add(output_name, MatplotlibWriter(filepath=str(out_path)))
+                register_if_missing(catalog, output_name, MatplotlibWriter(filepath=str(path)))
             catalog.save(output_name, value)
