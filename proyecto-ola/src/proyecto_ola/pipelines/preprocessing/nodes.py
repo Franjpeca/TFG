@@ -1,34 +1,24 @@
-import pandas as pd
 import logging
+from typing import Tuple
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-def clean_data_all(*datasets):
-    cleaned_list = []
-    logger.info("[Preprocessing] Limpiando los datasets ...\n")
+def clean_pair(
+                train_df: pd.DataFrame,
+                test_df: pd.DataFrame,
+                dataset_name: str,                    # <-- argumento extra
+                drop_penultimate: bool = True,
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
-    for dataset in datasets:
-        cleaned_data = clean_data(dataset)
-        cleaned_list.append(cleaned_data)
+    logger.info(f"[Preprocessing] Limpiando dataset {dataset_name} (train/test)...\n")
+    return clean_data(train_df, drop_penultimate), clean_data(test_df, drop_penultimate)
 
-    return tuple(cleaned_list)
-
-
-def clean_data(data: pd.DataFrame) -> pd.DataFrame:
-    if data.empty:
-        logger.warning("[Preprocessing] DataFrame vacio!\n")
-
-    data = data.dropna()
-    data = data.drop(columns=[data.columns[-2]])
-    
-    return data
-
-
-def merge_data(*cleaned_datasets):
-    train_datasets = cleaned_datasets[::2]
-    test_datasets = cleaned_datasets[1::2]
-
-    merged_train = pd.concat(train_datasets, axis=0, ignore_index=True)
-    merged_test = pd.concat(test_datasets, axis=0, ignore_index=True)
-
-    return merged_train, merged_test
+def clean_data(df: pd.DataFrame, drop_penultimate: bool = True) -> pd.DataFrame:
+    if df.empty:
+        logger.warning("[Preprocessing] DataFrame vacio!")
+    out = df.dropna()
+    if drop_penultimate and out.shape[1] >= 2:
+        col_to_drop = out.columns[-2]
+        out = out.drop(columns=[col_to_drop])
+    return out

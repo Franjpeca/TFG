@@ -99,9 +99,14 @@ def Visualize_Nominal_Metric(metrics_jsons, metric, dataset_id, execution_folder
 def Visualize_Heatmap_Metrics(metrics_jsons, metrics, dataset_id, execution_folder, metric_type="heatmap"):
     import numpy as np
     import matplotlib.pyplot as plt
+    import re  # por si no estaba importado arriba
 
     if not metrics_jsons:
         return None
+
+    # Colores para las etiquetas (familias)
+    ORDINAL_LABEL_COLOR = "#1f77b4"  # azul fuerte
+    CLASSIC_LABEL_COLOR = "#5da5da"  # azul medio (más legible que el muy claro)
 
     metrics = list(metrics)  # asegurar orden estable
     invert_metrics = {"mae", "amae"}  # métricas a minimizar
@@ -174,7 +179,7 @@ def Visualize_Heatmap_Metrics(metrics_jsons, metrics, dataset_id, execution_fold
                 txt = f"{val:.2f}\n({shade:.1f})"
                 ax.text(j_col, i, txt, ha="center", va="center", color=color, fontsize=8)
 
-    # Colorear etiquetas Y por familia
+    # Colorear etiquetas Y por familia (con azul medio para Clásicos)
     ORDINAL_SET = {
         "LAD", "LogisticAT", "LogisticIT", "OrdinalRidge",
         "OrdinalDecomposition", "REDSVM", "SVOREX", "NNOP", "NNPOM"
@@ -182,14 +187,15 @@ def Visualize_Heatmap_Metrics(metrics_jsons, metrics, dataset_id, execution_fold
     for tick in ax.get_yticklabels():
         m = re.match(r"(\w+)", tick.get_text())
         name = m.group(1) if m else ""
-        tick.set_color("#1f77b4" if name in ORDINAL_SET else "#aec7e8")
+        tick.set_color(ORDINAL_LABEL_COLOR if name in ORDINAL_SET else CLASSIC_LABEL_COLOR)
 
     ax.set_title(f"Comparativa de métricas - Dataset {dataset_id}", fontsize=13)
     fig.suptitle("(Normalizado por columna; MAE/AMAE invertidas)", fontsize=10, y=0.95)
 
+    # Leyenda usando los mismos colores
     handles = [
-        plt.Line2D([0], [0], marker='s', linestyle='None', color='#1f77b4', label='Ordinal'),
-        plt.Line2D([0], [0], marker='s', linestyle='None', color='#aec7e8', label='Clásico'),
+        plt.Line2D([0], [0], marker='s', linestyle='None', color=ORDINAL_LABEL_COLOR, label='Ordinal'),
+        plt.Line2D([0], [0], marker='s', linestyle='None', color=CLASSIC_LABEL_COLOR, label='Clásico'),
     ]
     ax.legend(handles=handles, loc="upper left", bbox_to_anchor=(1.01, 1.0))
 

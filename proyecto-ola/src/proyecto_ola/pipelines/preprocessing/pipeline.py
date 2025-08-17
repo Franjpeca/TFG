@@ -1,50 +1,31 @@
 from kedro.pipeline import Pipeline, node
-from .nodes import clean_data_all, merge_data
+from .nodes import clean_pair
 
-def create_pipeline(**kwargs) -> Pipeline:
-    
-    return Pipeline(
-        [
+def create_pipeline(dataset_ids=None, **kwargs):
+    if dataset_ids is None:
+        dataset_ids = [46014, 46025, 46042, 46053, 46069]
+
+    nodes = []
+    for ds_id in dataset_ids:
+        nodes.append(
             node(
-                func=clean_data_all, #Funcion del nodo a la que llamo
+                func=clean_pair,
                 inputs=[
-                    "46014_train_ordinal", "46014_test_ordinal",
-                    "46025_train_ordinal", "46025_test_ordinal",
-                    "46042_train_ordinal", "46042_test_ordinal",
-                    "46053_train_ordinal", "46053_test_ordinal",
-                    "46069_train_ordinal", "46069_test_ordinal"
+                    f"{ds_id}_train_ordinal",
+                    f"{ds_id}_test_ordinal",
+                    f"params:dataset_names.{ds_id}",
+                    "params:preprocessing.drop_penultimate"
                 ],
                 outputs=[
-                    "cleaned_46014_train_ordinal", "cleaned_46014_test_ordinal",
-                    "cleaned_46025_train_ordinal", "cleaned_46025_test_ordinal",
-                    "cleaned_46042_train_ordinal", "cleaned_46042_test_ordinal",
-                    "cleaned_46053_train_ordinal", "cleaned_46053_test_ordinal",
-                    "cleaned_46069_train_ordinal", "cleaned_46069_test_ordinal"
+                    f"cleaned_{ds_id}_train_ordinal",
+                    f"cleaned_{ds_id}_test_ordinal",
                 ],
-                name="PREPROCESSING_Node_clean_data",
+                name=f"PREPROCESSING_clean_pair_{ds_id}",
                 tags=[
                     "pipeline_preprocessing",
                     "node_clean_data",
-                    "dataset_46014",
-                    "dataset_46025",
-                    "dataset_46042",
-                    "dataset_46053",
-                    "dataset_46069"
+                    f"dataset_{ds_id}",
                 ]
-            )#,
-             #node(
-                #func=merge_data,
-                #inputs=[
-                #    "cleaned_46014_train_ordinal", "cleaned_46014_test_ordinal",
-                #    "cleaned_46025_train_ordinal", "cleaned_46025_test_ordinal",
-                #    "cleaned_46042_train_ordinal", "cleaned_46042_test_ordinal",
-                #    "cleaned_46053_train_ordinal", "cleaned_46053_test_ordinal",
-                #    "cleaned_46069_train_ordinal", "cleaned_46069_test_ordinal"
-                #],
-                #outputs=[
-               #     "train_ordinal", "test_ordinal",
-              #  ],
-             #   name="merge_data_node"
-            #)
-        ]
-    )
+            )
+        )
+    return Pipeline(nodes)
