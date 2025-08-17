@@ -79,12 +79,18 @@ def Evaluate_ORCA_SVOREX(y_true, y_pred, model_params, model_id, model_type, dat
 
     model_id_str = f"{model_type}(" + ", ".join(f"{k}={v}" for k, v in model_params.items()) + ")"
 
+    try:
+        combo_id = "_".join(model_id.split("_")[1:3])
+    except IndexError:
+        combo_id = "unknown"
+
     results = {
         "model_id": model_id_str,
+        "grid_id": combo_id,
         "dataset_id": dataset_id,
         "execution_folder": execution_folder,
         "nominal_metrics": nominal_metrics,
-        "ordinal_metrics": ordinal_metrics,
+        "ordinal_metrics": ordinal_metrics
     }
 
     logger.info(f"[Evaluating] model_id: {model_id_str}")
