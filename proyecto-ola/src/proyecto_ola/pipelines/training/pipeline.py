@@ -14,10 +14,17 @@ from proyecto_ola.pipelines.training.ORCA_OrdinalDecomposition.pipeline import c
 from proyecto_ola.pipelines.training.ORCA_REDSVM.pipeline import create_pipeline as create_ORCA_REDSVM_pipeline
 from proyecto_ola.pipelines.training.ORCA_SVOREX.pipeline import create_pipeline as create_ORCA_SVOREX_pipeline
 
+from proyecto_ola.pipelines.training.CLASSIC_LinearRegression.pipeline import create_pipeline as create_CLASSIC_LinearRegression_pipeline
+from proyecto_ola.pipelines.training.CLASSIC_DecisionTreeRegressor.pipeline import create_pipeline as create_CLASSIC_DecisionTreeRegressor_pipeline
+from proyecto_ola.pipelines.training.CLASSIC_KNeighborsClassifier.pipeline import create_pipeline as create_CLASSIC_KNeighborsClassifier_pipeline
+
 logger = logging.getLogger(__name__)
 
 # Diccionario centralizado con las funciones de cada modelo
 MODEL_PIPELINES = {
+    "LinearRegression": create_CLASSIC_LinearRegression_pipeline,
+    "DecisionTreeRegressor": create_CLASSIC_DecisionTreeRegressor_pipeline,
+    "KNeighborsClassifier": create_CLASSIC_KNeighborsClassifier_pipeline,
     "LAD": create_MORD_LAD_pipeline,
     "LogisticAT": create_MORD_LogisticAT_pipeline,
     "LogisticIT": create_MORD_LogisticIT_pipeline,

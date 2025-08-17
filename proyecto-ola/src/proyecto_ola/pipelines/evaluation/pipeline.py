@@ -13,10 +13,16 @@ from proyecto_ola.pipelines.evaluation.ORCA_NNPOM.pipeline import create_pipelin
 from proyecto_ola.pipelines.evaluation.ORCA_OrdinalDecomposition.pipeline import create_pipeline as create_ORCA_OrdinalDecomposition_pipeline
 from proyecto_ola.pipelines.evaluation.ORCA_REDSVM.pipeline import create_pipeline as create_ORCA_REDSVM_pipeline
 from proyecto_ola.pipelines.evaluation.ORCA_SVOREX.pipeline import create_pipeline as create_ORCA_SVOREX_evaluation_pipeline
+from proyecto_ola.pipelines.evaluation.CLASSIC_LinearRegression.pipeline import create_pipeline as create_CLASSIC_LinearRegression_pipeline
+from proyecto_ola.pipelines.evaluation.CLASSIC_DecisionTreeRegressor.pipeline import create_pipeline as create_CLASSIC_DecisionTreeRegressor_pipeline
+from proyecto_ola.pipelines.evaluation.CLASSIC_KNeighborsClassifier.pipeline import create_pipeline as create_CLASSIC_KNeighborsClassifier_pipeline
 
 logger = logging.getLogger(__name__)
 
 MODEL_PIPELINES = {
+    "LinearRegression": create_CLASSIC_LinearRegression_pipeline,
+    "DecisionTreeRegressor": create_CLASSIC_DecisionTreeRegressor_pipeline,
+    "KNeighborsClassifier": create_CLASSIC_KNeighborsClassifier_pipeline,
     "LAD": create_MORD_LAD_pipeline,
     "LogisticAT": create_MORD_LogisticAT_pipeline,
     "LogisticIT": create_MORD_LogisticIT_pipeline,
@@ -54,9 +60,9 @@ def create_pipeline(**kwargs) -> Pipeline:
         possible_dir = Path("data") / "04_models" / exec_folder
         if possible_dir.exists() and any(possible_dir.glob("Model_*.pkl")):
             model_dir = possible_dir
-            logger.info(f"[INFO] Usando la ejecucion indicada: {model_dir.name}")
+            logger.info(f"[INFO] Usando la ejecucion indicada: {model_dir.name}\n")
         else:
-            logger.warning(f"[INFO] La carpeta indicada no existe o no contiene modelos: {possible_dir}")
+            logger.warning(f"[INFO] La carpeta indicada no existe o no contiene modelos: {possible_dir}\n")
     else:
         # Buscar la ultima ejecucion con modelos en disco
         dirs = sorted((d for d in (Path("data") / "04_models").glob("*_*") if any(d.glob("Model_*.pkl"))), key=lambda d: d.stat().st_mtime, reverse=True)
