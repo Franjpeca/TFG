@@ -64,46 +64,143 @@ pip install -r requirements.txt
 
 ## ▶️ Ejecución general
 
-Para lanzar todos los pipelines (preprocesado, entrenamiento, evaluación):
-
+### Lanzar todos los modelos junto con sus parámetros (preprocessing + training + evaluation)
 ```bash
 kedro run
 ```
-Esto generará todos los resultados de los modelos encontrados en conf/base/parameters.yml.
 
-Para lanzar fases concretas:
-
+### Lanzar toda una ejecución para un dataset concreto
 ```bash
-kedro run -p training
-kedro run -p evaluation
+kedro run --tags dataset_46014
 ```
+
+### Lanzar toda una ejecución para un modelo concreto (training + evaluation)
+```bash
+kedro run --tags model_LogisticAT
+```
+
+### Lanzar entrenamiento + evaluación de un modelo concreto y un dataset concreto (preprocessing)
+```bash
+kedro run --tags model_DecisionTreeRegressor --tags dataset_46014
+```
+
+### Lanzar entrenamiento + evaluación de un modelo concreto con un grid concreto (training + evaluation)
+```bash
+kedro run --tags model_DecisionTreeRegressor_grid_001
+```
+
+### Lanzar entrenamiento + evaluación de un modelo concreto con un grid concreto y un dataset concreto (sin preprocessing)
+```bash
+kedro run --tags model_DecisionTreeRegressor_grid_001_dataset_46014
+```
+
+### Lanzar entrenamiento + evaluación de un modelo concreto con un grid concreto y un dataset concreto (con preprocessing)
+```bash
+kedro run --tags model_DecisionTreeRegressor_grid_001 --tags dataset_46014
+```
+
+### Lanzar entrenamiento + evaluación de grids concretos
+```bash
+kedro run --tags grid_001
+```
+
+### Lanzar entrenamiento + evaluación de un grid concreto de un dataset (con preprocessing)
+```bash
+kedro run --tags grid_002 --tags dataset_46042
+```
+
+---
+
+## 🔄 Ejecución de subpipelines
+
+### Lanza únicamente preprocesamiento
+```bash
+kedro run --pipeline preprocessing
+```
+
+### Lanzar preprocessing para un dataset concreto
+```bash
+kedro run --pipeline preprocessing --tags dataset_46014
+```
+
+### Lanza únicamente training (todos los modelos)
+```bash
+kedro run --pipeline training
+```
+
+### Lanza únicamente training de un modelo concreto
+```bash
+kedro run --pipeline training -t model_LogisticIT
+```
+
+### Lanza únicamente evaluation (toma última ejecución)
+```bash
+kedro run --pipeline evaluation
+```
+
+### Lanzar evaluation de una ejecución concreta
+```bash
+kedro run --pipeline evaluation --params="execution_folder=001_20250816_231254"
+```
+
+### Lanzar evaluation de un modelo unicamente
+```bash
+kedro run --pipeline evaluation -t model_LogisticIT
+```
+
+### Lanzar evaluation de todos los modelos de un dataset
+```bash
+kedro run --pipeline evaluation --tags dataset_46014
+```
+
+### Lanzar evaluation de un modelo concreto con un grid concreto
+```bash
+kedro run --pipeline evaluation --tags model_DecisionTreeRegressor_grid_001
+```
+
+> Si no se especifica carpeta (`execution_folder`) se toma la última por fecha.
 
 ---
 
 ## 📊 Visualización de resultados
 
-⚠️ El pipeline de visualización **no forma parte del `__default__`** para evitar errores cuando no hay métricas generadas. Está diseñado para ejecutarse manualmente y detectar automáticamente la última ejecución con resultados.
+⚠️ El pipeline de visualización **no forma parte del `__default__`** para evitar errores cuando no hay métricas generadas.
 
-### 🔁 Ejecución completa del pipeline de visualización:
-
+### Lanzar visualization (última ejecución)
 ```bash
-kedro run -p visualization
+kedro run --pipeline visualization
 ```
 
-Este comando generará todas las gráficas posibles para los modelos evaluados en la última ejecución válida (por orden de modificación en disco).
-
----
-
-### 🎯 Visualizar una métrica concreta (opcional):
-
+### Lanzar visualization de una ejecución concreta
 ```bash
-kedro run -p visualization \
-  --params execution_folder=001_20250815_184843   --to-outputs=visualization.001_20250815_184843.46053.qwk
+kedro run --pipeline visualization --params="execution_folder=001_20250816_231254"
 ```
-Los ficheros con las métricas deben de exitir antes de ejecutarse dicho comando y debe de tener la nomenclatura correcta.
 
-> 🧠 **Nota importante:** Los comandos generados por **Kedro Viz** no añaden automáticamente el argumento `--pipeline=visualization`.  
-> Por eso, si se desea lanzar visualización desde la CLI con `--to-outputs`, hay que especificar explícitamente el pipeline con `-p visualization`.
+### Lanzar visualization de un dataset concreto
+```bash
+kedro run --pipeline visualization --tags dataset_46014
+```
+
+### Lanzar visualization de una ejecución concreta y un dataset concreto
+```bash
+kedro run --pipeline visualization --params="execution_folder=001_20250816_231254" --tags dataset_46014
+```
+
+### Lanzar visualization de una gráfica concreta para todos los datasets
+```bash
+kedro run --pipeline visualization --tags node_visualization_ordinal
+```
+
+### Lanzar visualization de una gráfica concreta para un dataset concreto
+```bash
+kedro run --pipeline visualization --tags ordinal_dataset_46014
+kedro run --pipeline visualization --tags heatmap_dataset_46014
+```
+
+### Lanzar visualization de una métrica en concreto
+```bash
+kedro run --pipeline visualization --nodes VIS_ORDINAL_QWK_46014
+```
 
 ---
 
