@@ -1,0 +1,111 @@
+# Lanzar kedro-viz
+kedro viz
+
+
+
+# Lanzar todos los modelos junto con sus parametros (preprocessing + training + evaluation)
+kedro run
+
+# Lanzar toda una ejecucion para un dataset concreto
+kedro run --tags dataset_46014
+
+# Lanzar toda una ejecucion para un modelo concreto (training + evaluation)
+kedro run --tags model_LogisticAT
+
+# Lanzar entrenamiento + evaluacion de un modelo concreto y un dataset concreto (preprocessing)
+kedro run --tags model_DecisionTreeRegressor --tags dataset_46014
+
+# Lanzar entrenamiento + evaluacion de un modelo concreto con un grid concreto (training + evaluation)
+kedro run --tags model_DecisionTreeRegressor_grid_001
+
+# Lanzar entrenamiento + evaluacion de un modelo concreto con un grid concreto y un dataset concreto (sin preprocessing)
+kedro run --tags model_DecisionTreeRegressor_grid_001_dataset_46014
+
+# Lanzar entrenamiento + evaluacion de grid concretos
+kedro run --tags grid_001
+
+# Lanzar entrenamiento + evaluacion de grid concreto de un determinado dataset (con preprocesing)
+kedro run --tags grid_002 --tags dataset_46042
+
+
+
+# Lanza unicamente preprocesamiento
+kedro run --pipeline preprocessing
+
+# Lanzar preprocessing para un dataset concreto
+kedro run --pipeline preprocessing --tags dataset_46014
+
+
+
+
+# Lanzar unicamente training (toma todos los modelos)
+kedro run --pipeline training
+
+# Al comando anterior se pueden juntar --tags similares a los ejemplos siguientes:
+/*
+	Ejemplos con todos los tags del pipeline
+*/
+
+# Lanza unicamente training de un modelo unicamente
+kedro run --pipeline training -t model_LogisticIT
+
+
+
+
+
+
+
+# Si no se especifica una carpeta (ejecucion) entonces se toma la ultima por fecha
+
+# Lanzar unicamente evaluation (toma la ultima ejecuion)
+kedro run --pipeline evaluation
+
+# Al comando anterior se pueden juntar --tags similares a los ejemplos siguientes:
+/*
+	Ejemplos con todos los tags del pipeline
+*/
+
+# Lanzar evaluation de una ejecucion concreta
+kedro run --pipeline evaluation --params="execution_folder=001_20250816_231254"
+
+# Lanzar evaluation de un modelo unicamente (en caso de que exista el modelo en su correspondiente carpeta)
+kedro run --pipeline evaluation -t model_LogisticIT
+
+# Lanzar evaluation de todos los modelos de un unico dataset
+kedro run --pipeline evaluation --tags dataset_46014
+
+# Lanzar evaluation de un modelo concreto con un grid concreto
+kedro run --pipeline evaluation --tags model_DecisionTreeRegressor_grid_001
+
+# Se puede indicar con --params una carpeta concreta y usara (si existen) los modelos de esa carpeta
+
+
+
+# Lanzar unicamente visualization (toma ultima ejecucion)
+kedro run --pipelien visualization
+
+# Lanzar visualization de una ejecucion concreta
+kedro run --pipeline visualization --params="execution_folder=001_20250816_231254"
+
+# Lanzar visualization de un dataset unicamente
+kedro run --pipeline visualization --tags dataset_46014
+
+# Lanzar visualization de una ejecucion concreta y un dataset concreto
+kedro run --pipeline visualization --params="execution_folder=001_20250816_231254" --tags dataset_46014
+
+# Lanzar visualization para una grafica de un tipo concreto para todos los datasets (se puede usar --params)
+kedro run --pipeline visualization --tags node_visualization_ordinal
+
+# Lanzar visualization para una grafica de un tipo concreto para un dataset concreto (se puede usar --params)
+kedro run --pipeline visualization --tags ordinal_dataset_46014
+kedro run --pipeline visualization --tags heatmap_dataset_46014
+
+# Lanzar visualization de una metrica en concreto
+kedro run --pipeline visualization --nodes VIS_ORDINAL_QWK_46014
+---
+
+
+Ejecutar un nodo concreto
+kedro run --nodes PREPROCESSING_clean_pair_46042
+
+

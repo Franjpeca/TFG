@@ -115,6 +115,8 @@ kedro run --tags grid_002 --tags dataset_46042
 
 ## 🔄 Ejecución de subpipelines
 
+> Tanto evaluation como visualization pueden usar (`--params="execution_folder=<...>"`) junto con sus tags abajo indicados.
+
 ### Lanza únicamente preprocesamiento
 ```bash
 kedro run --pipeline preprocessing
