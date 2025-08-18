@@ -60,15 +60,15 @@ def create_pipeline(**kwargs) -> Pipeline:
         possible_dir = Path("data") / "04_models" / exec_folder
         if possible_dir.exists() and any(possible_dir.glob("Model_*.pkl")):
             model_dir = possible_dir
-            logger.info(f"[INFO] Usando la ejecucion indicada: {model_dir.name}\n")
+            logger.info(f"[INFO_EVALUATION] Usando la ejecucion indicada: {model_dir.name}\n")
         else:
-            logger.warning(f"[INFO] La carpeta indicada no existe o no contiene modelos: {possible_dir}\n")
+            logger.warning(f"[INFO_EVALUATION] La carpeta indicada no existe o no contiene modelos: {possible_dir}\n")
     else:
         # Buscar la ultima ejecucion con modelos en disco
         dirs = sorted((d for d in (Path("data") / "04_models").glob("*_*") if any(d.glob("Model_*.pkl"))), key=lambda d: d.stat().st_mtime, reverse=True)
         model_dir = dirs[0] if dirs else None
         if model_dir:
-            logger.info(f"[INFO] Usando ultima ejecucion: {model_dir.name}")
+            logger.info(f"[INFO_EVALUATION] Usando ultima ejecucion: {model_dir.name}")
 
     # Extraer keys de modelos en disco
     disk_keys = [p.stem.replace("Model_", "", 1) for p in sorted(model_dir.glob("Model_*.pkl"))] if model_dir else []

@@ -34,7 +34,7 @@ def create_pipeline(**kwargs) -> Pipeline:
     if not execution_folder:
         execution_folder = find_latest_metrics_execution_folder(Path("data/06_model_metrics"))
 
-    logger.info(f"[VISUALIZATION] Usando carpeta de ejecucion: {execution_folder}")
+    logger.info(f"[INFO_VISUALIZATION] Usando carpeta de ejecucion: {execution_folder}\n")
 
     # Salimos si no hay carpeta valida
     if not execution_folder:

@@ -167,7 +167,7 @@ class DynamicModelCatalogHook:
         # Modo visualizacion: registra entradas JSON
         if is_visualization(pipeline_name):
             visualization_folder = forced_execution_folder or find_latest_metrics_execution_folder(METRICS_BASE)
-            logger.info(f"[HOOK] Usando carpeta de ejecucion: {visualization_folder}")
+            #logger.info(f"[HOOK] Usando carpeta de ejecucion: {visualization_folder}")
             if not visualization_folder:
                 logger.warning("[VISUALIZATION] No valid metrics folder found.")
                 return

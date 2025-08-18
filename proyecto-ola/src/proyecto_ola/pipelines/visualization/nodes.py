@@ -1,10 +1,11 @@
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
-
 import warnings
 import re
 import numpy as np
+import logging
 
+logger = logging.getLogger(__name__)
 
 def clean_label(model_str, grid_id=None):
     """Devuelve 'NombreModelo grid_XXX' si hay grid_id, si no solo el nombre."""
@@ -12,13 +13,7 @@ def clean_label(model_str, grid_id=None):
     model_name = m.group(1) if m else "Model"
     return f"{model_name} {grid_id}" if grid_id else model_name
 
-
 def plot_metric(data, metric, dataset_id):
-    """
-    data: lista de tuplas. Puede ser:
-      - (model_id, valor)  [compat]
-      - (model_id, valor, grid_id)  [preferido]
-    """
     ORDINAL_SET = {
         "LAD", "LogisticAT", "LogisticIT", "OrdinalRidge",
         "OrdinalDecomposition", "REDSVM", "SVOREX", "NNOP", "NNPOM"
@@ -39,7 +34,6 @@ def plot_metric(data, metric, dataset_id):
             g_id = None
         normed.append((m_id, val, g_id))
 
-    # orden según métrica objetivo
     minimize = {"mae", "amae"}
     reverse = False if metric in minimize else True
     normed.sort(key=lambda x: x[1], reverse=reverse)
@@ -76,16 +70,14 @@ def plot_metric(data, metric, dataset_id):
         fig.tight_layout()
     return fig
 
-
 def Visualize_Ordinal_Metric(metrics_jsons, metric, dataset_id, execution_folder, metric_type="ordinal"):
-    # Pasamos (model_id, valor, grid_id) para etiquetar como 'Nombre grid_XXX'
     data = [
         (j.get("model_id"), j.get("ordinal_metrics", {}).get(metric), j.get("grid_id"))
         for j in metrics_jsons
         if j.get("ordinal_metrics", {}).get(metric) is not None
     ]
+    logger.info(f"[VISUALIZATION] Gráfica ORDINAL generada: metric={metric}, dataset={dataset_id}, ejecución={execution_folder}, n_modelos={len(data)}")
     return plot_metric(data, metric, dataset_id) if data else None
-
 
 def Visualize_Nominal_Metric(metrics_jsons, metric, dataset_id, execution_folder, metric_type="nominal"):
     data = [
@@ -93,25 +85,20 @@ def Visualize_Nominal_Metric(metrics_jsons, metric, dataset_id, execution_folder
         for j in metrics_jsons
         if j.get("nominal_metrics", {}).get(metric) is not None
     ]
+    logger.info(f"[VISUALIZATION] Gráfica NOMINAL generada: metric={metric}, dataset={dataset_id}, ejecución={execution_folder}, n_modelos={len(data)}")
     return plot_metric(data, metric, dataset_id) if data else None
 
-
 def Visualize_Heatmap_Metrics(metrics_jsons, metrics, dataset_id, execution_folder, metric_type="heatmap"):
-    import numpy as np
-    import matplotlib.pyplot as plt
-    import re  # por si no estaba importado arriba
-
     if not metrics_jsons:
+        logger.info(f"[VISUALIZATION] Heatmap NO generado (sin datos): dataset={dataset_id}, ejecución={execution_folder}")
         return None
 
-    # Colores para las etiquetas (familias)
-    ORDINAL_LABEL_COLOR = "#1f77b4"  # azul fuerte
-    CLASSIC_LABEL_COLOR = "#5da5da"  # azul medio (más legible que el muy claro)
+    ORDINAL_LABEL_COLOR = "#1f77b4"
+    CLASSIC_LABEL_COLOR = "#5da5da"
 
-    metrics = list(metrics)  # asegurar orden estable
-    invert_metrics = {"mae", "amae"}  # métricas a minimizar
+    metrics = list(metrics)
+    invert_metrics = {"mae", "amae"}
 
-    # Recopilar valores por modelo y métrica
     models = []
     grids = []
     values_matrix = []
@@ -133,6 +120,7 @@ def Visualize_Heatmap_Metrics(metrics_jsons, metrics, dataset_id, execution_fold
             values_matrix.append(row_vals)
 
     if not values_matrix:
+        logger.info(f"[VISUALIZATION] Heatmap NO generado (sin datos): dataset={dataset_id}, ejecución={execution_folder}")
         return None
 
     values = np.array(values_matrix, dtype=float)
@@ -179,7 +167,6 @@ def Visualize_Heatmap_Metrics(metrics_jsons, metrics, dataset_id, execution_fold
                 txt = f"{val:.2f}\n({shade:.1f})"
                 ax.text(j_col, i, txt, ha="center", va="center", color=color, fontsize=8)
 
-    # Colorear etiquetas Y por familia (con azul medio para Clásicos)
     ORDINAL_SET = {
         "LAD", "LogisticAT", "LogisticIT", "OrdinalRidge",
         "OrdinalDecomposition", "REDSVM", "SVOREX", "NNOP", "NNPOM"
@@ -192,7 +179,6 @@ def Visualize_Heatmap_Metrics(metrics_jsons, metrics, dataset_id, execution_fold
     ax.set_title(f"Comparativa de métricas - Dataset {dataset_id}", fontsize=13)
     fig.suptitle("(Normalizado por columna; MAE/AMAE invertidas)", fontsize=10, y=0.95)
 
-    # Leyenda usando los mismos colores
     handles = [
         plt.Line2D([0], [0], marker='s', linestyle='None', color=ORDINAL_LABEL_COLOR, label='Ordinal'),
         plt.Line2D([0], [0], marker='s', linestyle='None', color=CLASSIC_LABEL_COLOR, label='Clásico'),
@@ -200,8 +186,9 @@ def Visualize_Heatmap_Metrics(metrics_jsons, metrics, dataset_id, execution_fold
     ax.legend(handles=handles, loc="upper left", bbox_to_anchor=(1.01, 1.0))
 
     fig.tight_layout(rect=[0, 0, 1, 0.96])
-    return fig
 
+    logger.info(f"[VISUALIZATION] Heatmap generado: métricas={metrics}, dataset={dataset_id}, ejecución={execution_folder}, n_modelos={len(models)}")
+    return fig
 
 def Visualize_Scatter_QWKvsMAE(
     metrics_jsons,
@@ -211,11 +198,8 @@ def Visualize_Scatter_QWKvsMAE(
     y_metric="qwk",
     metric_type="scatter",
 ):
-    """
-    Scatter MAE (X) vs QWK (Y), etiquetas 'Nombre grid_XXX' si hay grid_id.
-    Colores por familia (Ordinal vs Clásico).
-    """
     if not metrics_jsons:
+        logger.info(f"[VISUALIZATION] Scatter QWKvsMAE NO generado (sin datos): dataset={dataset_id}, ejecución={execution_folder}")
         return None
 
     xs, ys, labels, colors = [], [], [], []
@@ -243,6 +227,7 @@ def Visualize_Scatter_QWKvsMAE(
         colors.append("#1f77b4" if short in ORDINAL_SET else "#aec7e8")
 
     if not xs:
+        logger.info(f"[VISUALIZATION] Scatter QWKvsMAE NO generado (sin datos): dataset={dataset_id}, ejecución={execution_folder}")
         return None
 
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -267,4 +252,5 @@ def Visualize_Scatter_QWKvsMAE(
         warnings.simplefilter("ignore", UserWarning)
         fig.tight_layout()
 
+    logger.info(f"[VISUALIZATION] Scatter QWKvsMAE generado: dataset={dataset_id}, ejecución={execution_folder}, n_modelos={len(xs)}")
     return fig
