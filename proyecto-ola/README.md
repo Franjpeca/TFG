@@ -17,10 +17,12 @@ Este proyecto utiliza una estructura dinámica de carpetas según cada ejecució
 
 ```
 data/
-├── 04_models/                # Modelos entrenados (PKL)
-├── 05_model_output/          # Predicciones (JSON)
-├── 06_model_metrics/         # Métricas (JSON)
-├── 07_reporting/             # Gráficas generadas por visualization
+├── 01_raw/                   # Datasets puros. Sin tratamiento.
+├── 02_primary/               # Datasets tratados listos para entrenar/testear
+├── 03_models/                # Modelos entrenados (PKL)
+├── 04_model_output/          # Predicciones (JSON)
+├── 05_model_metrics/         # Métricas (JSON)
+├── 06_reporting/             # Gráficas generadas por visualization
 │   └── <execution_folder>/
 │       └── <dataset_id>/
 │           ├── heatmap.png
@@ -208,6 +210,7 @@ kedro run --pipeline visualization --nodes VIS_ORDINAL_QWK_46014
 
 - **MORD**: LAD, LogisticAT, LogisticIT, OrdinalRidge
 - **ORCA (dlordinal)**: NNPOM, NNOP, REDSVM, SVOREX, OrdinalDecomposition
+- **No ordinales (Clasicos)**: DecisionTreeRegressor, KNeighborsClassifier, LinearRegression
 
 ---
 

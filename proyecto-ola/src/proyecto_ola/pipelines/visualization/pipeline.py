@@ -32,20 +32,20 @@ def create_pipeline(**kwargs) -> Pipeline:
     # Buscar la carpeta de ejecucion
     execution_folder = find_parameters_cli("execution_folder", params)
     if not execution_folder:
-        execution_folder = find_latest_metrics_execution_folder(Path("data/06_model_metrics"))
+        execution_folder = find_latest_metrics_execution_folder(Path("data/05_model_metrics"))
 
     logger.info(f"[INFO_VISUALIZATION] Usando carpeta de ejecucion: {execution_folder}\n")
 
     # Salimos si no hay carpeta valida
     if not execution_folder:
-        logger.warning("[VISUALIZATION] No se encontro ninguna carpeta de metricas en 06_model_metrics. Pipeline vacio.")
+        logger.warning("[VISUALIZATION] No se encontro ninguna carpeta de metricas en 05_model_metrics. Pipeline vacio.")
         return Pipeline([
             node(lambda _x: None, inputs="params:run_id", outputs=None,
                  name="VISUALIZATION_NOOP", tags=["pipeline_visualization"])
         ])
 
     # Buscar ficheros de metricas en la carpeta seleccionada
-    metrics_dir = Path("data/06_model_metrics") / execution_folder
+    metrics_dir = Path("data/05_model_metrics") / execution_folder
     metric_files = sorted(metrics_dir.glob("Metrics_*.json"))
 
     # Salimos si no hay ficheros de metricas

@@ -15,10 +15,10 @@ from proyecto_ola.utils.pipelines_utils import find_latest_metrics_execution_fol
 logger = logging.getLogger(__name__)
 
 # Carpetas base (no cambiar)
-MODELS_BASE = Path("data") / "04_models"
-OUTPUT_BASE = Path("data") / "05_model_output"
-METRICS_BASE = Path("data") / "06_model_metrics"
-REPORT_BASE = Path("data") / "07_reporting"
+MODELS_BASE = Path("data") / "03_models"
+OUTPUT_BASE = Path("data") / "04_model_output"
+METRICS_BASE = Path("data") / "05_model_metrics"
+REPORT_BASE = Path("data") / "06_reporting"
 
 
 # Comprueba si es pipeline de evaluacion

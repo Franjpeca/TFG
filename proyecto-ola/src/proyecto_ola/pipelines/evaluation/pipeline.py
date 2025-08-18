@@ -57,7 +57,7 @@ def create_pipeline(**kwargs) -> Pipeline:
     # Buscar carpeta de modelos segun exec_folder o ultima ejecucion
     model_dir: Optional[Path] = None
     if exec_folder:
-        possible_dir = Path("data") / "04_models" / exec_folder
+        possible_dir = Path("data") / "03_models" / exec_folder
         if possible_dir.exists() and any(possible_dir.glob("Model_*.pkl")):
             model_dir = possible_dir
             logger.info(f"[INFO_EVALUATION] Usando la ejecucion indicada: {model_dir.name}\n")
@@ -65,7 +65,7 @@ def create_pipeline(**kwargs) -> Pipeline:
             logger.warning(f"[INFO_EVALUATION] La carpeta indicada no existe o no contiene modelos: {possible_dir}\n")
     else:
         # Buscar la ultima ejecucion con modelos en disco
-        dirs = sorted((d for d in (Path("data") / "04_models").glob("*_*") if any(d.glob("Model_*.pkl"))), key=lambda d: d.stat().st_mtime, reverse=True)
+        dirs = sorted((d for d in (Path("data") / "03_models").glob("*_*") if any(d.glob("Model_*.pkl"))), key=lambda d: d.stat().st_mtime, reverse=True)
         model_dir = dirs[0] if dirs else None
         if model_dir:
             logger.info(f"[INFO_EVALUATION] Usando ultima ejecucion: {model_dir.name}")
