@@ -45,20 +45,15 @@ def only_evaluation() -> bool:
     return False
 
 
-def get_execution_folder(run_id: Optional[str] = None) -> Optional[str]:
-    base_dir = Path("data/06_model_metrics")
-    if not base_dir.exists():
-        return None
-
-    pattern = f"{run_id}_*" if run_id else "*_*"
-    best_dir, best_ts = None, -1.0
-
-
-    for d in base_dir.glob(pattern):
-        if not any(d.glob("Metrics_*.json")):
-            continue
-        ts = d.stat().st_mtime
-        if ts > best_ts:
-            best_ts, best_dir = ts, d
-
-    return best_dir.name if best_dir else None
+def find_latest_metrics_execution_folder(metrics_base: Path) -> Optional[str]:
+    latest_file = None
+    latest_time = -1.0
+    for folder in metrics_base.glob("*_*"):
+        for file in folder.glob("Metrics_*.json"):
+            mtime = file.stat().st_mtime
+            if mtime > latest_time:
+                latest_time = mtime
+                latest_file = file
+    if latest_file:
+        return latest_file.parent.name
+    return None

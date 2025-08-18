@@ -4,7 +4,7 @@ from typing import Optional, List
 from pathlib import Path
 from kedro.pipeline import Pipeline, node, pipeline
 
-from proyecto_ola.utils.pipelines_utils import find_parameters_cli, get_execution_folder
+from proyecto_ola.utils.pipelines_utils import find_parameters_cli, find_latest_metrics_execution_folder
 
 from .nodes import (
     Visualize_Nominal_Metric,
@@ -32,7 +32,9 @@ def create_pipeline(**kwargs) -> Pipeline:
     # Buscar la carpeta de ejecucion
     execution_folder = find_parameters_cli("execution_folder", params)
     if not execution_folder:
-        execution_folder = get_execution_folder(params.get("run_id"))
+        execution_folder = find_latest_metrics_execution_folder(Path("data/06_model_metrics"))
+
+    logger.info(f"[VISUALIZATION] Usando carpeta de ejecucion: {execution_folder}")
 
     # Salimos si no hay carpeta valida
     if not execution_folder:
@@ -101,6 +103,14 @@ def create_pipeline(**kwargs) -> Pipeline:
                         inputs=metric_inputs,
                         outputs=f"visualization.{execution_folder}.{dataset_id}.{metric_name}",
                         name=f"VIS_NOMINAL_{metric_name.upper()}_{dataset_id}",
+                        tags=[
+                            "pipeline_visualization",
+                            f"dataset_{dataset_id}",
+                            f"execution_{execution_folder}",
+                            f"nominal_dataset_{dataset_id}",
+                            "node_visualization",
+                            "node_visualization_nominal",
+                        ],
                     )
                 ])
             )
@@ -120,6 +130,14 @@ def create_pipeline(**kwargs) -> Pipeline:
                         inputs=metric_inputs,
                         outputs=f"visualization.{execution_folder}.{dataset_id}.{metric_name}",
                         name=f"VIS_ORDINAL_{metric_name.upper()}_{dataset_id}",
+                        tags=[
+                            "pipeline_visualization",
+                            f"dataset_{dataset_id}",
+                            f"execution_{execution_folder}",
+                            f"ordinal_dataset_{dataset_id}",
+                            "node_visualization",
+                            "node_visualization_ordinal",
+                        ],
                     )
                 ])
             )
@@ -138,6 +156,14 @@ def create_pipeline(**kwargs) -> Pipeline:
                     inputs=metric_inputs,
                     outputs=f"visualization.{execution_folder}.{dataset_id}.heatmap",
                     name=f"VIS_HEATMAP_{dataset_id}",
+                    tags=[
+                        "pipeline_visualization",
+                        f"dataset_{dataset_id}",
+                        f"execution_{execution_folder}",
+                        f"heatmap_dataset_{dataset_id}",
+                        "node_visualization",
+                        "node_visualization_heatmap",
+                    ],
                 )
             ])
         )
@@ -155,6 +181,14 @@ def create_pipeline(**kwargs) -> Pipeline:
                     inputs=metric_inputs,
                     outputs=f"visualization.{execution_folder}.{dataset_id}.scatter_qwk_mae",
                     name=f"VIS_SCATTER_QWK_MAE_{dataset_id}",
+                    tags=[
+                        "pipeline_visualization",
+                        f"dataset_{dataset_id}",
+                        f"execution_{execution_folder}",
+                        f"plot_dataset_{dataset_id}",
+                        "node_visualization",
+                        "node_visualization_scatter",
+                    ],
                 )
             ])
         )

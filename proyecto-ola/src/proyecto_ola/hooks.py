@@ -11,6 +11,7 @@ from kedro_datasets.json import JSONDataset
 from kedro_datasets.matplotlib import MatplotlibWriter
 from matplotlib.figure import Figure
 
+from proyecto_ola.utils.pipelines_utils import find_latest_metrics_execution_folder
 logger = logging.getLogger(__name__)
 
 # Carpetas base (no cambiar)
@@ -165,8 +166,8 @@ class DynamicModelCatalogHook:
 
         # Modo visualizacion: registra entradas JSON
         if is_visualization(pipeline_name):
-            latest_metrics_dir = find_latest_folder_with(METRICS_BASE, "Metrics_*.json")
-            visualization_folder = forced_execution_folder or (latest_metrics_dir.name if latest_metrics_dir else None)
+            visualization_folder = forced_execution_folder or find_latest_metrics_execution_folder(METRICS_BASE)
+            logger.info(f"[HOOK] Usando carpeta de ejecucion: {visualization_folder}")
             if not visualization_folder:
                 logger.warning("[VISUALIZATION] No valid metrics folder found.")
                 return

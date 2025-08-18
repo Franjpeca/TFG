@@ -1,9 +1,7 @@
 from kedro.pipeline import Pipeline, node
-from proyecto_ola.utils.wrappers import (
-    make_predict_wrapper,
-    make_evaluate_wrapper,
-)
+from proyecto_ola.utils.wrappers import make_predict_wrapper, make_evaluate_wrapper
 from .nodes import Predict_MORD_LogisticAT, Evaluate_MORD_LogisticAT
+import re
 
 def create_pipeline(param_key: str,
                     model_type: str,
@@ -13,6 +11,9 @@ def create_pipeline(param_key: str,
                     output_ds: str,
                     dataset_id: str,
                     ) -> Pipeline:
+
+    match = re.search(r'grid_\d+', param_key)
+    grid_id = match.group(0) if match else "grid_unknown"
 
     wrapped_predict  = make_predict_wrapper(
         Predict_MORD_LogisticAT, param_key, dataset_id
@@ -36,6 +37,9 @@ def create_pipeline(param_key: str,
                     param_key,
                     f"dataset_{dataset_id}",
                     f"model_{model_type}",
+                    f"grid_{grid_id}",
+                    f"model_{model_type}_{grid_id}",
+                    f"model_{model_type}_{grid_id}_dataset_{dataset_id}",
                     "pipeline_evaluation",
                     "node_predict_model",
                 ],
@@ -54,6 +58,9 @@ def create_pipeline(param_key: str,
                     param_key,
                     f"dataset_{dataset_id}",
                     f"model_{model_type}",
+                    f"grid_{grid_id}",
+                    f"model_{model_type}_{grid_id}",
+                    f"model_{model_type}_{grid_id}_dataset_{dataset_id}",
                     "pipeline_evaluation",
                     "node_evaluate_model",
                 ],
