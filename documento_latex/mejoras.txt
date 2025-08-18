@@ -1,9 +1,0 @@
-3.1
-- Añadida página en blanco entre portada y dedicatoria
-
-3.2
-- logo UCO actual
-- Cambio de lugar de la sección planos
-- Mejora formato tabla presupuesto
-- En la sección "ejemplos latex" se explica como poner el título de una figura para que sea distinto el que aparece en la lista de figuras del que aparece en el texto.
-- Se ha modificado la estructura de las referencias online en el archivo .bib para que aparece la fecha del último acceso.
