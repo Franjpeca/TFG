@@ -164,18 +164,54 @@ class DynamicModelCatalogHook:
         run_id = params.get("run_id", "001")
         forced_execution_folder = params.get("execution_folder")
 
-        # Modo visualizacion: registra entradas JSON
+        # Modo visualizacion: registra entradas JSON (+ pre-registro de writers)
         if is_visualization(pipeline_name):
             visualization_folder = forced_execution_folder or find_latest_metrics_execution_folder(METRICS_BASE)
-            #logger.info(f"[HOOK] Usando carpeta de ejecucion: {visualization_folder}")
             if not visualization_folder:
                 logger.warning("[VISUALIZATION] No valid metrics folder found.")
                 return
-            set_param_if_changed(catalog, "params:execution_folder", Path(visualization_folder).name)
-            metrics_root = METRICS_BASE / Path(visualization_folder).name
+
+            run_folder = Path(visualization_folder).name
+            set_param_if_changed(catalog, "params:execution_folder", run_folder)
+
+            metrics_root = METRICS_BASE / run_folder
+            # Registrar inputs JSON de métricas
             for file in metrics_root.glob("Metrics_*.json"):
-                key = f"evaluation.{Path(visualization_folder).name}.{file.stem}"
+                key = f"evaluation.{run_folder}.{file.stem}"
                 register_if_missing(catalog, key, JSONDataset(filepath=str(file)))
+
+            # --- PRE-REGISTRO DE WRITERS PARA FIGURAS (MISMAS CLAVES Y RUTAS) ---
+            # Detectar dataset_ids desde los JSON de métricas
+            dataset_ids = set()
+            for file in metrics_root.glob("Metrics_*.json"):
+                full_key = file.stem.replace("Metrics_", "", 1)
+                dsid = dataset_id_from_fullkey(full_key)
+                dataset_ids.add(dsid)
+
+            # Leer listas de métricas (mismas claves que usa tu pipeline de visualization)
+            nominal_metrics = params.get("nominal_metrics", ["accuracy", "f1_score"])
+            ordinal_metrics = params.get("ordinal_metrics", ["qwk", "mae", "amae"])
+            heatmap_metrics = params.get("heatmap_metrics", ["qwk", "mae", "amae", "f1_score", "accuracy"])
+
+            def _ensure_writer(key: str):
+                out_path = visualization_output_path(key)
+                if out_path:
+                    out_path.parent.mkdir(parents=True, exist_ok=True)
+                    register_if_missing(catalog, key, MatplotlibWriter(filepath=str(out_path)))
+
+            # Pre-registrar TODOS los writers que generará el pipeline (claves EXACTAS)
+            for dsid in dataset_ids:
+                # nominal
+                for m in nominal_metrics:
+                    _ensure_writer(f"visualization.{run_folder}.{dsid}.{m}")
+                # ordinal
+                for m in ordinal_metrics:
+                    _ensure_writer(f"visualization.{run_folder}.{dsid}.{m}")
+                # heatmap
+                _ensure_writer(f"visualization.{run_folder}.{dsid}.heatmap")
+                # scatter QWK vs MAE
+                _ensure_writer(f"visualization.{run_folder}.{dsid}.scatter_qwk_mae")
+
             return
 
         # Modo training/evaluation: resuelve carpeta de ejecucion
@@ -235,15 +271,18 @@ class DynamicModelCatalogHook:
 
     @hook_impl
     def after_node_run(self, node, inputs, outputs, catalog: DataCatalog):
-        # Persiste figuras de visualizacion
+        # Persistir figuras de visualizacion sin mutar la estructura del catalog (thread-safe)
         for output_name, value in outputs.items():
             if not (isinstance(value, Figure) and output_name.startswith("visualization.")):
                 continue
-            path = visualization_output_path(output_name)
-            if not path:
-                logger.warning(f"[visualization] Unexpected output name: {output_name}")
-                continue
-            path.parent.mkdir(parents=True, exist_ok=True)
-            if output_name not in catalog.list():
-                register_if_missing(catalog, output_name, MatplotlibWriter(filepath=str(path)))
-            catalog.save(output_name, value)
+            try:
+                # El writer ya esta pre-registrado en before_pipeline_run (rama visualization)
+                catalog.save(output_name, value)
+            except KeyError:
+                # Fallback ultra-seguro por si surgiera alguna clave no prevista
+                path = visualization_output_path(output_name)
+                if path:
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    value.savefig(str(path))
+                else:
+                    logger.warning(f"[visualization] Unexpected output name: {output_name}")
