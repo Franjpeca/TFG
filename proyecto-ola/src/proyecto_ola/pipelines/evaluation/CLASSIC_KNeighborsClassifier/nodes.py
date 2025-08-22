@@ -5,22 +5,9 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score, cohen_kappa_score, mean_absolute_error
 from sklearn.preprocessing import LabelEncoder
 
+from proyecto_ola.utils.nodes_utils import amae
+
 logger = logging.getLogger(__name__)
-
-def amae(y_true, y_pred):
-    y_true = np.asarray(y_true)
-    y_pred = np.asarray(y_pred)
-    classes = np.unique(y_true)
-
-    per_class_errors = []
-    for c in classes:
-        idx = np.where(y_true == c)[0]
-        if len(idx) == 0:
-            continue
-        class_error = np.mean(np.abs(y_true[idx] - y_pred[idx]))
-        per_class_errors.append(class_error)
-
-    return np.mean(per_class_errors)
 
 def Predict_CLASSIC_KNeighborsClassifier(model, dataset, model_id, dataset_id):
     logger.info(f"[Evaluating] Prediciendo con el modelo:\n\t{model_id}")

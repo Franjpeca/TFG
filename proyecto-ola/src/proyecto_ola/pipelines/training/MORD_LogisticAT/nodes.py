@@ -1,14 +1,17 @@
-import sys
-import os
-import pandas as pd
-import numpy as np
 import logging
+import numpy as np
 import mord
+
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
+
+from proyecto_ola.utils.nodes_utils import seed_everywhere
 
 logger = logging.getLogger(__name__)
 
 def Train_MORD_LogisticAT(dataset, params, cv_settings, model_id, dataset_id):
+    random_state = params.get("random_state", 42)
+    seed_everywhere(random_state)
+
     X = dataset.iloc[:, :-1]
     y_raw = dataset.iloc[:, -1]
 

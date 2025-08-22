@@ -1,6 +1,3 @@
-import sys
-import os
-import pandas as pd
 import numpy as np
 import logging
 
@@ -29,7 +26,7 @@ def Train_CLASSIC_DecisionTreeRegressor(dataset, params, cv_settings, model_id, 
 
     pipe = Pipeline(steps=[
         ("scaler", StandardScaler()),
-        ("model", DecisionTreeRegressor()),
+        ("model", DecisionTreeRegressor(random_state=cv_settings["random_state"])),
     ])
 
     search = GridSearchCV(

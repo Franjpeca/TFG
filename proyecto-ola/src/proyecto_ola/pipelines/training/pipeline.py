@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 
 # Diccionario centralizado con las funciones de cada modelo
 MODEL_PIPELINES = {
-    "LinearRegression": create_CLASSIC_LinearRegression_pipeline,
     "DecisionTreeRegressor": create_CLASSIC_DecisionTreeRegressor_pipeline,
     "KNeighborsClassifier": create_CLASSIC_KNeighborsClassifier_pipeline,
+    "LinearRegression": create_CLASSIC_LinearRegression_pipeline,
     "LAD": create_MORD_LAD_pipeline,
     "LogisticAT": create_MORD_LogisticAT_pipeline,
     "LogisticIT": create_MORD_LogisticIT_pipeline,
@@ -57,7 +57,6 @@ def create_pipeline(**kwargs) -> Pipeline:
                 continue
 
             param_ds = f"params:model_parameters.{model_name}.{combo_id}.param_grid"
-            param_type = f"params:model_parameters.{model_name}.{combo_id}.param_type"
             hyper_str = "gridsearch"
             cv = cfg.get("cv_settings", cv_default)
             cv_str = f"cv_{cv['n_splits']}_rs_{cv['random_state']}"

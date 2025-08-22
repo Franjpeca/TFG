@@ -24,9 +24,10 @@ def register_pipelines():
     # Carga de parametros
     config_loader = OmegaConfigLoader(conf_source="conf")
     params = config_loader.get("parameters")
+    dataset_ids = [str(k) for k in params["dataset_names"].keys()]
 
     # Subpipelines
-    preprocessing = preprocessing_pipeline.create_pipeline()
+    preprocessing = preprocessing_pipeline.create_pipeline(dataset_ids=dataset_ids)
     training = training_pipeline.create_pipeline(params=params)
     evaluation = evaluation_pipeline.create_pipeline(params=params)
     visualization = visualization_pipeline.create_pipeline(params=params)

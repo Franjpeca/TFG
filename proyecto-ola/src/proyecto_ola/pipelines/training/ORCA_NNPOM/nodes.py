@@ -1,31 +1,16 @@
-
 import logging
 import numpy as np
-import pandas as pd
 import torch
-import os, random
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from orca_python.classifiers.NNPOM import NNPOM
 from sklearn.preprocessing import RobustScaler
 from sklearn.pipeline import Pipeline
-logger = logging.getLogger(__name__)
 
-def seed_everywhere(seed: int):
-    random.seed(seed)
-    np.random.seed(seed)
-    try:
-        import torch
-        torch.manual_seed(seed)
-        if torch.cuda.is_available():
-            torch.cuda.manual_seed_all(seed)
-            os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
-        torch.use_deterministic_algorithms(True)
-        if hasattr(torch.backends, "cudnn"):
-            torch.backends.cudnn.benchmark = False
-    except Exception:
-        pass
+from proyecto_ola.utils.nodes_utils import seed_everywhere
+
+logger = logging.getLogger(__name__)
 
 
 def Train_ORCA_NNPOM(dataset, params, cv_settings, model_id, dataset_id):

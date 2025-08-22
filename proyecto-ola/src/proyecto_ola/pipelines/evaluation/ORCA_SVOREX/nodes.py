@@ -6,19 +6,9 @@ from sklearn.metrics import accuracy_score, f1_score, cohen_kappa_score, mean_ab
 from sklearn.preprocessing import LabelEncoder
 from orca_python.classifiers import SVOREX
 
-logger = logging.getLogger(__name__)
+from proyecto_ola.utils.nodes_utils import amae
 
-def amae(y_true, y_pred):
-    y_true = np.asarray(y_true)
-    y_pred = np.asarray(y_pred)
-    classes = np.unique(y_true)
-    per_class_errors = []
-    for c in classes:
-        idx = np.where(y_true == c)[0]
-        if len(idx) == 0:
-            continue
-        per_class_errors.append(np.mean(np.abs(y_true[idx] - y_pred[idx])))
-    return np.mean(per_class_errors)
+logger = logging.getLogger(__name__)
 
 def Predict_ORCA_SVOREX(model, dataset, model_id, dataset_id):
     logger.info(f"[Evaluating] Prediciendo con el modelo:\n\t{model_id}")
