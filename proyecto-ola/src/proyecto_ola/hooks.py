@@ -11,7 +11,12 @@ from kedro_datasets.json import JSONDataset
 from kedro_datasets.matplotlib import MatplotlibWriter
 from matplotlib.figure import Figure
 
-from proyecto_ola.utils.pipelines_utils import find_latest_metrics_execution_folder
+from proyecto_ola.utils.pipelines_utils import (
+    find_latest_metrics_execution_folder,
+    find_parameters_cli,
+    parse_folders_param,
+)
+
 logger = logging.getLogger(__name__)
 
 # Carpetas base (no cambiar)
@@ -21,22 +26,18 @@ METRICS_BASE = Path("data") / "05_model_metrics"
 REPORT_BASE = Path("data") / "06_reporting"
 
 
-# Comprueba si es pipeline de evaluacion
 def is_evaluation(name: str) -> bool:
     return "evaluation" in str(name)
 
 
-# Comprueba si es pipeline de visualizacion
 def is_visualization(name: str) -> bool:
     return "visualization" in str(name)
 
 
-# Carga parametros desde conf/
 def load_parameters() -> Dict[str, Any]:
     return OmegaConfigLoader(conf_source="conf").get("parameters", {}) or {}
 
 
-# Devuelve la ultima carpeta con ficheros que casen con el patron
 def find_latest_folder_with(base: Path, pattern: str) -> Optional[Path]:
     if not base.exists():
         return None
@@ -51,13 +52,11 @@ def find_latest_folder_with(base: Path, pattern: str) -> Optional[Path]:
     return best
 
 
-# Registra dataset si falta
 def register_if_missing(catalog: DataCatalog, key: str, dataset_obj) -> None:
     if key not in catalog.list():
         catalog.add(key, dataset_obj)
 
 
-# Setea params:* solo si cambia
 def set_param_if_changed(catalog: DataCatalog, param_key: str, value: Any) -> None:
     try:
         current = catalog.load(param_key)
@@ -67,7 +66,6 @@ def set_param_if_changed(catalog: DataCatalog, param_key: str, value: Any) -> No
         catalog.add_feed_dict({param_key: value}, replace=True)
 
 
-# Asegura carpetas de salida
 def ensure_dirs(is_eval: bool, models_dir: Path, outputs_dir: Path, metrics_dir: Path) -> None:
     if not is_eval:
         models_dir.mkdir(parents=True, exist_ok=True)
@@ -75,7 +73,6 @@ def ensure_dirs(is_eval: bool, models_dir: Path, outputs_dir: Path, metrics_dir:
     metrics_dir.mkdir(parents=True, exist_ok=True)
 
 
-# Resuelve carpeta de ejecucion
 def resolve_execution_folder(pipeline_name: str, run_id: str, forced: Optional[str]) -> str:
     if forced:
         return forced
@@ -88,35 +85,33 @@ def resolve_execution_folder(pipeline_name: str, run_id: str, forced: Optional[s
     return f"{run_id}_{datetime.datetime.now():%Y%m%d_%H%M%S}"
 
 
-# Extrae dataset_id desde la clave completa
 def dataset_id_from_fullkey(full_key: str) -> str:
-    try:
-        return full_key.split("_", 4)[2]
-    except Exception:
-        logger.warning(f"[evaluation] Could not extract dataset_id from {full_key}")
-        return "unknown"
+    # Ejemplo full_key: SVOREX_grid_001_46042_gridsearch_cv_2_rs_32
+    # tokens = [SVOREX, grid, 001, 46042, gridsearch, cv, 2, rs, 32]
+    # dataset_id debe ser tokens[-6] -> 46042
+    tokens = full_key.split("_")
+    if len(tokens) >= 6:
+        return tokens[-6]
+    logger.warning(f"[evaluation] Could not extract dataset_id from {full_key}")
+    return "unknown"
 
 
-# Extrae dataset_id desde el nombre del dataset de training
 def dataset_id_from_train_name(name: str) -> str:
     return name.replace("cleaned_", "").replace("_train_ordinal", "")
 
 
-# Guarda evaluated_keys sin warnings
 def save_evaluated_keys(catalog: DataCatalog, keys: List[str]) -> None:
     register_if_missing(catalog, "evaluated_keys", MemoryDataset(copy_mode="assign"))
     catalog.save("evaluated_keys", keys)
     set_param_if_changed(catalog, "params:evaluated_keys", keys)
 
 
-# Registra el modelo con clave oficial y alias
 def register_model(catalog: DataCatalog, run_id: str, full_key: str, model_path: Path) -> None:
     ds = PickleDataset(filepath=str(model_path), backend="pickle", save_args={"protocol": 5})
     register_if_missing(catalog, f"training.{run_id}.Model_{full_key}", ds)
     register_if_missing(catalog, full_key, ds)
 
 
-# Registra JSON de predicciones y metricas
 def register_evaluation_outputs(
     catalog: DataCatalog,
     run_id: str,
@@ -139,7 +134,6 @@ def register_evaluation_outputs(
         register_if_missing(catalog, key, JSONDataset(filepath=str(path)))
 
 
-# Calcula la ruta de salida para figuras de visualizacion
 def visualization_output_path(output_name: str) -> Optional[Path]:
     parts = output_name.split(".")
     if len(parts) != 4 or parts[0] != "visualization":
@@ -155,40 +149,66 @@ def visualization_output_path(output_name: str) -> Optional[Path]:
     return base / sub / f"{metric}.png"
 
 
+def _choose_recent_folder(folders: List[str], base: Path) -> str:
+    try:
+        return max(folders, key=lambda f: (base / f).stat().st_mtime)
+    except Exception:
+        return folders[0]
+
+
 class DynamicModelCatalogHook:
     @hook_impl
     def before_pipeline_run(self, run_params: dict, catalog: DataCatalog) -> None:
-        # Resuelve parametros base
         pipeline_name = run_params.get("pipeline_name", "")
         params = {**load_parameters(), **run_params.get("extra_params", {})}
         run_id = params.get("run_id", "001")
         forced_execution_folder = params.get("execution_folder")
 
-        # Modo visualizacion: registra entradas JSON (+ pre-registro de writers)
+        # -------- VISUALIZATION MODE: admite múltiples carpetas y unifica salidas --------
         if is_visualization(pipeline_name):
-            visualization_folder = forced_execution_folder or find_latest_metrics_execution_folder(METRICS_BASE)
-            if not visualization_folder:
+            # 1) Resolver carpetas de ENTRADA (multi-carpeta) desde CLI/params
+            cli_multi = find_parameters_cli("execution_folders", params)
+            exec_folders = parse_folders_param(cli_multi)
+
+            if not exec_folders:
+                cli_single = find_parameters_cli("execution_folder", params) or params.get("execution_folder")
+                exec_folders = parse_folders_param(cli_single) if cli_single else []
+
+            if not exec_folders:
+                latest = find_latest_metrics_execution_folder(METRICS_BASE)
+                if latest:
+                    exec_folders = [latest]
+
+            if not exec_folders:
                 logger.warning("[VISUALIZATION] No valid metrics folder found.")
                 return
 
-            run_folder = Path(visualization_folder).name
-            set_param_if_changed(catalog, "params:execution_folder", run_folder)
+            # 2) Carpeta de SALIDA (unificada): la más reciente entre las pasadas
+            output_folder = _choose_recent_folder(exec_folders, METRICS_BASE)
+            set_param_if_changed(catalog, "params:execution_folder", output_folder)
 
-            metrics_root = METRICS_BASE / run_folder
-            # Registrar inputs JSON de métricas
-            for file in metrics_root.glob("Metrics_*.json"):
-                key = f"evaluation.{run_folder}.{file.stem}"
-                register_if_missing(catalog, key, JSONDataset(filepath=str(file)))
+            # 3) Registrar TODOS los inputs JSON de métricas de CADA carpeta de entrada
+            all_metric_files = []
+            for folder in exec_folders:
+                metrics_root = METRICS_BASE / folder
+                files = list(metrics_root.glob("Metrics_*.json"))
+                for file in files:
+                    key = f"evaluation.{folder}.{file.stem}"
+                    register_if_missing(catalog, key, JSONDataset(filepath=str(file)))
+                all_metric_files.extend(files)
 
-            # --- PRE-REGISTRO DE WRITERS PARA FIGURAS (MISMAS CLAVES Y RUTAS) ---
-            # Detectar dataset_ids desde los JSON de métricas
+            if not all_metric_files:
+                logger.warning("[VISUALIZATION] No metric files found in provided folders.")
+                return
+
+            # 4) Pre-registrar writers EXACTOS para las salidas bajo la carpeta de salida unificada
             dataset_ids = set()
-            for file in metrics_root.glob("Metrics_*.json"):
+            for file in all_metric_files:
                 full_key = file.stem.replace("Metrics_", "", 1)
-                dsid = dataset_id_from_fullkey(full_key)
-                dataset_ids.add(dsid)
+                dsid = dataset_id_from_fullkey(full_key)  # <-- extractor corregido
+                if dsid != "unknown":
+                    dataset_ids.add(dsid)
 
-            # Leer listas de métricas (mismas claves que usa tu pipeline de visualization)
             nominal_metrics = params.get("nominal_metrics", ["accuracy", "f1_score"])
             ordinal_metrics = params.get("ordinal_metrics", ["qwk", "mae", "amae"])
             heatmap_metrics = params.get("heatmap_metrics", ["qwk", "mae", "amae", "f1_score", "accuracy"])
@@ -199,37 +219,28 @@ class DynamicModelCatalogHook:
                     out_path.parent.mkdir(parents=True, exist_ok=True)
                     register_if_missing(catalog, key, MatplotlibWriter(filepath=str(out_path)))
 
-            # Pre-registrar TODOS los writers que generará el pipeline (claves EXACTAS)
             for dsid in dataset_ids:
-                # nominal
                 for m in nominal_metrics:
-                    _ensure_writer(f"visualization.{run_folder}.{dsid}.{m}")
-                # ordinal
+                    _ensure_writer(f"visualization.{output_folder}.{dsid}.{m}")
                 for m in ordinal_metrics:
-                    _ensure_writer(f"visualization.{run_folder}.{dsid}.{m}")
-                # heatmap
-                _ensure_writer(f"visualization.{run_folder}.{dsid}.heatmap")
-                # scatter QWK vs MAE
-                _ensure_writer(f"visualization.{run_folder}.{dsid}.scatter_qwk_mae")
-
+                    _ensure_writer(f"visualization.{output_folder}.{dsid}.{m}")
+                _ensure_writer(f"visualization.{output_folder}.{dsid}.heatmap")
+                _ensure_writer(f"visualization.{output_folder}.{dsid}.scatter_qwk_mae")
             return
 
-        # Modo training/evaluation: resuelve carpeta de ejecucion
+        # -------- TRAINING / EVALUATION --------
         execution_folder = resolve_execution_folder(pipeline_name, run_id, forced_execution_folder)
         set_param_if_changed(catalog, "params:execution_folder", execution_folder)
 
-        # Prepara directorios
         models_dir = MODELS_BASE / execution_folder
         outputs_dir = OUTPUT_BASE / execution_folder
         metrics_dir = METRICS_BASE / execution_folder
         ensure_dirs(is_evaluation(pipeline_name), models_dir, outputs_dir, metrics_dir)
 
-        # Lee parametros de modelos/datasets/cv
         model_parameters: Dict[str, Dict[str, Any]] = params.get("model_parameters", {})
         training_datasets: List[str] = params.get("training_datasets", [])
         default_cv: Dict[str, Any] = params.get("cv_settings", {"n_splits": 5, "random_state": 42})
 
-        # Construye items a registrar
         if is_evaluation(pipeline_name):
             items: List[Tuple[str, Path]] = [
                 (p.stem.replace("Model_", "", 1), p) for p in models_dir.glob("Model_*.pkl")
@@ -247,7 +258,6 @@ class DynamicModelCatalogHook:
                         full_key = f"{model_name}_{combo_id}_{dsid}_gridsearch_{cv_str}"
                         items.append((full_key, models_dir / f"Model_{full_key}.pkl"))
 
-        # Registra modelos, salidas y params por modelo
         evaluated_keys: List[str] = []
         for full_key, model_path in items:
             evaluated_keys.append(full_key)
@@ -257,8 +267,8 @@ class DynamicModelCatalogHook:
                 run_id=run_id,
                 execution_folder=execution_folder,
                 full_key=full_key,
-                outputs_dir=outputs_dir,
-                metrics_dir=metrics_dir,
+                outputs_dir=OUTPUT_BASE / execution_folder,
+                metrics_dir=METRICS_BASE / execution_folder,
             )
             dsid = dataset_id_from_fullkey(full_key)
             register_if_missing(catalog, f"params:{full_key}_train_dataset_id", MemoryDataset(copy_mode="assign"))
@@ -266,20 +276,16 @@ class DynamicModelCatalogHook:
             catalog.save(f"params:{full_key}_train_dataset_id", dsid)
             catalog.save(f"params:{full_key}_dataset_id", dsid)
 
-        # Guarda evaluated_keys
         save_evaluated_keys(catalog, evaluated_keys)
 
     @hook_impl
     def after_node_run(self, node, inputs, outputs, catalog: DataCatalog):
-        # Persistir figuras de visualizacion sin mutar la estructura del catalog (thread-safe)
         for output_name, value in outputs.items():
             if not (isinstance(value, Figure) and output_name.startswith("visualization.")):
                 continue
             try:
-                # El writer ya esta pre-registrado en before_pipeline_run (rama visualization)
                 catalog.save(output_name, value)
             except KeyError:
-                # Fallback ultra-seguro por si surgiera alguna clave no prevista
                 path = visualization_output_path(output_name)
                 if path:
                     path.parent.mkdir(parents=True, exist_ok=True)

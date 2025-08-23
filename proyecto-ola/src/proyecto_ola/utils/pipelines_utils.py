@@ -2,6 +2,18 @@ import sys
 from typing import Optional
 from pathlib import Path
 
+def parse_folders_param(val):
+    """Devuelve lista a partir de list/str con separadores , ; |"""
+    if val is None:
+        return []
+    if isinstance(val, (list, tuple)):
+        return [str(v).strip() for v in val if str(v).strip()]
+    s = str(val).strip().strip('"').strip("'")
+    for sep in (",", ";", "|"):
+        if sep in s:
+            return [x.strip() for x in s.split(sep) if x.strip()]
+    return [s] if s else []
+
 def find_parameters_cli(param_name: str, params: dict) -> Optional[str]:
     # 1) Prioriza lo que ya viene en params (parameters.yml + extra_params merged)
     value = params.get(param_name)
@@ -33,6 +45,8 @@ def find_parameters_cli(param_name: str, params: dict) -> Optional[str]:
     return None
 
 
+
+
 def only_evaluation() -> bool:
     args = sys.argv
     for i, a in enumerate(args):
@@ -57,3 +71,4 @@ def find_latest_metrics_execution_folder(metrics_base: Path) -> Optional[str]:
     if latest_file:
         return latest_file.parent.name
     return None
+
