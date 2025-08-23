@@ -4,7 +4,7 @@ import mord
 
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 
-from proyecto_ola.utils.nodes_utils import seed_everywhere
+from proyecto_ola.utils.nodes_utils import seed_everywhere, qwk_scorer
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ def Train_MORD_LogisticIT(dataset, params, cv_settings, model_id, dataset_id):
     label_mapping = {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4}
     y_mapped = y_raw.map(label_mapping).astype(int)
 
-    logger.info(f"[Training] Entrenando LogisticIT con GridSearch (MAE) con el dataset: {dataset_id} ...")
+    logger.info(f"[Training] Entrenando LogisticIT con GridSearch (QWK) con el dataset: {dataset_id} ...")
     logger.info(f"[Training] Model id: {model_id} ...\n")
 
     cv = StratifiedKFold(
@@ -31,7 +31,7 @@ def Train_MORD_LogisticIT(dataset, params, cv_settings, model_id, dataset_id):
         estimator=mord.LogisticIT(),
         param_grid=params,
         cv=cv,
-        scoring="neg_mean_absolute_error",  # MAE negativo
+        scoring=qwk_scorer,
         n_jobs=-1
     )
     search.fit(X, y_mapped)
@@ -39,7 +39,9 @@ def Train_MORD_LogisticIT(dataset, params, cv_settings, model_id, dataset_id):
     best_model = search.best_estimator_
     best_model.label_mapping = label_mapping
 
-    logger.info(f"[Training] Mejor MAE obtenido: {-search.best_score_:.5f}")
+    best_score = search.best_score_
+
+    logger.info(f"[Training] Mejor QWK obtenido: {best_score:.5f}")
     logger.info(f"[Training] Mejor modelo obtenido:\n\t{best_model}\n\n")
 
     return best_model

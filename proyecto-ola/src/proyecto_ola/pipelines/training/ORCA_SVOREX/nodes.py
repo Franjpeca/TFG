@@ -4,11 +4,11 @@ import torch
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
-
 from sklearn.pipeline import Pipeline
+
 from orca_python.classifiers import SVOREX
 
-from proyecto_ola.utils.nodes_utils import seed_everywhere
+from proyecto_ola.utils.nodes_utils import seed_everywhere, qwk_scorer
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ def Train_ORCA_SVOREX(dataset, params, cv_settings, model_id, dataset_id):
     X = dataset.iloc[:, :-1].values.astype(np.float32)
     y_fit = dataset.iloc[:, -1].map({"A": 1, "B": 2, "C": 3, "D": 4, "E": 5}).astype(int).values
 
-    logger.info(f"[Training] Entrenando ORCA-SVOREX con GridSearch (MAE) con el dataset: {dataset_id} ...")
+    logger.info(f"[Training] Entrenando ORCA-SVOREX con GridSearch (QWK) con el dataset: {dataset_id} ...")
     logger.info(f"[Training] Model id: {model_id} ...\n")
 
     cv = StratifiedKFold(
@@ -39,14 +39,16 @@ def Train_ORCA_SVOREX(dataset, params, cv_settings, model_id, dataset_id):
         estimator=pipe,
         param_grid=param_grid,
         cv=cv,
-        scoring="neg_mean_absolute_error",
+        scoring=qwk_scorer,
         n_jobs=-1
     )
     search.fit(X, y_fit)
 
     best_model = search.best_estimator_
 
-    logger.info(f"[Training] Mejor MAE obtenido: {-search.best_score_:.5f}")
+    best_score = search.best_score_
+
+    logger.info(f"[Training] Mejor QWK obtenido: {best_score:.5f}")
     logger.info(f"[Training] Mejor modelo obtenido:\n\t{best_model}\n\n")
 
     return best_model

@@ -6,6 +6,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeRegressor
 
+from proyecto_ola.utils.nodes_utils import qwk_scorer
+
 logger = logging.getLogger(__name__)
 
 def Train_CLASSIC_DecisionTreeRegressor(dataset, params, cv_settings, model_id, dataset_id):
@@ -15,7 +17,7 @@ def Train_CLASSIC_DecisionTreeRegressor(dataset, params, cv_settings, model_id, 
     label_mapping = {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4}
     y_mapped = y_raw.map(label_mapping).astype(int)
 
-    logger.info(f"[Training] Entrenando DecisionTreeRegressor con GridSearch (MAE) con el dataset: {dataset_id} ...\n")
+    logger.info(f"[Training] Entrenando DecisionTreeRegressor con GridSearch (QWK) con el dataset: {dataset_id} ...\n")
     logger.info(f"[Training] Model id: {model_id} ...\n")
 
     cv = StratifiedKFold(
@@ -32,7 +34,7 @@ def Train_CLASSIC_DecisionTreeRegressor(dataset, params, cv_settings, model_id, 
     search = GridSearchCV(
         estimator=pipe,
         param_grid={f"model__{k}": v for k, v in params.items()},
-        scoring="neg_mean_absolute_error",
+        scoring=qwk_scorer,
         cv=cv,
         n_jobs=-1
     )
@@ -42,9 +44,9 @@ def Train_CLASSIC_DecisionTreeRegressor(dataset, params, cv_settings, model_id, 
     best_model.label_mapping = label_mapping
     best_model.scaler = best_model.named_steps["scaler"]
 
-    best_score = -search.best_score_
+    best_score = search.best_score_
 
-    logger.info(f"[Training] Mejor MAE obtenido: {best_score:.5f}")
+    logger.info(f"[Training] Mejor QWK obtenido: {best_score:.5f}")
     logger.info(f"[Training] Mejor modelo obtenido:\n\t{best_model}\n\n")
 
     return best_model

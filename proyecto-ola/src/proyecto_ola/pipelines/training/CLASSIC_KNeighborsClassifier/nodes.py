@@ -6,6 +6,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
 
+from proyecto_ola.utils.nodes_utils import qwk_scorer
+
 logger = logging.getLogger(__name__)
 
 def Train_CLASSIC_KNeighborsClassifier(dataset, params, cv_settings, model_id, dataset_id):
@@ -15,7 +17,7 @@ def Train_CLASSIC_KNeighborsClassifier(dataset, params, cv_settings, model_id, d
     label_mapping = {'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4}
     y_mapped = y_raw.map(label_mapping).astype(int)
 
-    logger.info(f"[Training] Entrenando KNeighborsClassifier con GridSearch (MAE) con el dataset: {dataset_id} ...\n")
+    logger.info(f"[Training] Entrenando KNeighborsClassifier con GridSearch (QWK) con el dataset: {dataset_id} ...\n")
     logger.info(f"[Training] Model id: {model_id} ...\n")
 
     cv = StratifiedKFold(
@@ -29,11 +31,10 @@ def Train_CLASSIC_KNeighborsClassifier(dataset, params, cv_settings, model_id, d
         ("model", KNeighborsClassifier()),
     ])
 
-    logger.info(f"[Training] Realizando validación cruzada (neg_mean_absolute_error)...\n")
     search = GridSearchCV(
         estimator=pipe,
         param_grid={f"model__{k}": v for k, v in params.items()},
-        scoring="neg_mean_absolute_error",
+        scoring=qwk_scorer,
         cv=cv,
         n_jobs=-1
     )
@@ -43,7 +44,9 @@ def Train_CLASSIC_KNeighborsClassifier(dataset, params, cv_settings, model_id, d
     best_model.label_mapping = label_mapping
     best_model.scaler = best_model.named_steps["scaler"]
 
-    logger.info(f"[Training] Mejor MAE obtenido: {-search.best_score_:.5f}")
+    best_score = search.best_score_
+
+    logger.info(f"[Training] Mejor QWK obtenido: {best_score:.5f}")
     logger.info(f"[Training] Mejor modelo obtenido:\n\t{best_model}\n\n")
 
     return best_model
