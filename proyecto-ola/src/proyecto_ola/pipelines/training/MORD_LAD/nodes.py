@@ -25,7 +25,7 @@ def Train_MORD_LAD(dataset, params, cv_settings, model_id, dataset_id):
 
     cv = StratifiedKFold(
         n_splits=cv_settings["n_splits"],
-        shuffle=True,
+        shuffle=cv_settings.get("shuffle", True),
         random_state=cv_settings["random_state"]
     )
 

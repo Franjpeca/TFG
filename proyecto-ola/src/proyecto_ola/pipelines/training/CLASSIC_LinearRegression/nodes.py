@@ -23,7 +23,7 @@ def Train_CLASSIC_LinearRegression(dataset, params, cv_settings, model_id, datas
 
     cv = StratifiedKFold(
         n_splits=cv_settings["n_splits"],
-        shuffle=True,
+        shuffle=cv_settings.get("shuffle", True),
         random_state=cv_settings["random_state"]
     )
 
