@@ -26,9 +26,15 @@ def Predict_ORCA_SVOREX(model, dataset, model_id, dataset_id):
         if 0 not in vals and vals.min() >= 1:
             y = y - 1
 
-    y_pred = model.predict(X.to_numpy())
 
-    y_pred_list = [int(v) - 1 for v in np.asarray(y_pred).tolist()]
+    y_pred = model.predict(X.to_numpy(dtype=np.float64))
+    pred = np.asarray(y_pred)
+    if not np.issubdtype(pred.dtype, np.integer):
+        pred = np.rint(pred).astype(int)
+    if pred.min() >= 1:
+        pred = pred - 1
+
+    y_pred_list = pred.tolist()
     y_true_list = [int(v) for v in np.asarray(y).tolist()]
 
     return (
