@@ -16,7 +16,7 @@ def Train_ORCA_NNPOM(dataset, params, cv_settings, model_id, dataset_id):
     random_state = params.get("random_state", 42)
     seed_everywhere(random_state)
 
-    X = dataset.iloc[:, :-1].values.astype(np.float32)
+    X = dataset.iloc[:, :-1].to_numpy(dtype=np.float64)
     y_raw = dataset.iloc[:, -1]
 
     label_mapping = {"A": 1, "B": 2, "C": 3, "D": 4, "E": 5}

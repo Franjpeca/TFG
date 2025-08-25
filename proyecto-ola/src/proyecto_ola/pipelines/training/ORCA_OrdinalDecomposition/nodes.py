@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import RobustScaler
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.pipeline import Pipeline
 
@@ -17,7 +17,7 @@ def Train_ORCA_OrdinalDecomposition(dataset, params, cv_settings, model_id, data
     random_state = params.get("random_state", 42)
     seed_everywhere(random_state)
 
-    X = dataset.iloc[:, :-1].values.astype(np.float32)
+    X = dataset.iloc[:, :-1].to_numpy(dtype=np.float64)
     y_raw = dataset.iloc[:, -1]
 
     label_mapping = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}

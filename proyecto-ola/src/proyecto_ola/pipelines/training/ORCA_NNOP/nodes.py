@@ -2,7 +2,7 @@ import logging
 import numpy as np
 import torch
 
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import RobustScaler
 from sklearn.model_selection import GridSearchCV, StratifiedKFold
 from sklearn.pipeline import Pipeline
 
@@ -16,7 +16,7 @@ def Train_ORCA_NNOP(dataset, params, cv_settings, model_id, dataset_id):
     random_state = params.get("random_state", 42)
     seed_everywhere(random_state)
 
-    X = dataset.iloc[:, :-1].values.astype(np.float32)
+    X = dataset.iloc[:, :-1].to_numpy(dtype=np.float64)
     y_raw = dataset.iloc[:, -1]
 
     label_mapping = {"A": 1, "B": 2, "C": 3, "D": 4, "E": 5}
@@ -35,7 +35,7 @@ def Train_ORCA_NNOP(dataset, params, cv_settings, model_id, dataset_id):
     np.random.seed(cv_settings["random_state"])
 
     pipe = Pipeline(steps=[
-        ("scaler", StandardScaler()),
+        ("scaler", RobustScaler()),
         ("model", NNOP()),
     ])
 
