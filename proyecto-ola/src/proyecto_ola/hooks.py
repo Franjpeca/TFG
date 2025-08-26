@@ -73,14 +73,19 @@ def ensure_dirs(is_eval: bool, models_dir: Path, outputs_dir: Path, metrics_dir:
     metrics_dir.mkdir(parents=True, exist_ok=True)
 
 
-def resolve_execution_folder(pipeline_name: str, run_id: str, forced: Optional[str]) -> str:
+def resolve_execution_folder(pipeline_name: str, run_id: str, forced: Optional[str], cv_cfg: Dict[str, Any]) -> str:
     if forced:
         return forced
-    if is_evaluation(pipeline_name) and pipeline_name == "evaluation":
-        latest = find_latest_folder_with(MODELS_BASE, "Model_*.pkl")
+    if is_evaluation(pipeline_name):
+        sig = f"cv_{cv_cfg.get('n_splits', 5)}_rs_{cv_cfg.get('random_state', 42)}"
+        latest = find_latest_folder_with(MODELS_BASE, f"Model_*_{sig}.pkl")
         if latest:
             logger.info(f"[Evaluating] Using folder: {latest.name}")
             return latest.name
+        latest_any = find_latest_folder_with(MODELS_BASE, "Model_*.pkl")
+        if latest_any:
+            logger.info(f"[Evaluating] Using folder: {latest_any.name}")
+            return latest_any.name
         logger.warning(f"[Evaluating] No models found for run_id={run_id}.")
     return f"{run_id}_{datetime.datetime.now():%Y%m%d_%H%M%S}"
 
@@ -163,10 +168,10 @@ class DynamicModelCatalogHook:
         params = {**load_parameters(), **run_params.get("extra_params", {})}
         run_id = params.get("run_id", "001")
         forced_execution_folder = params.get("execution_folder")
+        default_cv: Dict[str, Any] = params.get("cv_settings", {"n_splits": 5, "random_state": 42})
 
-        # -------- VISUALIZATION MODE: admite múltiples carpetas y unifica salidas --------
+        # -------- VISUALIZATION MODE --------
         if is_visualization(pipeline_name):
-            # 1) Resolver carpetas de ENTRADA (multi-carpeta) desde CLI/params
             cli_multi = find_parameters_cli("execution_folders", params)
             exec_folders = parse_folders_param(cli_multi)
 
@@ -183,11 +188,9 @@ class DynamicModelCatalogHook:
                 logger.warning("[VISUALIZATION] No valid metrics folder found.")
                 return
 
-            # 2) Carpeta de SALIDA (unificada): la más reciente entre las pasadas
             output_folder = _choose_recent_folder(exec_folders, METRICS_BASE)
             set_param_if_changed(catalog, "params:execution_folder", output_folder)
 
-            # 3) Registrar TODOS los inputs JSON de métricas de CADA carpeta de entrada
             all_metric_files = []
             for folder in exec_folders:
                 metrics_root = METRICS_BASE / folder
@@ -201,11 +204,10 @@ class DynamicModelCatalogHook:
                 logger.warning("[VISUALIZATION] No metric files found in provided folders.")
                 return
 
-            # 4) Pre-registrar writers EXACTOS para las salidas bajo la carpeta de salida unificada
             dataset_ids = set()
             for file in all_metric_files:
                 full_key = file.stem.replace("Metrics_", "", 1)
-                dsid = dataset_id_from_fullkey(full_key)  # <-- extractor corregido
+                dsid = dataset_id_from_fullkey(full_key)
                 if dsid != "unknown":
                     dataset_ids.add(dsid)
 
@@ -229,7 +231,7 @@ class DynamicModelCatalogHook:
             return
 
         # -------- TRAINING / EVALUATION --------
-        execution_folder = resolve_execution_folder(pipeline_name, run_id, forced_execution_folder)
+        execution_folder = resolve_execution_folder(pipeline_name, run_id, forced_execution_folder, default_cv)
         set_param_if_changed(catalog, "params:execution_folder", execution_folder)
 
         models_dir = MODELS_BASE / execution_folder
@@ -239,14 +241,51 @@ class DynamicModelCatalogHook:
 
         model_parameters: Dict[str, Dict[str, Any]] = params.get("model_parameters", {})
         training_datasets: List[str] = params.get("training_datasets", [])
-        default_cv: Dict[str, Any] = params.get("cv_settings", {"n_splits": 5, "random_state": 42})
 
         if is_evaluation(pipeline_name):
-            items: List[Tuple[str, Path]] = [
-                (p.stem.replace("Model_", "", 1), p) for p in models_dir.glob("Model_*.pkl")
-            ]
+            # Firma CV activa (sea 2, 3, 5... lo que venga en params)
+            sig = f"cv_{default_cv.get('n_splits', 5)}_rs_{default_cv.get('random_state', 42)}"
+
+            if forced_execution_folder:
+                # Si fuerzas carpeta: no filtramos por CV, pero avisamos si la firma activa no está presente.
+                items: List[Tuple[str, Path]] = [
+                    (p.stem.replace("Model_", "", 1), p) for p in models_dir.glob("Model_*.pkl")
+                ]
+                if not items:
+                    logger.warning("[evaluation] No se encontraron modelos en %s.", models_dir)
+                    # --- añadido: propaga vacío y sal ---
+                    save_evaluated_keys(catalog, [])
+                    return
+                else:
+                    # Detecta qué firmas CV hay en la carpeta forzada y avisa si falta la activa.
+                    present_sigs = set()
+                    for _, p in items:
+                        name = p.stem  # Model_<...>_cv_X_rs_Y
+                        parts = name.split("_")
+                        if len(parts) >= 4:
+                            present_sigs.add("_".join(parts[-4:]))  # e.g. "cv_3_rs_32"
+                    if sig not in present_sigs:
+                        logger.warning(
+                            "[evaluation] La carpeta forzada '%s' no contiene modelos con la firma activa %s. "
+                            "Firmas encontradas: %s",
+                            models_dir, sig, sorted(present_sigs) if present_sigs else "ninguna"
+                        )
+            else:
+                # Si no fuerzas carpeta: filtra por la firma CV activa para evitar mismatches.
+                items = [
+                    (p.stem.replace("Model_", "", 1), p) for p in models_dir.glob(f"Model_*_{sig}.pkl")
+                ]
+                if not items:
+                    logger.warning(
+                        "[evaluation] En la ultima ejecucion no hay modelos con firma %s en %s. "
+                        "Pasa --params \"execution_folder=<carpeta_con_modelos>\" o ajusta cv_settings.",
+                        sig, models_dir
+                    )
+                    save_evaluated_keys(catalog, [])
+                    return
         else:
-            items = []
+            items: List[Tuple[str, Path]] = []
+            # Claves esperadas del training actual (se guardarán en models_dir cuando termine el fit)
             for model_name, combos in model_parameters.items():
                 for combo_id, cfg in combos.items():
                     if "param_grid" not in cfg:
