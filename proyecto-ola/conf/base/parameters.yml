@@ -36,117 +36,102 @@ cv_settings:
 
 
 model_parameters:
-#
+  # =========================
+  # Baselines (referencia)
+  # =========================
   LinearRegression:
     grid_001:
       param_grid:
         fit_intercept: [True]
-        positive: [False]
+        positive: [False]   # baseline simple y estable
 
-    grid_002:
-      param_grid:
-        fit_intercept: [True]
-        positive: [True]
-#
   DecisionTreeRegressor:
     grid_001:
       param_grid:
-        max_depth: [3, 5, 10]
-        min_samples_split: [2, 5]
-    
-    grid_002:
-      param_grid:
-        max_depth: [10]
-        min_samples_split: [2, 5]    
+        max_depth: [5, 10]
+        min_samples_split: [2, 5]   # 4 combos
 
-#
   KNeighborsClassifier:
     grid_001:
       param_grid:
-        n_neighbors: [3, 5]
-        weights: ["uniform"]
-        p: [2]  # distancia euclídea
+        n_neighbors: [3, 5, 7, 9]
+        weights: ["uniform", "distance"]
+        p: [1, 2]   # 16 combos
 
-#
+  # =========================
+  # MORD (modelos ordinales)
+  # =========================
   LogisticAT:
-    grid_001: # Representa combinacion de parametros
-      param_grid:
-        alpha: [0.1, 0.5]
-        max_iter: [500, 1000]
-
-#
-  LAD:
     grid_001:
       param_grid:
-        C: [0.001, 0.02]
-        max_iter: [30000, 1000]
+        alpha: [0.01, 0.1, 1.0, 10.0]
+        max_iter: [1000]   # 4 combos
 
-#
   LogisticIT:
     grid_001:
       param_grid:
-        alpha: [0.001, 0.01]
-        max_iter: [1000, 2000]
+        alpha: [0.01, 0.1, 1.0, 10.0]
+        max_iter: [1000]   # 4 combos
 
-#
+  LAD:
+    grid_001:
+      param_grid:
+        C: [0.01, 0.1, 1.0, 10.0]
+        max_iter: [30000]  # subir iteraciones para evitar ConvergenceWarning
+
   OrdinalRidge:
     grid_001:
       param_grid:
-        alpha: [0.001, 5]
-        max_iter: [1000, 500]
+        alpha: [0.01, 0.1, 1.0, 10.0]
+        max_iter: [1000]   # 4 combos
 
-#
+  # =========================
+  # ORCA (modelos ordinales)
+  # =========================
   NNOP:
     grid_001:
       param_grid:
-        hiddenN: [8, 16]
-        lambdaValue: [0.01, 0.1, 1.0]
-        iterations: [200, 500]
-        epsilonInit: [0.005, 0.01]
+        hiddenN: [8, 16]                # más pequeño para evitar acumulaciones
+        lambdaValue: [0.01, 0.1, 1.0]   # regularización más fuerte
+        iterations: [800]
+        epsilonInit: [0.001, 0.005]     # evita overflow en sigmoides
 
-#
   NNPOM:
     grid_001:
       param_grid:
         hiddenN: [8, 16, 32]
         lambdaValue: [0.001, 0.01, 0.1]
         iterations: [500, 800]
-        epsilonInit: [0.01, 0.05]
+        epsilonInit: [0.01, 0.05]    # evita log(0) y divisiones por 0
 
-#
   OrdinalDecomposition:
     grid_001:
       param_grid:
         base_classifier:
           - "sklearn.linear_model.LogisticRegression"
         parameters:
-          - {max_iter: 1000, C: 1.0}
+          - {max_iter: 1000, C: 1.0}    # referencia estable (1 combo)
 
-#
   REDSVM:
     grid_001:
       param_grid:
-        c: [0.1, 0.2]
+        c: [0.1, 1.0, 10.0]
         t: [0]
-        d: [2]         
-        g: [0.001, 0.003]     
+        d: [2]
+        g: [0.001, 0.01]
         r: [0.0]
-        e: [0.01, 0.03]
+        e: [0.01]
         h: [0]
-        m: [128]
+        m: [128]             # 6 combos
 
-#
   SVOREX:
     grid_001:
       param_grid:
-        c: [0.1, 1]
-        kernel_type: [0, 2]
-        k: [0.5, 1.0]
+        c: [0.1, 1.0, 10.0]
+        kernel_type: [0, 2]   # 0: linear, 2: RBF
+        k: [1.0]
         p: [2, 3]
         t: [0.001, 0.01]
-
-#
-
 
 
 

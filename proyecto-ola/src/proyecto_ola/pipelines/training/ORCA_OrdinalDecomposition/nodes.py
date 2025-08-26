@@ -36,7 +36,7 @@ def Train_ORCA_OrdinalDecomposition(dataset, params, cv_settings, model_id, data
     )
 
     pipe = Pipeline(steps=[
-        ("scaler", StandardScaler()),
+        ("scaler", RobustScaler()),
         ("model", OrdinalDecomposition()),
     ])
 
