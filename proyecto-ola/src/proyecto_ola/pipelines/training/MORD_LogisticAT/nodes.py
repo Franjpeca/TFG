@@ -32,7 +32,7 @@ def Train_MORD_LogisticAT(dataset, params, cv_settings, model_id, dataset_id):
         param_grid=params,
         cv=cv,
         scoring=qwk_scorer,
-        n_jobs=-1
+        n_jobs=1
     )
     search.fit(X, y_mapped)
 

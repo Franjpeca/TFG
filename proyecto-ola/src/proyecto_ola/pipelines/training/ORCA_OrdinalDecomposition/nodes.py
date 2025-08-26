@@ -47,7 +47,7 @@ def Train_ORCA_OrdinalDecomposition(dataset, params, cv_settings, model_id, data
         param_grid=param_grid,
         cv=cv,
         scoring=qwk_scorer,
-        n_jobs=-1
+        n_jobs=1
     )
     search.fit(X, y)
 

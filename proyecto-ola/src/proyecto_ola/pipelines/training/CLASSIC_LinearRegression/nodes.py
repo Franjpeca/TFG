@@ -36,7 +36,7 @@ def Train_CLASSIC_LinearRegression(dataset, params, cv_settings, model_id, datas
         pipe, X, y_mapped,
         cv=cv,
         scoring=qwk_scorer,
-        n_jobs=-1
+        n_jobs=1
     )
 
     mean_score = np.mean(scores)

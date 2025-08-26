@@ -36,7 +36,7 @@ def Train_CLASSIC_DecisionTreeRegressor(dataset, params, cv_settings, model_id, 
         param_grid={f"model__{k}": v for k, v in params.items()},
         scoring=qwk_scorer,
         cv=cv,
-        n_jobs=-1
+        n_jobs=1
     )
 
     search.fit(X, y_mapped)
