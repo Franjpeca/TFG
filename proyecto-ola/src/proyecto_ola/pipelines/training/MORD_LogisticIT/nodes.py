@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 def Train_MORD_LogisticIT(dataset, params, cv_settings, model_id, dataset_id):
     random_state = params.get("random_state", 42)
+    jobs = cv_settings.get("n_jobs", 1)
+
     seed_everywhere(random_state)
 
     X = dataset.iloc[:, :-1]
@@ -32,7 +34,7 @@ def Train_MORD_LogisticIT(dataset, params, cv_settings, model_id, dataset_id):
         param_grid=params,
         cv=cv,
         scoring=qwk_scorer,
-        n_jobs=1
+        n_jobs=jobs
     )
     search.fit(X, y_mapped)
 

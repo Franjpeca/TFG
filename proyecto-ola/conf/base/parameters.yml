@@ -30,14 +30,16 @@ test_datasets:
   - cleaned_46069_test_ordinal
 
 cv_settings:
-  n_splits: 2
+  n_splits: 5
   shuffle: true
-  random_state: 32
+  random_state: 10
 
+training_settings:
+  n_jobs: -1
 
 model_parameters:
   # =========================
-  # Baselines (referencia)
+  # Clasicos
   # =========================
   LinearRegression:
     grid_001:
@@ -101,7 +103,7 @@ model_parameters:
       param_grid:
         hiddenN: [8, 16, 32]
         lambdaValue: [0.001, 0.01, 0.1]
-        iterations: [500, 800]
+        iterations: [800]
         epsilonInit: [0.01, 0.05]    # evita log(0) y divisiones por 0
 
   OrdinalDecomposition:

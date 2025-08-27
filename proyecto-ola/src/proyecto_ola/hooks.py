@@ -170,6 +170,16 @@ class DynamicModelCatalogHook:
         forced_execution_folder = params.get("execution_folder")
         default_cv: Dict[str, Any] = params.get("cv_settings", {"n_splits": 5, "random_state": 42})
 
+        # --- Cabecera visible por ejecución ---
+        ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        logger.info("=" * 89)
+        logger.info(f"NUEVA EJECUCIÓN | pipeline='{pipeline_name or 'default'}' | run_id='{run_id}' | timestamp={ts}")
+        if forced_execution_folder:
+            logger.info(f"[RunContext] execution_folder (forced)='{forced_execution_folder}'\n")
+            logger.info("")
+
+
         # -------- VISUALIZATION MODE --------
         if is_visualization(pipeline_name):
             cli_multi = find_parameters_cli("execution_folders", params)
@@ -233,6 +243,12 @@ class DynamicModelCatalogHook:
         # -------- TRAINING / EVALUATION --------
         execution_folder = resolve_execution_folder(pipeline_name, run_id, forced_execution_folder, default_cv)
         set_param_if_changed(catalog, "params:execution_folder", execution_folder)
+
+        # Log del contexto de ejecución ya resuelto
+        logger.info(f"[RunContext] execution_folder='{execution_folder}'")
+
+        logger.info("=" * 89)
+        logger.info("")
 
         models_dir = MODELS_BASE / execution_folder
         outputs_dir = OUTPUT_BASE / execution_folder

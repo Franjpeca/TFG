@@ -1,5 +1,4 @@
 version: 1
-
 disable_existing_loggers: False
 
 formatters:
@@ -9,13 +8,13 @@ formatters:
 handlers:
   console:
     class: logging.StreamHandler
-    level: WARNING
+    level: INFO                  # << INFO para ver info en terminal si usas console
     formatter: simple
     stream: ext://sys.stdout
 
   info_file_handler:
     class: logging.handlers.RotatingFileHandler
-    level: WARNING
+    level: INFO                  # << INFO para guardar info en disco
     formatter: simple
     filename: logs/kedro.log
     maxBytes: 10485760
@@ -26,14 +25,17 @@ handlers:
   rich:
     class: kedro.logging.RichHandler
     rich_tracebacks: True
+    level: INFO                  # << explícito
 
 loggers:
   kedro:
-    level: WARNING
+    level: INFO
+    propagate: False
 
   pyspark_viz_spaceflights:
     level: INFO
+    propagate: False
 
 root:
-  level: WARNING
-  handlers: [rich, info_file_handler]
+  level: INFO                    # << clave: el filtro global
+  handlers: [rich, info_file_handler] 

@@ -11,6 +11,8 @@ from proyecto_ola.utils.nodes_utils import qwk_scorer
 logger = logging.getLogger(__name__)
 
 def Train_CLASSIC_DecisionTreeRegressor(dataset, params, cv_settings, model_id, dataset_id):
+    jobs = cv_settings.get("n_jobs", 1)
+
     X = dataset.iloc[:, :-1].values.astype(np.float32)
     y_raw = dataset.iloc[:, -1]
 
@@ -36,7 +38,7 @@ def Train_CLASSIC_DecisionTreeRegressor(dataset, params, cv_settings, model_id, 
         param_grid={f"model__{k}": v for k, v in params.items()},
         scoring=qwk_scorer,
         cv=cv,
-        n_jobs=1
+        n_jobs=jobs
     )
 
     search.fit(X, y_mapped)
