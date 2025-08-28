@@ -12,20 +12,16 @@ kedro run --tags dataset_46014
 # Lanzar toda una ejecucion para un modelo concreto (training + evaluation)
 kedro run --tags model_LogisticAT
 
-# Lanzar entrenamiento + evaluacion de un modelo concreto y un dataset concreto (preprocessing)
-kedro run --tags model_DecisionTreeRegressor --tags dataset_46014
-
 # Lanzar entrenamiento + evaluacion de un modelo concreto con un grid concreto (training + evaluation)
 kedro run --tags model_DecisionTreeRegressor_grid_001
 
 # Lanzar entrenamiento + evaluacion de un modelo concreto con un grid concreto y un dataset concreto (sin preprocessing)
 kedro run --tags model_DecisionTreeRegressor_grid_001_dataset_46014
 
-# Lanzar entrenamiento + evaluacion de grid concretos
+# Lanzar entrenamiento + evaluacion de grid concretos [!!!! NO FUNCIONA !!!!]
 kedro run --tags grid_001
 
-# Lanzar entrenamiento + evaluacion de grid concreto de un determinado dataset (con preprocesing)
-kedro run --tags grid_002 --tags dataset_46042
+
 
 
 
@@ -74,7 +70,7 @@ kedro run --pipeline evaluation -t model_LogisticIT
 # Lanzar evaluation de todos los modelos de un unico dataset
 kedro run --pipeline evaluation --tags dataset_46014
 
-# Lanzar evaluation de un modelo concreto con un grid concreto
+# Lanzar evaluation de un modelo concreto con un grid concreto (REVISAR. Creo que es si existe unicamente en la carpeta)
 kedro run --pipeline evaluation --tags model_DecisionTreeRegressor_grid_001
 
 # Se puede indicar con --params una carpeta concreta y usara (si existen) los modelos de esa carpeta
@@ -82,10 +78,13 @@ kedro run --pipeline evaluation --tags model_DecisionTreeRegressor_grid_001
 
 
 # Lanzar unicamente visualization (toma ultima ejecucion)
-kedro run --pipelien visualization
+kedro run --pipeline visualization
 
 # Lanzar visualization de una ejecucion concreta
 kedro run --pipeline visualization --params="execution_folder=001_20250816_231254"
+
+# Lanzar visualization tomando varias ejecuciones y juntarlas (toma como carpeta de ejecucion la última lanzada)
+kedro run --pipeline visualization --params="execution_folders=001_20250823_112227;001_20250823_112506;001_20250818_050539"
 
 # Lanzar visualization de un dataset unicamente
 kedro run --pipeline visualization --tags dataset_46014
@@ -109,3 +108,6 @@ Ejecutar un nodo concreto
 kedro run --nodes PREPROCESSING_clean_pair_46042
 
 
+--from-inputs
+
+--only-nodes
