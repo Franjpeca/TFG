@@ -252,6 +252,7 @@ kedro run --nodes PREPROCESSING_clean_pair_46042
 ```
 
 ### --only-nodes
+
 Ejecuta únicamente los nodos especificados, sin ejecutar ni los anteriores ni los posteriores.  
 Es útil cuando quieres forzar la ejecución de un nodo concreto sin que se arrastre el grafo de dependencias.  
 En kedro-viz se pueden ver ejemplos que usan este elemento.
