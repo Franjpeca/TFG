@@ -64,6 +64,33 @@ pip install -r requirements.txt
 
 ---
 
+4. Compilar modelos de ORCA-Python
+
+```bash
+# Asegúrate de estar en la raíz del proyecto
+cd ~/TFG/proyecto-ola
+
+# 1. Compilar svorex
+cd orca-python/orca_python/classifiers/svorex
+python setup.py build_ext --inplace
+
+# 2. Compilar libsvmRank.svm (usado por REDSVM y SVOREX)
+cd ../../libsvmRank/python
+python setup.py build_ext --inplace
+
+# 3. Volver a la raíz del proyecto
+cd ~/TFG/proyecto-ola
+```
+
+Tras estos pasos ya puedes ejecutar:
+
+```bash
+kedro run
+```
+
+
+
+
 ## ▶️ Ejecución general
 
 ### Lanzar todos los modelos junto con sus parámetros (preprocessing + training + evaluation)
