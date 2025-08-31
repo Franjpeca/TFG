@@ -6,3 +6,9 @@ repaso_py/
 
 # Ignorar carpeta datos
 datos/
+
+# Ignora el requirements de la raiz, no se usa
+requirements.txt
+
+# Ignoramos comandos, ya estan en el readme
+comandos.txt
