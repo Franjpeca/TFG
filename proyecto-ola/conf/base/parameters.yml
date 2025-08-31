@@ -31,7 +31,7 @@ test_datasets:
 
 cv_settings:
   n_splits: 5
-  shuffle: false
+  shuffle: true
   random_state: 10
 
 training_settings:
