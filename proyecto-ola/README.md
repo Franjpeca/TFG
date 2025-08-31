@@ -248,3 +248,9 @@ kedro run --pipeline visualization --nodes VIS_ORDINAL_QWK_46014
 - La identidad de ejecución se controla con `run_id` y `execution_folder`.
 - Todos los resultados se guardan en rutas únicas para facilitar comparaciones y evitar sobrescritura.
 - El hook dinámico asegura que los modelos, métricas y gráficas se registran y guardan correctamente incluso si no están en `catalog.yml`.
+
+
+## 🔗 Repositorios externos
+
+- [ORCA-Python (Ayrna)](https://github.com/ayrna/orca): librería utilizada para implementar modelos ordinales como **REDSVM**, **SVOREX**, **NNOP**, **NNPOM** y **OrdinalDecomposition**. :contentReference[oaicite:3]{index=3}
+- [MORD (Fabian Pedregosa)](https://github.com/fabianp/mord): colección de algoritmos de regresión ordinal en Python con API compatible con scikit-learn, incluyendo modelos como **LogisticIT**, **Log
