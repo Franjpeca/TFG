@@ -190,16 +190,16 @@ def Visualize_Heatmap_Metrics(metrics_jsons, metrics, dataset_id, execution_fold
     logger.info(f"[VISUALIZATION] Heatmap generado: métricas={metrics}, dataset={dataset_id}, ejecución={execution_folder}, n_modelos={len(models)}")
     return fig
 
-def Visualize_Scatter_QWKvsMAE(
+def Visualize_Scatter_QWKvsAMAE(
     metrics_jsons,
     dataset_id,
     execution_folder,
-    x_metric="mae",
+    x_metric="amae",   # ← por defecto AMAE
     y_metric="qwk",
     metric_type="scatter",
 ):
     if not metrics_jsons:
-        logger.info(f"[VISUALIZATION] Scatter QWKvsMAE NO generado (sin datos): dataset={dataset_id}, ejecución={execution_folder}")
+        logger.info(f"[VISUALIZATION] Scatter QWK vs {x_metric.upper()} NO generado (sin datos): dataset={dataset_id}, ejecución={execution_folder}")
         return None
 
     xs, ys, labels, colors = [], [], [], []
@@ -227,8 +227,15 @@ def Visualize_Scatter_QWKvsMAE(
         colors.append("#1f77b4" if short in ORDINAL_SET else "#aec7e8")
 
     if not xs:
-        logger.info(f"[VISUALIZATION] Scatter QWKvsMAE NO generado (sin datos): dataset={dataset_id}, ejecución={execution_folder}")
+        logger.info(f"[VISUALIZATION] Scatter QWK vs {x_metric.upper()} NO generado (sin datos): dataset={dataset_id}, ejecución={execution_folder}")
         return None
+
+    # Etiquetas dinámicas y flechas segun métrica
+    def axis_label(metric_name):
+        metric_name_up = metric_name.upper()
+        minimize = {"mae", "amae"}
+        arrow = "↓ mejor" if metric_name.lower() in minimize else "↑ mejor"
+        return f"{metric_name_up} ({arrow})"
 
     fig, ax = plt.subplots(figsize=(10, 6))
     ax.scatter(xs, ys, c=colors)
@@ -236,9 +243,9 @@ def Visualize_Scatter_QWKvsMAE(
     for x, y, text in zip(xs, ys, labels):
         ax.annotate(text, (x, y), textcoords="offset points", xytext=(4, 4), fontsize=9)
 
-    ax.set_xlabel("MAE (↓ mejor)")
-    ax.set_ylabel("QWK (↑ mejor)")
-    ax.set_title(f"QWK vs MAE - Dataset {dataset_id}")
+    ax.set_xlabel(axis_label(x_metric))
+    ax.set_ylabel(axis_label(y_metric))
+    ax.set_title(f"{y_metric.upper()} vs {x_metric.upper()} - Dataset {dataset_id}")
     ax.grid(True, which="both", linestyle="--", alpha=0.3)
     ax.margins(0.05)
 
@@ -252,5 +259,5 @@ def Visualize_Scatter_QWKvsMAE(
         warnings.simplefilter("ignore", UserWarning)
         fig.tight_layout()
 
-    logger.info(f"[VISUALIZATION] Scatter QWKvsMAE generado: dataset={dataset_id}, ejecución={execution_folder}, n_modelos={len(xs)}")
+    logger.info(f"[VISUALIZATION] Scatter {y_metric.upper()} vs {x_metric.upper()} generado: dataset={dataset_id}, ejecución={execution_folder}, n_modelos={len(xs)}")
     return fig

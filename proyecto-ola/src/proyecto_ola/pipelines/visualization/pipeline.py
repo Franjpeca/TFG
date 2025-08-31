@@ -1,4 +1,3 @@
-# pipelines/visualization/pipeline.py
 import logging
 from functools import update_wrapper
 from typing import List, Dict
@@ -15,13 +14,13 @@ from .nodes import (
     Visualize_Nominal_Metric,
     Visualize_Ordinal_Metric,
     Visualize_Heatmap_Metrics,
-    Visualize_Scatter_QWKvsMAE,
+    Visualize_Scatter_QWKvsAMAE,
 )
 from proyecto_ola.utils.wrappers import (
     make_nominal_viz_wrapper,
     make_ordinal_viz_wrapper,
     make_heatmap_viz_wrapper,
-    make_scatter_qwk_mae_viz_wrapper,
+    make_scatter_qwk_amae_viz_wrapper,
 )
 
 logger = logging.getLogger(__name__)
@@ -201,20 +200,20 @@ def create_pipeline(**kwargs) -> Pipeline:
             ])
         )
 
-        # Scatter QWK vs MAE por dataset
-        wrapped_scatter = make_scatter_qwk_mae_viz_wrapper(
-            viz_func=Visualize_Scatter_QWKvsMAE,
+        # Scatter QWK vs AMAE por dataset (solo cambia el nombre del output/nodo)
+        wrapped_scatter = make_scatter_qwk_amae_viz_wrapper(
+            viz_func=Visualize_Scatter_QWKvsAMAE,
             dataset_id=dataset_id,
             execution_folder=output_execution_folder,
         )
-        wrapped_scatter = update_wrapper(wrapped_scatter, Visualize_Scatter_QWKvsMAE)
+        wrapped_scatter = update_wrapper(wrapped_scatter, Visualize_Scatter_QWKvsAMAE)
         subpipelines.append(
             pipeline([
                 node(
                     func=wrapped_scatter,
                     inputs=metric_inputs,
-                    outputs=f"visualization.{output_execution_folder}.{dataset_id}.scatter_qwk_mae",
-                    name=f"VIS_SCATTER_QWK_MAE_{dataset_id}",
+                    outputs=f"visualization.{output_execution_folder}.{dataset_id}.scatter_qwk_amae",
+                    name=f"VIS_SCATTER_QWK_AMAE_{dataset_id}",
                     tags=[
                         "pipeline_visualization",
                         f"dataset_{dataset_id}",

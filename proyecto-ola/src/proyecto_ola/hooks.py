@@ -146,10 +146,17 @@ def visualization_output_path(output_name: str) -> Optional[Path]:
     _, run_folder, dataset_id, metric = parts
     metric_l = metric.lower()
     base = REPORT_BASE / run_folder / dataset_id
+
+    # --- nombres canónicos ---
     if metric_l == "heatmap":
         return base / "heatmap.png"
-    if metric_l == "scatter_qwk_mae":
-        return base / "scatter_qwk_mae.png"
+
+    # --- soporte genérico para cualquier scatter_* (compat: scatter_qwk_mae) ---
+    if metric_l.startswith("scatter_"):
+        # guarda tal cual el nombre de la métrica del nodo, p.ej. scatter_qwk_amae.png
+        return base / f"{metric_l}.png"
+
+    # --- métricas simples: se organizan por subcarpeta ordinal/nominal ---
     sub = "ordinal" if metric_l in {"qwk", "mae", "amae"} else "nominal"
     return base / sub / f"{metric}.png"
 
@@ -178,7 +185,6 @@ class DynamicModelCatalogHook:
         if forced_execution_folder:
             logger.info(f"[RunContext] execution_folder (forced)='{forced_execution_folder}'\n")
             logger.info("")
-
 
         # -------- VISUALIZATION MODE --------
         if is_visualization(pipeline_name):
@@ -237,7 +243,9 @@ class DynamicModelCatalogHook:
                 for m in ordinal_metrics:
                     _ensure_writer(f"visualization.{output_folder}.{dsid}.{m}")
                 _ensure_writer(f"visualization.{output_folder}.{dsid}.heatmap")
+                # Registrar ambos por compatibilidad: MAE y AMAE
                 _ensure_writer(f"visualization.{output_folder}.{dsid}.scatter_qwk_mae")
+                _ensure_writer(f"visualization.{output_folder}.{dsid}.scatter_qwk_amae")
             return
 
         # -------- TRAINING / EVALUATION --------
