@@ -88,8 +88,7 @@ Tras estos pasos ya puedes ejecutar:
 kedro run
 ```
 
-
-
+---
 
 ## ▶️ Ejecución general
 
@@ -98,19 +97,25 @@ kedro run
 kedro run
 ```
 
+### Lanzar kedro-viz
+```bash
+kedro viz
+```
+
+---
+
+## 🔖 Lanzamientos con etiquetas
+
+> Se pueden combinar con otros comandos
+
 ### Lanzar toda una ejecución para un dataset concreto
 ```bash
 kedro run --tags dataset_46014
 ```
 
-### Lanzar toda una ejecución para un modelo concreto (training + evaluation)
+### Lanzar una ejecución para un modelo concreto (training + evaluation)
 ```bash
 kedro run --tags model_LogisticAT
-```
-
-### Lanzar entrenamiento + evaluación de un modelo concreto y un dataset concreto (preprocessing)
-```bash
-kedro run --tags model_DecisionTreeRegressor --tags dataset_46014
 ```
 
 ### Lanzar entrenamiento + evaluación de un modelo concreto con un grid concreto (training + evaluation)
@@ -123,26 +128,9 @@ kedro run --tags model_DecisionTreeRegressor_grid_001
 kedro run --tags model_DecisionTreeRegressor_grid_001_dataset_46014
 ```
 
-### Lanzar entrenamiento + evaluación de un modelo concreto con un grid concreto y un dataset concreto (con preprocessing)
-```bash
-kedro run --tags model_DecisionTreeRegressor_grid_001 --tags dataset_46014
-```
-
-### Lanzar entrenamiento + evaluación de grids concretos
-```bash
-kedro run --tags grid_001
-```
-
-### Lanzar entrenamiento + evaluación de un grid concreto de un dataset (con preprocessing)
-```bash
-kedro run --tags grid_002 --tags dataset_46042
-```
-
 ---
 
-## 🔄 Ejecución de subpipelines
-
-> Tanto en evaluation como en visualization se puede usar (`--params="execution_folder=<...>"`) junto con sus tags abajo indicados.
+## 🧹 Pipeline de preprocesamiento
 
 ### Lanza únicamente preprocesamiento
 ```bash
@@ -154,32 +142,41 @@ kedro run --pipeline preprocessing
 kedro run --pipeline preprocessing --tags dataset_46014
 ```
 
-### Lanza únicamente training (todos los modelos)
+---
+
+## 🏋️ Pipeline de entrenamiento
+
+### Lanzar únicamente training (todos los modelos)
 ```bash
 kedro run --pipeline training
 ```
 
-### Lanza únicamente training de un modelo concreto
+### Lanzar únicamente training de un modelo concreto
 ```bash
 kedro run --pipeline training -t model_LogisticIT
 ```
 
-### Lanza únicamente evaluation (toma última ejecución)
+---
+
+## 📈 Pipeline de evaluación
+
+### Lanzar únicamente evaluation (toma la última ejecución)
 ```bash
 kedro run --pipeline evaluation
 ```
 
 ### Lanzar evaluation de una ejecución concreta
+> Si no se especifica carpeta (`execution_folder`), se toma la última por fecha
 ```bash
 kedro run --pipeline evaluation --params="execution_folder=001_20250816_231254"
 ```
 
-### Lanzar evaluation de un modelo unicamente
+### Lanzar evaluation de un modelo únicamente
 ```bash
 kedro run --pipeline evaluation -t model_LogisticIT
 ```
 
-### Lanzar evaluation de todos los modelos de un dataset
+### Lanzar evaluation de todos los modelos de un único dataset
 ```bash
 kedro run --pipeline evaluation --tags dataset_46014
 ```
@@ -189,15 +186,11 @@ kedro run --pipeline evaluation --tags dataset_46014
 kedro run --pipeline evaluation --tags model_DecisionTreeRegressor_grid_001
 ```
 
-> Si no se especifica carpeta (`execution_folder`) se toma la última por fecha.
-
 ---
 
-## 📊 Visualización de resultados
+## 📊 Pipeline de visualización
 
-⚠️ El pipeline de visualización **no forma parte del `__default__`** para evitar errores cuando no hay métricas generadas.
-
-### Lanzar visualization (última ejecución)
+### Lanzar únicamente visualization (última ejecución)
 ```bash
 kedro run --pipeline visualization
 ```
@@ -207,7 +200,12 @@ kedro run --pipeline visualization
 kedro run --pipeline visualization --params="execution_folder=001_20250816_231254"
 ```
 
-### Lanzar visualization de un dataset concreto
+### Lanzar visualization tomando varias ejecuciones y juntarlas
+```bash
+kedro run --pipeline visualization --params="execution_folders=001_20250823_112227;001_20250823_112506;001_20250818_050539"
+```
+
+### Lanzar visualization de un dataset únicamente
 ```bash
 kedro run --pipeline visualization --tags dataset_46014
 ```
@@ -217,12 +215,12 @@ kedro run --pipeline visualization --tags dataset_46014
 kedro run --pipeline visualization --params="execution_folder=001_20250816_231254" --tags dataset_46014
 ```
 
-### Lanzar visualization de una gráfica concreta para todos los datasets
+### Lanzar visualization de una gráfica de un tipo concreto para todos los datasets
 ```bash
 kedro run --pipeline visualization --tags node_visualization_ordinal
 ```
 
-### Lanzar visualization de una gráfica concreta para un dataset concreto
+### Lanzar visualization de una gráfica de un tipo concreto para un dataset concreto
 ```bash
 kedro run --pipeline visualization --tags ordinal_dataset_46014
 kedro run --pipeline visualization --tags heatmap_dataset_46014
@@ -233,6 +231,30 @@ kedro run --pipeline visualization --tags heatmap_dataset_46014
 kedro run --pipeline visualization --nodes VIS_ORDINAL_QWK_46014
 ```
 
+---
+
+## ⚙️ Otros flags útiles
+
+### --from-inputs
+Permite ejecutar únicamente los nodos que consumen un input concreto (y sus descendientes).  
+Es muy útil si has cambiado un dataset intermedio y quieres re-lanzar solo lo que depende de él.
+
+```bash
+kedro run --from-inputs cleaned_46014_train_ordinal
+```
+
+### --nodes
+Permite lanzar directamente un nodo específico del pipeline, sin ejecutar el resto de nodos dependientes.  
+Es útil si quieres probar un nodo aislado o re-ejecutarlo sin pasar por todo el pipeline.
+
+```bash
+kedro run --nodes PREPROCESSING_clean_pair_46042
+```
+
+### --only-nodes
+Ejecuta únicamente los nodos especificados, sin ejecutar ni los anteriores ni los posteriores.  
+Es útil cuando quieres forzar la ejecución de un nodo concreto sin que se arrastre el grafo de dependencias.  
+En kedro-viz se pueden ver ejemplos que usan este elemento.
 ---
 
 ## 🧠 Modelos incluidos
