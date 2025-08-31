@@ -23,4 +23,4 @@ mord==0.7
 dlordinal==2.4.1
 
 # ORCA
--e git+https://github.com/ayrna/orca-python@5475c99a26581f14fea9b981ada28b1ff1b4aa63#egg=orca_python
+-e ./orca-python
