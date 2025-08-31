@@ -163,3 +163,7 @@ mlruns/*
 # Ignora rar
 *.rar
 *.zipTFG_visual_refact.rar
+
+orca-python/*.egg-info/
+**/__pycache__/
+*.pyc

@@ -4,7 +4,7 @@
 kedro==0.19.14
 
 # Conectores(json, matplotlib)
-kedro-datasets[json,matplotlib]==8.0.0
+kedro-datasets[json,matplotlib]==1.8.0
 
 # Kedro Viz
 kedro-viz==11.0.2
