@@ -41,21 +41,21 @@ data/
 
 ## 🛠️ Instalación
 
-1. Clona el repositorio:
+### 1. Clona el repositorio:
 
 ```bash
 git clone https://github.com/Franjpeca/TFG.git
 cd TFG/proyecto-ola
 ```
 
-2. Crea un entorno virtual:
+### 2. Crea un entorno virtual:
 
 ```bash
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate  # o .\venv\Scripts\activate en Windows
 ```
 
-3. Instala las dependencias:
+### 3. Instala las dependencias:
 
 ```bash
 pip install -r requirements.txt
@@ -65,7 +65,23 @@ pip install -r requirements.txt
 
 ---
 
-4. Compilar modelos de ORCA-Python
+### 4. Compilar modelos de ORCA-Python (Linux)
+
+> ⚠️ Hay que dar los permisos correspondientes de ejecución.
+
+#### ✅ Opción automática (script)
+
+```bash
+bash scripts/compile_orca.sh
+```
+
+Este script automatiza la compilación de los módulos svorex y libsvmRank de ORCA-Python. Detecta el sistema operativo, instala los compiladores y cabeceras necesarios (como build-essential y python3-dev), actualiza las herramientas de Python (pip, setuptools, wheel) y ejecuta los comandos de compilación desde las rutas correspondientes. Al finalizar, deja el entorno listo para ejecutar kedro run.
+
+---
+
+#### ⚠️ Alternativa manual si el script falla
+
+> Dependiendo del sistema operativo y paquetes instalados, puede ser necesarios pasos adicionales.
 
 ```bash
 # Asegúrate de estar en la raíz del proyecto
@@ -73,17 +89,19 @@ cd ~/TFG/proyecto-ola
 
 # 1. Compilar svorex
 cd orca-python/orca_python/classifiers/svorex
-python setup.py build_ext --inplace
+python3 setup.py build_ext --inplace
 
 # 2. Compilar libsvmRank.svm (usado por REDSVM y SVOREX)
 cd ../../libsvmRank/python
-python setup.py build_ext --inplace
+python3 setup.py build_ext --inplace
 
 # 3. Volver a la raíz del proyecto
 cd ~/TFG/proyecto-ola
 ```
 
-Tras estos pasos ya puedes ejecutar:
+---
+
+### 5. Ejecutar el pipeline principal
 
 ```bash
 kedro run
