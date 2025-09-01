@@ -45,20 +45,20 @@ model_parameters:
     grid_001:
       param_grid:
         fit_intercept: [True]
-        positive: [False]   # baseline simple y estable
+        positive: [False]
 
   DecisionTreeRegressor:
     grid_001:
       param_grid:
         max_depth: [5, 10]
-        min_samples_split: [2, 5]   # 4 combos
+        min_samples_split: [2, 5]
 
   KNeighborsClassifier:
     grid_001:
       param_grid:
         n_neighbors: [3, 5, 7, 9]
         weights: ["uniform", "distance"]
-        p: [1, 2]   # 16 combos
+        p: [1, 2]
 
   # =========================
   # MORD (modelos ordinales)
@@ -67,25 +67,26 @@ model_parameters:
     grid_001:
       param_grid:
         alpha: [0.01, 0.1, 1.0, 10.0]
-        max_iter: [1000]   # 4 combos
+        max_iter: [1000]
 
   LogisticIT:
     grid_001:
       param_grid:
         alpha: [0.01, 0.1, 1.0, 10.0]
-        max_iter: [1000]   # 4 combos
+        max_iter: [1000]
 
   LAD:
     grid_001:
       param_grid:
         C: [0.01, 0.1, 1.0, 10.0]
-        max_iter: [30000]  # subir iteraciones para evitar ConvergenceWarning
+        max_iter: [30000]
+        dual: ["auto"]
 
   OrdinalRidge:
     grid_001:
       param_grid:
         alpha: [0.01, 0.1, 1.0, 10.0]
-        max_iter: [1000]   # 4 combos
+        max_iter: [1000]
 
   # =========================
   # ORCA (modelos ordinales)
@@ -93,10 +94,10 @@ model_parameters:
   NNOP:
     grid_001:
       param_grid:
-        hiddenN: [8, 16]                # más pequeño para evitar acumulaciones
-        lambdaValue: [0.01, 0.1, 1.0]   # regularización más fuerte
+        hiddenN: [8, 16]
+        lambdaValue: [0.01, 0.1, 1.0]
         iterations: [800]
-        epsilonInit: [0.001, 0.005]     # evita overflow en sigmoides
+        epsilonInit: [0.001, 0.005]
 
   NNPOM:
     grid_001:
@@ -104,7 +105,7 @@ model_parameters:
         hiddenN: [8, 16, 32]
         lambdaValue: [0.001, 0.01, 0.1]
         iterations: [800]
-        epsilonInit: [0.01, 0.05]    # evita log(0) y divisiones por 0
+        epsilonInit: [0.01, 0.05]
 
   OrdinalDecomposition:
     grid_001:
@@ -112,7 +113,7 @@ model_parameters:
         base_classifier:
           - "sklearn.linear_model.LogisticRegression"
         parameters:
-          - {max_iter: 1000, C: 1.0}    # referencia estable (1 combo)
+          - {max_iter: 1000, C: 1.0}
 
   REDSVM:
     grid_001:
@@ -124,7 +125,7 @@ model_parameters:
         r: [0.0]
         e: [0.01]
         h: [0]
-        m: [128]             # 6 combos
+        m: [128]
 
   SVOREX:
     grid_001:
@@ -135,174 +136,3 @@ model_parameters:
         p: [2, 3]
         t: [0.001, 0.01]
 
-
-
-
-
-
-#model_parameters:
-##
-#  LinearRegression:
-#    grid_001:
-#      param_grid:
-#        fit_intercept: [True]
-#        positive: [False]
-#
-#    grid_002:
-#      param_grid:
-#        fit_intercept: [True]
-#        positive: [True]
-##
-#  DecisionTreeRegressor:
-#    grid_001:
-#      param_grid:
-#        max_depth: [3, 5, 10]
-#        min_samples_split: [2, 5]
-#
-#    grid_002:
-#      param_grid:
-#        max_depth: [15]
-#        min_samples_split: [2, 5]
-##
-#  KNeighborsClassifier:
-#    grid_001:
-#      param_grid:
-#        n_neighbors: [3, 5]
-#        weights: ["uniform"]
-#        p: [2]  # distancia euclídea
-#
-#    grid_002:
-#      param_grid:
-#        n_neighbors: [3, 7, 11]
-#        weights: ["uniform", "distance"]
-#        p: [1, 2]  # manhattan y euclídea
-##
-#  LogisticAT:
-#    grid_001: # Representa combinacion de parametros
-#      param_grid:
-#        alpha: [0.1]
-#        max_iter: [500]
-#
-#    grid_002: # Representa combinacion de parametros
-#      param_grid:
-#        alpha: [0.5]
-#        max_iter: [1000]
-##
-#  LAD:
-#    grid_001:
-#      param_grid:
-#        C: [0.001]
-#        max_iter: [30000]
-#
-#    grid_002:
-#      param_grid:
-#        C: [0.02]
-#        max_iter: [30000]
-##
-#  LogisticIT:
-#    grid_001:
-#      param_grid:
-#        alpha: [0.001]
-#        max_iter: [1000]
-#
-#    grid_003:
-#      param_grid:
-#        alpha: [0.001]
-#        max_iter: [2000]
-##
-#  OrdinalRidge:
-#    grid_001:
-#      param_grid:
-#        alpha: [0.001, 5]
-#        max_iter: [1000]
-#    
-#    grid_002:
-#      param_grid:
-#        alpha: [0.001, 3]
-#        max_iter: [2000]
-##
-#  NNOP:
-#    grid_001:
-#      param_grid:
-#        hiddenN: [8, 16]
-#        lambdaValue: [0.01, 0.1, 1.0]
-#        iterations: [200, 500]
-#        epsilonInit: [0.005, 0.01]
-#
-#    grid_002:
-#      param_grid:
-#        hiddenN: [8]
-#        lambdaValue: [0.01]
-#        iterations: [200]
-#        epsilonInit: [0.01]
-##
-#  NNPOM:
-#    grid_001:
-#      param_grid:
-#        hiddenN: [8, 16, 32]
-#        lambdaValue: [0.001, 0.01, 0.1]
-#        iterations: [500, 800]
-#        epsilonInit: [0.01, 0.05]
-#    
-#    grid_002:
-#      param_grid:
-#        hiddenN: [8]
-#        lambdaValue: [0.001]
-#        iterations: [500]
-#        epsilonInit: [0.05]
-##
-#  OrdinalDecomposition:
-#    grid_001:
-#      param_grid:
-#        base_classifier:
-#          - "sklearn.linear_model.LogisticRegression"
-#        parameters:
-#          - {max_iter: 1000, C: 1.0}
-#    
-#    grid_002:
-#      param_grid:
-#        base_classifier:
-#          - "sklearn.linear_model.LogisticRegression"
-#        parameters:
-#          - {max_iter: 1100, C: 1.0}
-##
-#  REDSVM:
-#    grid_001:
-#      param_grid:
-#        c: [0.1]
-#        t: [0]
-#        d: [2]         
-#        g: [0.001]     
-#        r: [0.0]
-#        e: [0.01]
-#        h: [0]
-#        m: [128]
-#    
-#    grid_002:
-#      param_grid:
-#        c: [0.2]
-#        t: [0]
-#        d: [2]         
-#        g: [0.003]     
-#        r: [0.0]
-#        e: [0.03]
-#        h: [0]
-#        m: [128]
-##
-#  SVOREX:
-#    grid_001:
-#      param_grid:
-#        c: [0.1, 1]
-#        kernel_type: [0, 2]
-#        k: [0.5, 1.0]
-#        p: [2, 3]
-#        t: [0.001, 0.01]
-#
-#    grid_002:
-#      param_grid:
-#        c: [0.1, 1]
-#        kernel_type: [0]
-#        k: [0.5, 1.4]
-#        p: [2]
-#        t: [0.001, 0.01]
-##

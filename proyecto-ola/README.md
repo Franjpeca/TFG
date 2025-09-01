@@ -75,11 +75,11 @@ pip install -r requirements.txt
 bash compile_orca.sh
 ```
 
-Este script automatiza la compilación de los módulos svorex y libsvmRank de ORCA-Python. Detecta el sistema operativo, instala los compiladores y cabeceras necesarios (como build-essential y python3-dev), actualiza las herramientas de Python (pip, setuptools, wheel) y ejecuta los comandos de compilación desde las rutas correspondientes. Al finalizar, deja el entorno listo para ejecutar kedro run.
+Este script automatiza la compilación de los módulos svorex y libsvmRank de ORCA-Python. Detecta el sistema operativo, instala los compiladores y cabeceras necesarios (como build-essential y python3-dev), actualiza las herramientas de Python (pip, setuptools, wheel) y tras ello ejecuta los comandos de compilación desde las rutas correspondientes. Al finalizar, deja el entorno listo para ejecutar kedro run.
 
 ---
 
-#### ⚠️ Alternativa manual si el script falla
+##### Alternativa manual si el script falla
 
 > Dependiendo del sistema operativo y paquetes instalados, puede ser necesarios pasos adicionales.
 
@@ -101,7 +101,7 @@ cd ~/TFG/proyecto-ola
 
 ---
 
-### 5. Ejecutar el pipeline principal
+### 5. Prueba del programa
 
 ```bash
 kedro run
