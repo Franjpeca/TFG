@@ -275,5 +275,5 @@ En kedro-viz se pueden ver ejemplos que usan este elemento.
 
 ## 🔗 Repositorios externos
 
-- [ORCA-Python (Ayrna)](https://github.com/ayrna/orca-python): librería utilizada para implementar modelos ordinales como **REDSVM**, **SVOREX**, **NNOP**, **NNPOM** y **OrdinalDecomposition**. :contentReference[oaicite:3]{index=3}
-- [MORD (Fabian Pedregosa)](https://github.com/fabianp/mord): colección de algoritmos de regresión ordinal en Python con API compatible con scikit-learn, incluyendo modelos como **LogisticIT**, **Log
+- [ORCA-Python (Ayrna)](https://github.com/ayrna/orca-python): librería utilizada para implementar modelos ordinales implementados por el grupo de investiación AYRNA de la Universidad de Córdoba.
+- [MORD (Fabian Pedregosa)](https://github.com/fabianp/mord): colección de algoritmos de regresión ordinal en Python con API compatible con scikit-learn.
