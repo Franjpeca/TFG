@@ -67,12 +67,12 @@ pip install -r requirements.txt
 
 ### 4. Compilar modelos de ORCA-Python (Linux)
 
-> ⚠️ Hay que dar los permisos correspondientes de ejecución.
+> ⚠️ Asegúrate de dar permisos de ejecución al script antes de lanzarlo (chmod +x compile_orca.sh si es necesario).
 
 #### ✅ Opción automática (script)
 
 ```bash
-bash scripts/compile_orca.sh
+bash compile_orca.sh
 ```
 
 Este script automatiza la compilación de los módulos svorex y libsvmRank de ORCA-Python. Detecta el sistema operativo, instala los compiladores y cabeceras necesarios (como build-essential y python3-dev), actualiza las herramientas de Python (pip, setuptools, wheel) y ejecuta los comandos de compilación desde las rutas correspondientes. Al finalizar, deja el entorno listo para ejecutar kedro run.
