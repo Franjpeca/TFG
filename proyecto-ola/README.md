@@ -6,9 +6,10 @@ Este repositorio contiene el Trabajo de Fin de Grado (TFG) sobre predicción ord
 
 ## 📦 Requisitos
 
-- Python 3.9+
-- pip
-- git
+- Python 3.10 o superior (compatible con 3.10 y 3.11, se recomienda evitar 3.12+ por posibles incompatibilidades)
+- pip (instalador de paquetes de Python)
+- git (para clonar el repositorio)
+- Se recomienda usar un entorno virtual (`venv`, `virtualenv` o `conda`) para evitar conflictos de dependencias
 
 ---
 
@@ -49,6 +50,8 @@ cd TFG/proyecto-ola
 ```
 
 ### 2. Crea un entorno virtual:
+
+> ⚠️ El comando de python puede variar por la versión. La creación de un entorno virtual es opcional.
 
 ```bash
 python3 -m venv venv
