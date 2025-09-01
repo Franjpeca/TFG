@@ -1,0 +1,6 @@
+class,limit_inferior,limit_superior
+A,0.65,1.49
+B,1.49,2.01
+C,2.01,3.1
+D,3.1,4.31
+E,4.31,7.68

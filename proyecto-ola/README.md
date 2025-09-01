@@ -8,6 +8,7 @@ Este repositorio contiene el Trabajo de Fin de Grado (TFG) sobre predicción ord
 
 - Python 3.9+
 - pip
+- git
 
 ---
 
@@ -262,7 +263,7 @@ En kedro-viz se pueden ver ejemplos que usan este elemento.
 
 - **MORD**: LAD, LogisticAT, LogisticIT, OrdinalRidge
 - **ORCA (dlordinal)**: NNPOM, NNOP, REDSVM, SVOREX, OrdinalDecomposition
-- **No ordinales (Clasicos)**: DecisionTreeRegressor, KNeighborsClassifier, LinearRegression
+- **Nominales**: DecisionTreeRegressor, KNeighborsClassifier, LinearRegression
 
 ---
 
