@@ -10,8 +10,10 @@ from proyecto_ola.utils.nodes_utils import qwk_scorer
 
 logger = logging.getLogger(__name__)
 
-def Train_CLASSIC_DecisionTreeRegressor(dataset, params, cv_settings, model_id, dataset_id):
-    jobs = cv_settings.get("n_jobs", 1)
+def Train_CLASSIC_DecisionTreeRegressor(dataset, params, cv_settings, training_settings, model_id, dataset_id):
+    random_state = cv_settings.get("random_state", 42)
+    jobs = training_settings.get("n_jobs", 1)
+    seed = training_settings.get("seed", 42)
 
     X = dataset.iloc[:, :-1].values.astype(np.float32)
     y_raw = dataset.iloc[:, -1]

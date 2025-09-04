@@ -3,13 +3,16 @@ from proyecto_ola.utils.wrappers import make_train_wrapper
 from .nodes import Train_ORCA_REDSVM
 import re
 
-def create_pipeline(param_key: str,
+def create_pipeline(
+                    param_key: str,
                     model_type: str,
                     param_ds: str,
                     output_ds: str,
                     dataset_name: str,
                     cv_settings: str,
-                    dataset_id: str) -> Pipeline:
+                    training_settings: str,
+                    dataset_id: str,
+                ) -> Pipeline:
 
     match = re.search(r'grid_\d+', param_key)
     grid_id = match.group(0) if match else "grid_unknown"
@@ -26,7 +29,8 @@ def create_pipeline(param_key: str,
             inputs=[
                 dataset_name,
                 param_ds,
-                cv_settings
+                cv_settings,
+                training_settings,
             ],
             outputs=output_ds,
             name=f"TRAIN_{param_key}",

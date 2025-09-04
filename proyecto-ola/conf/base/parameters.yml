@@ -32,14 +32,17 @@ test_datasets:
 cv_settings:
   n_splits: 5
   shuffle: true
-  random_state: 10
+  random_state: 42
 
 training_settings:
   n_jobs: -1
+  seed: 42
+
+
 
 model_parameters:
   # =========================
-  # Clasicos
+  # Nominales
   # =========================
   LinearRegression:
     grid_001:

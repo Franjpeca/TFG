@@ -3,13 +3,15 @@ from proyecto_ola.utils.wrappers import make_train_wrapper
 from .nodes import Train_MORD_LogisticAT
 import re
 
-def create_pipeline(param_key: str,
+def create_pipeline(
+                    param_key: str,
                     model_type: str,
                     param_ds: str,
                     output_ds: str,
                     dataset_name: str,
                     cv_settings: str,
-                    dataset_id: str
+                    training_settings: str,
+                    dataset_id: str,
                 ) -> Pipeline:
 
     match = re.search(r'grid_\d+', param_key)
@@ -26,8 +28,9 @@ def create_pipeline(param_key: str,
             func=wrapped,
             inputs=[
                 dataset_name,
-                param_ds,    
-                cv_settings  
+                param_ds,
+                cv_settings,
+                training_settings,
             ],
             outputs=output_ds,
             name=f"TRAIN_{param_key}",

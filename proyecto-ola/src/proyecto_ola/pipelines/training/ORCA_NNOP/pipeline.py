@@ -10,6 +10,7 @@ def create_pipeline(
                     output_ds: str,
                     dataset_name: str,
                     cv_settings: str,
+                    training_settings: str,
                     dataset_id: str,
                 ) -> Pipeline:
 
@@ -25,7 +26,12 @@ def create_pipeline(
     return Pipeline([
         node(
             func=wrapped,
-            inputs=[dataset_name, param_ds, cv_settings],
+            inputs=[
+                dataset_name,
+                param_ds,
+                cv_settings,
+                training_settings,
+            ],
             outputs=output_ds,
             name=f"TRAIN_{param_key}",
             tags=[

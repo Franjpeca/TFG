@@ -75,6 +75,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                     output_ds=output_ds,
                     dataset_name=train_ds,
                     cv_settings="params:cv_settings",
+                    training_settings="params:training_settings",
                     dataset_id=dataset_id,
                 ).tag([
                     full_key,

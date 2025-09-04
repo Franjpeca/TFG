@@ -1,12 +1,14 @@
 def make_train_wrapper(train_func, model_id, dataset_id):
-    def _train(dataset, params, cv_settings):
+    def _train(dataset, params, cv_settings, training_settings):
         return train_func(
             dataset=dataset,
             params=params,
             cv_settings=cv_settings,
+            training_settings=training_settings,
             model_id=model_id,
-            dataset_id=dataset_id
+            dataset_id=dataset_id,
         )
+
     _train.__name__ = f"train_{model_id}"
     _train.__qualname__ = _train.__name__
     return _train

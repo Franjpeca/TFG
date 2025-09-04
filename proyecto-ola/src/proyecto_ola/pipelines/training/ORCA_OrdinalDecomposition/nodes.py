@@ -13,11 +13,12 @@ from proyecto_ola.utils.nodes_utils import seed_everywhere, qwk_scorer
 
 logger = logging.getLogger(__name__)
 
-def Train_ORCA_OrdinalDecomposition(dataset, params, cv_settings, model_id, dataset_id):
-    random_state = params.get("random_state", 42)
-    jobs = cv_settings.get("n_jobs", 1)
+def Train_ORCA_OrdinalDecomposition(dataset, params, cv_settings, training_settings, model_id, dataset_id):
+    random_state = cv_settings.get("random_state", 42)
+    jobs = training_settings.get("n_jobs", 1)
+    seed = training_settings.get("seed", 42)
 
-    seed_everywhere(random_state)
+    seed_everywhere(seed)
 
     X = dataset.iloc[:, :-1].to_numpy(dtype=np.float64)
     y_raw = dataset.iloc[:, -1]
