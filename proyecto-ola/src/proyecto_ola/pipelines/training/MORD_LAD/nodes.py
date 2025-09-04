@@ -15,7 +15,7 @@ def Train_MORD_LAD(dataset, params, cv_settings, training_settings, model_id, da
     jobs = training_settings.get("n_jobs", 1)
     seed = training_settings.get("seed", 42)
 
-    seed_everywhere(random_state)
+    seed_everywhere(seed)
 
     X = dataset.iloc[:, :-1].values.astype(np.float32)
     y_raw = dataset.iloc[:, -1]

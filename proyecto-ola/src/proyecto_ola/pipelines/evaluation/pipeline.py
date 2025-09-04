@@ -42,6 +42,8 @@ def create_pipeline(**kwargs) -> Pipeline:
     training_datasets = params.get("training_datasets", [])
     default_cv = params.get("cv_settings", {"n_splits": 5, "random_state": 42})
     cv_str = f"cv_{default_cv['n_splits']}_rs_{default_cv['random_state']}"  # <- firma CV activa
+    training_settings = params.get("training_settings", {})
+    seed_val = training_settings.get("seed", "unk")
 
     if isinstance(evaluate_only, str):
         evaluate_only = [evaluate_only]
@@ -90,7 +92,7 @@ def create_pipeline(**kwargs) -> Pipeline:
             cv_sig = f"cv_{cv_cfg['n_splits']}_rs_{cv_cfg['random_state']}"
             for train_ds in training_datasets:
                 dataset_id = train_ds.replace("cleaned_", "").replace("_train_ordinal", "")
-                param_keys.append(f"{model_name}_{combo_id}_{dataset_id}_gridsearch_{cv_sig}")
+                param_keys.append(f"{model_name}_{combo_id}_{dataset_id}_seed_{seed_val}_gridsearch_{cv_sig}")
 
     if evaluated_keys:
         selected_keys = list(dict.fromkeys(evaluated_keys))
@@ -114,7 +116,7 @@ def create_pipeline(**kwargs) -> Pipeline:
             continue
 
         model_name = tokens[0]
-        dataset_id = tokens[-6]
+        dataset_id = tokens[-8] if "seed" in tokens else tokens[-6]
         if model_name not in MODEL_PIPELINES:
             logger.warning(f"Modelo no reconocido (se omite): {model_name}")
             continue
@@ -141,3 +143,4 @@ def create_pipeline(**kwargs) -> Pipeline:
         return Pipeline([node(lambda _x: None, inputs="params:run_id", outputs=None, name="EVALUATION_NOOP", tags=["pipeline_evaluation"])])
 
     return sum(subpipelines, Pipeline([]))
+

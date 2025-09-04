@@ -1,5 +1,6 @@
 import datetime
 import logging
+import re
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 
@@ -25,18 +26,21 @@ OUTPUT_BASE = Path("data") / "04_model_output"
 METRICS_BASE = Path("data") / "05_model_metrics"
 REPORT_BASE = Path("data") / "06_reporting"
 
+# Soporta nombres con o sin segmento seed_<valor>
+KEY_RE = re.compile(
+    r'^(?P<model>[^_]+)_(?P<combo>grid_\d+)_(?P<dataset>\d+)'
+    r'(?:_seed_(?P<seed>[^_]+))?_'
+    r'(?P<train>gridsearch)_(?P<cv>cv_\d+_rs_\d+)$'
+)
 
 def is_evaluation(name: str) -> bool:
     return "evaluation" in str(name)
 
-
 def is_visualization(name: str) -> bool:
     return "visualization" in str(name)
 
-
 def load_parameters() -> Dict[str, Any]:
     return OmegaConfigLoader(conf_source="conf").get("parameters", {}) or {}
-
 
 def find_latest_folder_with(base: Path, pattern: str) -> Optional[Path]:
     if not base.exists():
@@ -51,11 +55,9 @@ def find_latest_folder_with(base: Path, pattern: str) -> Optional[Path]:
             ts, best = latest_mtime, folder
     return best
 
-
 def register_if_missing(catalog: DataCatalog, key: str, dataset_obj) -> None:
     if key not in catalog.list():
         catalog.add(key, dataset_obj)
-
 
 def set_param_if_changed(catalog: DataCatalog, param_key: str, value: Any) -> None:
     try:
@@ -65,13 +67,11 @@ def set_param_if_changed(catalog: DataCatalog, param_key: str, value: Any) -> No
     if current != value:
         catalog.add_feed_dict({param_key: value}, replace=True)
 
-
 def ensure_dirs(is_eval: bool, models_dir: Path, outputs_dir: Path, metrics_dir: Path) -> None:
     if not is_eval:
         models_dir.mkdir(parents=True, exist_ok=True)
     outputs_dir.mkdir(parents=True, exist_ok=True)
     metrics_dir.mkdir(parents=True, exist_ok=True)
-
 
 def resolve_execution_folder(pipeline_name: str, run_id: str, forced: Optional[str], cv_cfg: Dict[str, Any]) -> str:
     if forced:
@@ -89,33 +89,25 @@ def resolve_execution_folder(pipeline_name: str, run_id: str, forced: Optional[s
         logger.warning(f"[Evaluating] No models found for run_id={run_id}.")
     return f"{run_id}_{datetime.datetime.now():%Y%m%d_%H%M%S}"
 
-
 def dataset_id_from_fullkey(full_key: str) -> str:
-    # Ejemplo full_key: SVOREX_grid_001_46042_gridsearch_cv_2_rs_32
-    # tokens = [SVOREX, grid, 001, 46042, gridsearch, cv, 2, rs, 32]
-    # dataset_id debe ser tokens[-6] -> 46042
-    tokens = full_key.split("_")
-    if len(tokens) >= 6:
-        return tokens[-6]
+    m = KEY_RE.match(full_key)
+    if m:
+        return m.group("dataset")
     logger.warning(f"[evaluation] Could not extract dataset_id from {full_key}")
     return "unknown"
 
-
 def dataset_id_from_train_name(name: str) -> str:
     return name.replace("cleaned_", "").replace("_train_ordinal", "")
-
 
 def save_evaluated_keys(catalog: DataCatalog, keys: List[str]) -> None:
     register_if_missing(catalog, "evaluated_keys", MemoryDataset(copy_mode="assign"))
     catalog.save("evaluated_keys", keys)
     set_param_if_changed(catalog, "params:evaluated_keys", keys)
 
-
 def register_model(catalog: DataCatalog, run_id: str, full_key: str, model_path: Path) -> None:
     ds = PickleDataset(filepath=str(model_path), backend="pickle", save_args={"protocol": 5})
     register_if_missing(catalog, f"training.{run_id}.Model_{full_key}", ds)
     register_if_missing(catalog, full_key, ds)
-
 
 def register_evaluation_outputs(
     catalog: DataCatalog,
@@ -138,7 +130,6 @@ def register_evaluation_outputs(
     for key, path in pairs:
         register_if_missing(catalog, key, JSONDataset(filepath=str(path)))
 
-
 def visualization_output_path(output_name: str) -> Optional[Path]:
     parts = output_name.split(".")
     if len(parts) != 4 or parts[0] != "visualization":
@@ -147,26 +138,20 @@ def visualization_output_path(output_name: str) -> Optional[Path]:
     metric_l = metric.lower()
     base = REPORT_BASE / run_folder / dataset_id
 
-    # --- nombres canónicos ---
     if metric_l == "heatmap":
         return base / "heatmap.png"
 
-    # --- soporte genérico para cualquier scatter_* (compat: scatter_qwk_mae) ---
     if metric_l.startswith("scatter_"):
-        # guarda tal cual el nombre de la métrica del nodo, p.ej. scatter_qwk_amae.png
         return base / f"{metric_l}.png"
 
-    # --- métricas simples: se organizan por subcarpeta ordinal/nominal ---
     sub = "ordinal" if metric_l in {"qwk", "mae", "amae"} else "nominal"
     return base / sub / f"{metric}.png"
-
 
 def _choose_recent_folder(folders: List[str], base: Path) -> str:
     try:
         return max(folders, key=lambda f: (base / f).stat().st_mtime)
     except Exception:
         return folders[0]
-
 
 class DynamicModelCatalogHook:
     @hook_impl
@@ -176,6 +161,8 @@ class DynamicModelCatalogHook:
         run_id = params.get("run_id", "001")
         forced_execution_folder = params.get("execution_folder")
         default_cv: Dict[str, Any] = params.get("cv_settings", {"n_splits": 5, "random_state": 42})
+        training_settings: Dict[str, Any] = params.get("training_settings", {})
+        seed_val = training_settings.get("seed", "unk")
 
         # --- Cabecera visible por ejecución ---
         ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -318,7 +305,7 @@ class DynamicModelCatalogHook:
                     cv_str = f"cv_{cv_cfg['n_splits']}_rs_{cv_cfg['random_state']}"
                     for train_ds in training_datasets:
                         dsid = dataset_id_from_train_name(train_ds)
-                        full_key = f"{model_name}_{combo_id}_{dsid}_gridsearch_{cv_str}"
+                        full_key = f"{model_name}_{combo_id}_{dsid}_seed_{seed_val}_gridsearch_{cv_str}"
                         items.append((full_key, models_dir / f"Model_{full_key}.pkl"))
 
         evaluated_keys: List[str] = []

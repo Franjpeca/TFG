@@ -25,16 +25,27 @@ def Predict_CLASSIC_DecisionTree(model, dataset, model_id, dataset_id):
         else:
             y = LabelEncoder().fit_transform(y)
 
-    # Predicción especial con redondeo y recorte al rango 0-4
-    y_pred_raw = model.predict(X.values)
-    y_pred = np.clip(np.round(y_pred_raw), 0, 4).astype(int)
+    y_pred = model.predict(X)
 
-    return y_pred.tolist(), y.tolist(), model.get_params()
+    y_pred_list = [int(v) for v in y_pred.tolist()]
+    y_true_list = [int(v) for v in np.asarray(y).tolist()]
+
+    return (
+        {"y_pred": y_pred_list, "y_true": y_true_list},
+        y_true_list,
+        model.get_params(),
+    )
 
 def Evaluate_CLASSIC_DecisionTree(y_true, y_pred, model_params, model_id, model_type, dataset_id, execution_folder):
     logger.info(f"[Evaluating] Evaluando modelo:\n\t{model_id}")
     logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
     logger.info(f"[Evaluating] Carpeta de ejecución:\n\t{execution_folder}\n")
+
+    # Desempaqueta si y_pred es un dict con y_true e y_pred
+    if isinstance(y_pred, dict) and "y_pred" in y_pred:
+        if "y_true" in y_pred:
+            y_true = y_pred["y_true"]
+        y_pred = y_pred["y_pred"]
 
     y_true = np.asarray(y_true)
     y_pred = np.asarray(y_pred)
@@ -70,7 +81,7 @@ def Evaluate_CLASSIC_DecisionTree(y_true, y_pred, model_params, model_id, model_
     }
 
     logger.info(f"[Evaluating] model_id: {model_id_str}")
-    logger.info(f"[Evaluating] Metricas nominales:\n\t{nominal_metrics}")
-    logger.info(f"[Evaluating] Metricas ordinales:\n\t{ordinal_metrics}\n\n")
-
+    logger.info(f"[Evaluating] Métricas nominales:\n\t{nominal_metrics}")
+    logger.info(f"[Evaluating] Métricas ordinales:\n\t{ordinal_metrics}\n\n")
+    
     return results

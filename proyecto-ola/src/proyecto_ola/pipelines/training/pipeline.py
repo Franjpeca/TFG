@@ -20,7 +20,6 @@ from proyecto_ola.pipelines.training.CLASSIC_KNeighborsClassifier.pipeline impor
 
 logger = logging.getLogger(__name__)
 
-# Diccionario centralizado con las funciones de cada modelo
 MODEL_PIPELINES = {
     "DecisionTreeRegressor": create_CLASSIC_DecisionTreeRegressor_pipeline,
     "KNeighborsClassifier": create_CLASSIC_KNeighborsClassifier_pipeline,
@@ -36,13 +35,14 @@ MODEL_PIPELINES = {
     "SVOREX": create_ORCA_SVOREX_pipeline,
 }
 
-
 def create_pipeline(**kwargs) -> Pipeline:
     params = kwargs.get("params", {})
     run_id = params.get("run_id", "001")
     model_params = params.get("model_parameters", {})
     train_datasets = params.get("training_datasets", [])
     cv_default = params.get("cv_settings", {"n_splits": 5, "random_state": 42})
+    training_settings = params.get("training_settings", {})
+    seed_val = training_settings.get("seed", "unk")
 
     subpipelines = []
 
@@ -63,7 +63,7 @@ def create_pipeline(**kwargs) -> Pipeline:
 
             for train_ds in train_datasets:
                 dataset_id = train_ds.replace("cleaned_", "").replace("_train_ordinal", "")
-                full_key = f"{model_name}_{combo_id}_{dataset_id}_{hyper_str}_{cv_str}"
+                full_key = f"{model_name}_{combo_id}_{dataset_id}_seed_{seed_val}_{hyper_str}_{cv_str}"
                 output_ds = f"training.{run_id}.Model_{full_key}"
 
                 pipeline_fn = MODEL_PIPELINES[model_name]

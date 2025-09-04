@@ -28,7 +28,6 @@ BASE_DIR = Path("data/05_model_metrics")
 
 
 def _choose_output_folder(exec_folders: List[str]) -> str:
-    # Usa la más reciente por mtime; si algo falla, usa la primera
     try:
         return max(exec_folders, key=lambda f: (BASE_DIR / f).stat().st_mtime)
     except Exception:
@@ -38,12 +37,10 @@ def _choose_output_folder(exec_folders: List[str]) -> str:
 def create_pipeline(**kwargs) -> Pipeline:
     params = kwargs.get("params", {})
 
-    # Métricas a visualizar
     nominal_metrics = params.get("nominal_metrics", ["accuracy", "f1_score"])
     ordinal_metrics = params.get("ordinal_metrics", ["qwk", "mae", "amae"])
     heatmap_metrics = params.get("heatmap_metrics", ["qwk", "mae", "amae", "f1_score", "accuracy"])
 
-    # Lee carpetas desde CLI/params; si no hay, usa la última disponible
     cli_multi = find_parameters_cli("execution_folders", params)
     exec_folders = parse_folders_param(cli_multi)
 
@@ -63,13 +60,11 @@ def create_pipeline(**kwargs) -> Pipeline:
                  name="VISUALIZATION_NOOP", tags=["pipeline_visualization"])
         ])
 
-    # Carpeta de SALIDA (donde se generan/guardan los gráficos)
     output_execution_folder = _choose_output_folder(exec_folders)
 
     logger.info(f"[INFO_VISUALIZATION] Carpetas de ENTRADA: {exec_folders}")
     logger.info(f"[INFO_VISUALIZATION] Carpeta de SALIDA: {output_execution_folder}\n")
 
-    # Recolecta métricas de todas las carpetas de entrada
     all_metric_files = []
     for folder in exec_folders:
         metrics_dir = BASE_DIR / folder
@@ -85,12 +80,10 @@ def create_pipeline(**kwargs) -> Pipeline:
                  name="VISUALIZATION_NOOP", tags=["pipeline_visualization"])
         ])
 
-    # Filtrado por evaluated_keys (opcional)
     evaluated_keys = params.get("evaluated_keys", [])
     if isinstance(evaluated_keys, str):
         evaluated_keys = [evaluated_keys]
 
-    # Agrupa inputs por dataset_id (mezclando entre carpetas)
     datasets_map: Dict[str, List[str]] = {}
     for f in all_metric_files:
         full_key = f.stem.replace("Metrics_", "", 1)
@@ -100,9 +93,9 @@ def create_pipeline(**kwargs) -> Pipeline:
         if len(tokens) < 6:
             logger.warning(f"[VISUALIZATION] full_key inesperada: {full_key}")
             continue
-        dataset_id = tokens[-6]
+        dataset_id = tokens[-8] if "seed" in tokens else tokens[-6]
         src_folder = f.parent.name
-        json_key = f"evaluation.{src_folder}.{f.stem}"  # <- input real, mantiene su carpeta de origen
+        json_key = f"evaluation.{src_folder}.{f.stem}"
         datasets_map.setdefault(dataset_id, []).append(json_key)
 
     if not datasets_map:
@@ -112,12 +105,9 @@ def create_pipeline(**kwargs) -> Pipeline:
                  name="VISUALIZATION_NOOP", tags=["pipeline_visualization"])
         ])
 
-    # Construcción de subpipelines.
-    # IMPORTANTE: todos los outputs se escriben bajo `output_execution_folder`
     subpipelines: List[Pipeline] = []
 
     for dataset_id, metric_inputs in datasets_map.items():
-        # Nodos nominales
         for metric_name in nominal_metrics:
             wrapped = make_nominal_viz_wrapper(
                 viz_func=Visualize_Nominal_Metric,
@@ -145,7 +135,6 @@ def create_pipeline(**kwargs) -> Pipeline:
                 ])
             )
 
-        # Nodos ordinales
         for metric_name in ordinal_metrics:
             wrapped = make_ordinal_viz_wrapper(
                 viz_func=Visualize_Ordinal_Metric,
@@ -173,7 +162,6 @@ def create_pipeline(**kwargs) -> Pipeline:
                 ])
             )
 
-        # Heatmap por dataset
         wrapped_heatmap = make_heatmap_viz_wrapper(
             viz_func=Visualize_Heatmap_Metrics,
             metrics=heatmap_metrics,
@@ -200,7 +188,6 @@ def create_pipeline(**kwargs) -> Pipeline:
             ])
         )
 
-        # Scatter QWK vs AMAE por dataset (solo cambia el nombre del output/nodo)
         wrapped_scatter = make_scatter_qwk_amae_viz_wrapper(
             viz_func=Visualize_Scatter_QWKvsAMAE,
             dataset_id=dataset_id,
@@ -226,5 +213,4 @@ def create_pipeline(**kwargs) -> Pipeline:
             ])
         )
 
-    # Devolver todos los subpipelines juntos
     return sum(subpipelines, Pipeline([]))
