@@ -36,9 +36,6 @@ def Train_ORCA_NNOP(dataset, params, cv_settings, training_settings, model_id, d
         random_state=cv_settings["random_state"]
     )
 
-    torch.manual_seed(cv_settings["random_state"])
-    np.random.seed(cv_settings["random_state"])
-
     pipe = Pipeline(steps=[
         ("scaler", RobustScaler()),
         ("model", NNOP()),

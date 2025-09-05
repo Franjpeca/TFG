@@ -56,6 +56,8 @@ def create_pipeline(**kwargs) -> Pipeline:
 
     model_dir: Optional[Path] = None
     base_models = Path("data") / "03_models"
+
+    # 1) Selección de carpeta: prioriza CV+seed si seed definida
     if exec_folder:
         possible_dir = base_models / exec_folder
         if possible_dir.exists() and any(possible_dir.glob("Model_*.pkl")):
@@ -69,20 +71,27 @@ def create_pipeline(**kwargs) -> Pipeline:
             key=lambda d: d.stat().st_mtime,
             reverse=True,
         )
-        # prioriza carpeta que contiene modelos con la firma CV activa
-        pref = [d for d in dirs if any(d.glob(f"Model_*_{cv_str}.pkl"))]
-        model_dir = (pref[0] if pref else (dirs[0] if dirs else None))
+        # preferencia 1: carpeta con Model_*_seed_{seed}_gridsearch_{cv_str}.pkl (si seed definida)
+        pref_seed = []
+        if seed_val not in (None, "unk"):
+            pref_seed = [d for d in dirs if any(d.glob(f"Model_*_seed_{seed_val}_gridsearch_{cv_str}.pkl"))]
+        # preferencia 2: carpeta con Model_*_{cv_str}.pkl (como hasta ahora)
+        pref_cv = [d for d in dirs if any(d.glob(f"Model_*_{cv_str}.pkl"))]
+        model_dir = (pref_seed[0] if pref_seed else (pref_cv[0] if pref_cv else (dirs[0] if dirs else None)))
         if model_dir:
             logger.info(f"[INFO_EVALUATION] Usando ultima ejecucion: {model_dir.name}")
 
-    # keys en disco filtradas por firma CV activa
+    # 2) Descubrimiento de keys en disco: filtra por CV y, si aplica, por seed
     if model_dir:
         all_disk_keys = [p.stem.replace("Model_", "", 1) for p in sorted(model_dir.glob("Model_*.pkl"))]
-        disk_keys = [k for k in all_disk_keys if k.endswith(cv_str)]
+        if seed_val not in (None, "unk"):
+            disk_keys = [k for k in all_disk_keys if k.endswith(cv_str) and f"_seed_{seed_val}_" in k]
+        else:
+            disk_keys = [k for k in all_disk_keys if k.endswith(cv_str)]
     else:
         disk_keys = []
 
-    # keys esperadas segun parametros (respetando cv_settings por combinación si existe)
+    # 3) Keys esperadas según parámetros (respetando cv_settings por combinación si existe)
     param_keys = []
     for model_name, combos in model_parameters.items():
         for combo_id, cfg in combos.items():
@@ -97,7 +106,8 @@ def create_pipeline(**kwargs) -> Pipeline:
     if evaluated_keys:
         selected_keys = list(dict.fromkeys(evaluated_keys))
     elif only_evaluation():
-        selected_keys = list(dict.fromkeys(disk_keys))  # solo lo que existe con la firma CV activa
+        # Solo lo que existe con firma CV (y seed si aplica)
+        selected_keys = list(dict.fromkeys(disk_keys))
     else:
         selected_keys = list(dict.fromkeys(disk_keys + param_keys))
 
@@ -143,4 +153,3 @@ def create_pipeline(**kwargs) -> Pipeline:
         return Pipeline([node(lambda _x: None, inputs="params:run_id", outputs=None, name="EVALUATION_NOOP", tags=["pipeline_evaluation"])])
 
     return sum(subpipelines, Pipeline([]))
-

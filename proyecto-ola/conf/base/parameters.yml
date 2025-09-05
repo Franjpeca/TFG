@@ -36,7 +36,7 @@ cv_settings:
 
 training_settings:
   n_jobs: -1
-  seed: 42
+  seed: 46 
 
 
 

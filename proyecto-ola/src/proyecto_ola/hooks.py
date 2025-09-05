@@ -164,6 +164,11 @@ class DynamicModelCatalogHook:
         training_settings: Dict[str, Any] = params.get("training_settings", {})
         seed_val = training_settings.get("seed", "unk")
 
+        # NUEVO: decidir "evaluation-like" también en pipeline default sin params de training
+        model_parameters: Dict[str, Dict[str, Any]] = params.get("model_parameters", {})
+        training_datasets: List[str] = params.get("training_datasets", [])
+        eval_like = is_evaluation(pipeline_name) or (not model_parameters and not training_datasets)
+
         # --- Cabecera visible por ejecución ---
         ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -236,7 +241,13 @@ class DynamicModelCatalogHook:
             return
 
         # -------- TRAINING / EVALUATION --------
-        execution_folder = resolve_execution_folder(pipeline_name, run_id, forced_execution_folder, default_cv)
+        # Forzamos comportamiento "evaluation" al resolver carpeta si eval_like=True
+        execution_folder = resolve_execution_folder(
+            "evaluation" if eval_like else pipeline_name,
+            run_id,
+            forced_execution_folder,
+            default_cv,
+        )
         set_param_if_changed(catalog, "params:execution_folder", execution_folder)
 
         # Log del contexto de ejecución ya resuelto
@@ -248,27 +259,21 @@ class DynamicModelCatalogHook:
         models_dir = MODELS_BASE / execution_folder
         outputs_dir = OUTPUT_BASE / execution_folder
         metrics_dir = METRICS_BASE / execution_folder
-        ensure_dirs(is_evaluation(pipeline_name), models_dir, outputs_dir, metrics_dir)
+        ensure_dirs(eval_like, models_dir, outputs_dir, metrics_dir)
 
-        model_parameters: Dict[str, Dict[str, Any]] = params.get("model_parameters", {})
-        training_datasets: List[str] = params.get("training_datasets", [])
-
-        if is_evaluation(pipeline_name):
+        if eval_like:
             # Firma CV activa (sea 2, 3, 5... lo que venga en params)
             sig = f"cv_{default_cv.get('n_splits', 5)}_rs_{default_cv.get('random_state', 42)}"
 
             if forced_execution_folder:
-                # Si fuerzas carpeta: no filtramos por CV, pero avisamos si la firma activa no está presente.
                 items: List[Tuple[str, Path]] = [
                     (p.stem.replace("Model_", "", 1), p) for p in models_dir.glob("Model_*.pkl")
                 ]
                 if not items:
                     logger.warning("[evaluation] No se encontraron modelos en %s.", models_dir)
-                    # --- añadido: propaga vacío y sal ---
                     save_evaluated_keys(catalog, [])
                     return
                 else:
-                    # Detecta qué firmas CV hay en la carpeta forzada y avisa si falta la activa.
                     present_sigs = set()
                     for _, p in items:
                         name = p.stem  # Model_<...>_cv_X_rs_Y
@@ -282,7 +287,6 @@ class DynamicModelCatalogHook:
                             models_dir, sig, sorted(present_sigs) if present_sigs else "ninguna"
                         )
             else:
-                # Si no fuerzas carpeta: filtra por la firma CV activa para evitar mismatches.
                 items = [
                     (p.stem.replace("Model_", "", 1), p) for p in models_dir.glob(f"Model_*_{sig}.pkl")
                 ]
@@ -312,6 +316,16 @@ class DynamicModelCatalogHook:
         for full_key, model_path in items:
             evaluated_keys.append(full_key)
             register_model(catalog, run_id, full_key, model_path)
+
+            # NUEVO: en evaluación, si la seed del archivo != seed actual, registrar alias con la seed actual
+            if eval_like:
+                m = KEY_RE.match(full_key)
+                if m:
+                    file_seed = m.group("seed")
+                    if file_seed and seed_val != "unk" and str(file_seed) != str(seed_val):
+                        alias_full_key = full_key.replace(f"_seed_{file_seed}_", f"_seed_{seed_val}_")
+                        register_model(catalog, run_id, alias_full_key, model_path)
+
             register_evaluation_outputs(
                 catalog=catalog,
                 run_id=run_id,

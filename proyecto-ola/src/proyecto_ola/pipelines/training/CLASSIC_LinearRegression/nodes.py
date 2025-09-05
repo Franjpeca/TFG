@@ -7,7 +7,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import cross_val_score
 
-from proyecto_ola.utils.nodes_utils import qwk_scorer
+from proyecto_ola.utils.nodes_utils import seed_everywhere , qwk_scorer
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +15,8 @@ def Train_CLASSIC_LinearRegression(dataset, params, cv_settings, training_settin
     random_state = cv_settings.get("random_state", 42)
     jobs = training_settings.get("n_jobs", 1)
     seed = training_settings.get("seed", 42)
+
+    seed_everywhere(seed)
 
     X = dataset.iloc[:, :-1].values.astype(np.float32)
     y_raw = dataset.iloc[:, -1]

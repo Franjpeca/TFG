@@ -28,9 +28,6 @@ def Train_ORCA_NNPOM(dataset, params, cv_settings, training_settings, model_id, 
     logger.info(f"[Training] Entrenando ORCA-NNPOM con GridSearch (QWK) con el dataset: {dataset_id} ...")
     logger.info(f"[Training] Model id: {model_id} ...\n")
 
-    torch.manual_seed(cv_settings["random_state"])
-    np.random.seed(cv_settings["random_state"])
-
     cv = StratifiedKFold(
         n_splits=cv_settings["n_splits"],
         shuffle=cv_settings.get("shuffle", True),
