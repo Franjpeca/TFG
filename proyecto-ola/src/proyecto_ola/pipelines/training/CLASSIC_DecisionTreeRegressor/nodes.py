@@ -6,7 +6,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeRegressor
 
-from proyecto_ola.utils.nodes_utils import qwk_scorer
+from proyecto_ola.utils.nodes_utils import seed_everywhere, qwk_scorer
 
 logger = logging.getLogger(__name__)
 

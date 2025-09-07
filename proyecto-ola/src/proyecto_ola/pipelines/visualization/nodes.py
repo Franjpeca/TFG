@@ -164,7 +164,7 @@ def Visualize_Heatmap_Metrics(metrics_jsons, metrics, dataset_id, execution_fold
                 ax.text(j_col, i, "-", ha="center", va="center", color="0.7", fontsize=9)
             else:
                 color = "black" if shade > 0.6 else "white"
-                txt = f"{val:.2f}\n({shade:.1f})"
+                txt = f"{val:.4f}\n({shade:.2f})"
                 ax.text(j_col, i, txt, ha="center", va="center", color=color, fontsize=8)
 
     ORDINAL_SET = {

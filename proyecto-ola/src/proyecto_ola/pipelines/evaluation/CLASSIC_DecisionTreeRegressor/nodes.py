@@ -17,7 +17,6 @@ def Predict_CLASSIC_DecisionTree(model, dataset, model_id, dataset_id):
     y = dataset.iloc[:, -1]
 
     # mantener exactamente la misma forma: si es objeto, codificamos
-    # usando el mapping del entrenamiento si existe; si no, LabelEncoder
     if y.dtype == 'O':
         if hasattr(model, "label_mapping"):
             mapping = model.label_mapping

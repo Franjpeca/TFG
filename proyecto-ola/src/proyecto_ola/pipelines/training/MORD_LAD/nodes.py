@@ -37,6 +37,8 @@ def Train_MORD_LAD(dataset, params, cv_settings, training_settings, model_id, da
         ("model", mord.LAD()),
     ])
 
+    pipe.set_params(model__random_state=seed)
+
     param_grid = {f"model__{k}": v for k, v in params.items()}
 
     search = GridSearchCV(
