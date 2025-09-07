@@ -8,13 +8,13 @@ formatters:
 handlers:
   console:
     class: logging.StreamHandler
-    level: INFO                  # << INFO para ver info en terminal si usas console
+    level: INFO
     formatter: simple
     stream: ext://sys.stdout
 
   info_file_handler:
     class: logging.handlers.RotatingFileHandler
-    level: INFO                  # << INFO para guardar info en disco
+    level: INFO
     formatter: simple
     filename: logs/kedro.log
     maxBytes: 10485760
@@ -25,8 +25,7 @@ handlers:
   rich:
     class: kedro.logging.RichHandler
     rich_tracebacks: True
-    level: INFO                  # << explícito
-
+    level: INFO
 loggers:
   kedro:
     level: INFO
@@ -37,5 +36,5 @@ loggers:
     propagate: False
 
 root:
-  level: INFO                    # << clave: el filtro global
+  level: INFO
   handlers: [rich, info_file_handler] 

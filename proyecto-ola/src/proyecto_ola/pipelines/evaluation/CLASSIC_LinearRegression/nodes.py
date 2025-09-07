@@ -25,7 +25,7 @@ def Predict_CLASSIC_LinearRegression(model, dataset, model_id, dataset_id):
         else:
             y = LabelEncoder().fit_transform(y)
 
-    # Predicción especial con redondeo y recorte al rango 0-4
+
     y_pred_raw = model.predict(X.values)
     y_pred = np.clip(np.round(y_pred_raw), 0, 4).astype(int)
 

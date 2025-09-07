@@ -25,10 +25,8 @@ def Predict_CLASSIC_KNeighborsClassifier(model, dataset, model_id, dataset_id):
         else:
             y = LabelEncoder().fit_transform(y)
 
-    # Predicción directa
     y_pred = model.predict(X)
 
-    # Convertir a listas enteras
     y_pred_list = [int(v) for v in y_pred.tolist()]
     y_true_list = [int(v) for v in np.asarray(y).tolist()]
 
@@ -43,7 +41,6 @@ def Evaluate_CLASSIC_KNeighborsClassifier(y_true, y_pred, model_params, model_id
     logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
     logger.info(f"[Evaluating] Carpeta de ejecución:\n\t{execution_folder}\n")
 
-    # Desempaqueta si y_pred es un dict con y_true e y_pred
     if isinstance(y_pred, dict) and "y_pred" in y_pred:
         if "y_true" in y_pred:
             y_true = y_pred["y_true"]

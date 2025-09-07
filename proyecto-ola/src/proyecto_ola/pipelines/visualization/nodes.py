@@ -194,7 +194,7 @@ def Visualize_Scatter_QWKvsAMAE(
     metrics_jsons,
     dataset_id,
     execution_folder,
-    x_metric="amae",   # ← por defecto AMAE
+    x_metric="amae",
     y_metric="qwk",
     metric_type="scatter",
 ):

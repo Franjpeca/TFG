@@ -20,7 +20,6 @@ def Predict_MORD_LAD(model, dataset, model_id, dataset_id):
     if y.dtype == 'O':
         y = LabelEncoder().fit_transform(y)
 
-    # Predicción especial con redondeo y recorte al rango 0-4
     y_pred_raw = model.predict(X.values)
     y_pred = np.clip(np.round(y_pred_raw), 0, 4).astype(int)
 
@@ -38,7 +37,6 @@ def Evaluate_MORD_LAD(y_true, y_pred, model_params, model_id, model_type, datase
     logger.info(f"[Evaluating] Dataset usado:\n\t{dataset_id}")
     logger.info(f"[Evaluating] Carpeta de ejecución:\n\t{execution_folder}\n")
 
-    # Desempaqueta si y_pred es un dict con y_true e y_pred
     if isinstance(y_pred, dict) and "y_pred" in y_pred:
         if "y_true" in y_pred:
             y_true = y_pred["y_true"]

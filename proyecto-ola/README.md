@@ -115,6 +115,7 @@ kedro run
 ## ▶️ Ejecución general
 
 ### Lanzar todos los modelos junto con sus parámetros (preprocessing + training + evaluation)
+> Hay que asegurar que se está en  `TFG/proyecto_ola/`
 ```bash
 kedro run
 ```

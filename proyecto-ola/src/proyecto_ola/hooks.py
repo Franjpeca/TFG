@@ -164,12 +164,10 @@ class DynamicModelCatalogHook:
         training_settings: Dict[str, Any] = params.get("training_settings", {})
         seed_val = training_settings.get("seed", "unk")
 
-        # NUEVO: decidir "evaluation-like" también en pipeline default sin params de training
         model_parameters: Dict[str, Dict[str, Any]] = params.get("model_parameters", {})
         training_datasets: List[str] = params.get("training_datasets", [])
         eval_like = is_evaluation(pipeline_name) or (not model_parameters and not training_datasets)
 
-        # --- Cabecera visible por ejecución ---
         ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         logger.info("=" * 89)
@@ -250,7 +248,6 @@ class DynamicModelCatalogHook:
         )
         set_param_if_changed(catalog, "params:execution_folder", execution_folder)
 
-        # Log del contexto de ejecución ya resuelto
         logger.info(f"[RunContext] execution_folder='{execution_folder}'")
 
         logger.info("=" * 89)
@@ -276,10 +273,10 @@ class DynamicModelCatalogHook:
                 else:
                     present_sigs = set()
                     for _, p in items:
-                        name = p.stem  # Model_<...>_cv_X_rs_Y
+                        name = p.stem
                         parts = name.split("_")
                         if len(parts) >= 4:
-                            present_sigs.add("_".join(parts[-4:]))  # e.g. "cv_3_rs_32"
+                            present_sigs.add("_".join(parts[-4:]))
                     if sig not in present_sigs:
                         logger.warning(
                             "[evaluation] La carpeta forzada '%s' no contiene modelos con la firma activa %s. "
@@ -300,7 +297,7 @@ class DynamicModelCatalogHook:
                     return
         else:
             items: List[Tuple[str, Path]] = []
-            # Claves esperadas del training actual (se guardarán en models_dir cuando termine el fit)
+            # Claves esperadas del training actual (se guardaran en models_dir cuando termine el fit)
             for model_name, combos in model_parameters.items():
                 for combo_id, cfg in combos.items():
                     if "param_grid" not in cfg:
@@ -317,7 +314,6 @@ class DynamicModelCatalogHook:
             evaluated_keys.append(full_key)
             register_model(catalog, run_id, full_key, model_path)
 
-            # NUEVO: en evaluación, si la seed del archivo != seed actual, registrar alias con la seed actual
             if eval_like:
                 m = KEY_RE.match(full_key)
                 if m:

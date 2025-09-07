@@ -29,10 +29,10 @@ def clean_data(
 
     out = df.copy()
 
-    # Eliminar filas vacías
+    # Eliminar filas vacias
     out = out.dropna()
 
-    # Eliminar columnas completamente vacías
+    # Eliminar columnas completamente vacias
     if params.get("drop_empty_cols", True):
         empty_cols = out.columns[out.isna().all()].tolist()
         if empty_cols:
@@ -53,7 +53,7 @@ def clean_data(
         if constant_cols:
             out = out.drop(columns=constant_cols)
 
-    # Eliminar penúltima columna si se solicita
+    # Eliminar penultima columna si se solicita
     if params.get("drop_penultimate", True) and out.shape[1] >= 2:
         col_to_drop = out.columns[-2]
         out = out.drop(columns=[col_to_drop])
