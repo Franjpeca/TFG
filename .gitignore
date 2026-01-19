@@ -1,3 +1,6 @@
+# Ignora este mismo fichero
+.gitignore
+
 # Ignorar carpeta anteproyecto
 anteproyecto/
 
